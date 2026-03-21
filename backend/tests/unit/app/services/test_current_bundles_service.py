@@ -1,0 +1,293 @@
+"""Unit tests for current bundle runtime service helpers."""
+
+from __future__ import annotations
+
+import importlib
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Callable
+
+import pytest
+
+current_bundles_service = importlib.import_module("app.services.current_bundles")
+
+
+@pytest.mark.unit
+class TestCurrentBundlesService:
+    """Verify runtime current bundle service defaults and overrides."""
+
+    @pytest.mark.parametrize(
+        "payload_factory",
+        [
+            lambda base_dir: {
+                "base_dir": str(base_dir),
+                "bundle_types": ["Books", "games"],
+                "timeout_seconds": 45,
+            },
+            lambda base_dir: SimpleNamespace(
+                base_dir=str(base_dir),
+                bundle_types=["Books", "games"],
+                timeout_seconds=45,
+            ),
+        ],
+    )
+    def test_runtime_current_bundles_config_normalizes_non_model_payloads(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        payload_factory: Callable[[Path], object],
+    ) -> None:
+        base_dir = tmp_path / "bundles"
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(current_bundles=payload_factory(base_dir)),
+        )
+
+        config = current_bundles_service.runtime_current_bundles_config()
+
+        assert isinstance(config, current_bundles_service.CurrentBundlesConfig)
+        assert config.base_dir == base_dir
+        assert config.bundle_types == ["books", "games"]
+        assert config.timeout_seconds == 45
+
+    def test_resolve_current_bundles_library_path_prefers_bundle_library(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        bundle_library = tmp_path / "bundle-library.json"
+        viewer_library = tmp_path / "viewer-library.json"
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles=current_bundles_service.CurrentBundlesConfig(
+                    base_dir=tmp_path / "bundles",
+                    library_path=bundle_library,
+                ),
+                viewer=current_bundles_service.ViewerConfig(
+                    library_path=viewer_library
+                ),
+                artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
+            ),
+        )
+
+        assert (
+            current_bundles_service.resolve_current_bundles_library_path()
+            == bundle_library
+        )
+
+    def test_resolve_current_bundles_paths_are_derived_from_output_dir(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        output_dir = tmp_path / "bundles"
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles=current_bundles_service.CurrentBundlesConfig(
+                    base_dir=output_dir,
+                ),
+            ),
+        )
+
+        assert (
+            current_bundles_service.resolve_current_bundles_output_dir() == output_dir
+        )
+        assert current_bundles_service.resolve_current_bundles_report_path() == (
+            output_dir / "bundle_overlap_report.json"
+        )
+        assert current_bundles_service.resolve_current_bundles_markdown_path() == (
+            output_dir / "bundle_overlap_report.md"
+        )
+
+    def test_resolve_current_bundles_library_path_falls_back_to_viewer_library(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        viewer_library = tmp_path / "viewer-library.json"
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles=current_bundles_service.CurrentBundlesConfig(
+                    base_dir=tmp_path / "bundles",
+                ),
+                viewer=current_bundles_service.ViewerConfig(
+                    library_path=viewer_library
+                ),
+                artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
+            ),
+        )
+
+        assert (
+            current_bundles_service.resolve_current_bundles_library_path()
+            == viewer_library
+        )
+
+    def test_resolve_current_bundles_library_path_falls_back_to_default_artifact_library(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        artifacts_dir = tmp_path / "artifacts"
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles=current_bundles_service.CurrentBundlesConfig(
+                    base_dir=tmp_path / "bundles",
+                ),
+                viewer=current_bundles_service.ViewerConfig(),
+                artifacts=SimpleNamespace(base_dir=artifacts_dir),
+            ),
+        )
+        monkeypatch.setattr(
+            current_bundles_service,
+            "default_library_products_path",
+            lambda path: path / "library_products.json",
+        )
+
+        assert current_bundles_service.resolve_current_bundles_library_path() == (
+            artifacts_dir / "library_products.json"
+        )
+
+    def test_resolve_current_bundles_bundle_types_normalizes_runtime_selection(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles={
+                    "base_dir": str(tmp_path / "bundles"),
+                    "bundle_types": ["Books", "games"],
+                }
+            ),
+        )
+
+        assert current_bundles_service.resolve_current_bundles_bundle_types() == [
+            "books",
+            "games",
+        ]
+
+    def test_load_current_bundles_report_uses_resolved_path_when_omitted(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        report_path = tmp_path / "bundle_overlap_report.json"
+        captured: dict[str, Path] = {}
+
+        monkeypatch.setattr(
+            current_bundles_service,
+            "resolve_current_bundles_report_path",
+            lambda: report_path,
+        )
+        monkeypatch.setattr(
+            current_bundles_service,
+            "load_bundle_overlap_report",
+            lambda path: captured.setdefault("path", path),
+        )
+
+        result = current_bundles_service.load_current_bundles_report()
+
+        assert result == report_path
+        assert captured["path"] == report_path
+
+    def test_build_current_bundles_report_uses_runtime_defaults(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        output_dir = tmp_path / "bundles"
+        library_path = tmp_path / "library_products.json"
+        captured: dict[str, object] = {}
+        workflow_result = SimpleNamespace(
+            report_json_path=output_dir / "bundle_overlap_report.json"
+        )
+
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles={
+                    "base_dir": str(output_dir),
+                    "library_path": str(library_path),
+                    "bundle_types": ["Books", "games"],
+                    "timeout_seconds": 45,
+                },
+                viewer=current_bundles_service.ViewerConfig(),
+                artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
+            ),
+        )
+
+        def capture_stub(**kwargs):
+            captured.update(kwargs)
+            return workflow_result
+
+        monkeypatch.setattr(
+            current_bundles_service,
+            "capture_and_report_current_bundles",
+            capture_stub,
+        )
+
+        result = current_bundles_service.build_current_bundles_report()
+
+        assert result is workflow_result
+        assert captured == {
+            "output_dir": output_dir,
+            "library_path": library_path,
+            "bundle_types": ["books", "games"],
+            "timeout_seconds": 45,
+        }
+
+    def test_build_current_bundles_report_honors_explicit_overrides(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        captured: dict[str, object] = {}
+        workflow_result = SimpleNamespace(
+            report_json_path=tmp_path / "explicit-report.json"
+        )
+
+        monkeypatch.setattr(
+            current_bundles_service,
+            "RuntimeSettings",
+            lambda: SimpleNamespace(
+                current_bundles=current_bundles_service.CurrentBundlesConfig(
+                    base_dir=tmp_path / "bundles",
+                    bundle_types=["books"],
+                    timeout_seconds=30,
+                ),
+                viewer=current_bundles_service.ViewerConfig(),
+                artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
+            ),
+        )
+        monkeypatch.setattr(
+            current_bundles_service,
+            "capture_and_report_current_bundles",
+            lambda **kwargs: captured.update(kwargs) or workflow_result,
+        )
+
+        result = current_bundles_service.build_current_bundles_report(
+            output_dir=tmp_path / "explicit-output",
+            library_path=tmp_path / "explicit-library.json",
+            bundle_types=["Software", "books"],
+            timeout_seconds=90,
+        )
+
+        assert result is workflow_result
+        assert captured == {
+            "output_dir": tmp_path / "explicit-output",
+            "library_path": tmp_path / "explicit-library.json",
+            "bundle_types": ["software", "books"],
+            "timeout_seconds": 90,
+        }

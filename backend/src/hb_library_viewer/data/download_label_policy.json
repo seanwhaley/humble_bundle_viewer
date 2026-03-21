@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "platform_families": {
+    "ebook": "ebook",
+    "audio": "audiobook",
+    "video": "video",
+    "windows": "software",
+    "mac": "software",
+    "linux": "software",
+    "android": "software"
+  },
+  "platform_labels": {
+    "ebook": "eBook",
+    "audio": "Audio",
+    "video": "Video",
+    "windows": "Windows",
+    "mac": "macOS",
+    "linux": "Linux",
+    "android": "Android",
+    "unknown": "Download"
+  },
+  "file_type_labels": {
+    "apk": "APK",
+    "azw3": "AZW3",
+    "cbr": "CBR",
+    "cbz": "CBZ",
+    "csv": "CSV",
+    "deb": "DEB",
+    "dmg": "DMG",
+    "epub": "EPUB",
+    "exe": "EXE",
+    "flac": "FLAC",
+    "gz": "TAR.GZ",
+    "html": "HTML",
+    "iso": "ISO",
+    "jpg": "JPG",
+    "jpeg": "JPEG",
+    "m4a": "M4A",
+    "m4b": "M4B",
+    "mobi": "MOBI",
+    "mp3": "MP3",
+    "mp4": "MP4",
+    "msi": "MSI",
+    "pdf": "PDF",
+    "png": "PNG",
+    "rpm": "RPM",
+    "sh": "SH",
+    "txt": "TXT",
+    "wav": "WAV",
+    "zip": "ZIP",
+    "file": "Download"
+  },
+  "name_labels": {
+    ".sh": "SH",
+    ".tar.gz": "TAR.GZ",
+    ".zip": "ZIP",
+    "32-bit .deb": "32-bit DEB",
+    "64-bit .deb": "64-bit DEB",
+    "apk": "APK",
+    "azw3": "AZW3",
+    "cbr": "CBR",
+    "cbz": "CBZ",
+    "download": "Download",
+    "epub": "EPUB",
+    "flac": "FLAC",
+    "installer": "Installer",
+    "m4a": "M4A",
+    "m4b": "M4B",
+    "mobi": "MOBI",
+    "mp3": "MP3",
+    "mp4": "MP4",
+    "pdf": "PDF",
+    "tar.gz": "TAR.GZ",
+    "wav": "WAV"
+  },
+  "software_name_overrides": {
+    ".sh": {
+      "package_label": "SH"
+    },
+    ".tar.gz": {
+      "package_label": "TAR.GZ"
+    },
+    ".zip": {
+      "package_label": "ZIP"
+    },
+    "32-bit .deb": {
+      "content_suffix": "32-bit",
+      "package_label": "DEB"
+    },
+    "64-bit .deb": {
+      "content_suffix": "64-bit",
+      "package_label": "DEB"
+    },
+    "apk": {
+      "package_label": "APK"
+    },
+    "download": {},
+    "installer": {
+      "package_label": "Installer"
+    },
+    "tar.gz": {
+      "package_label": "TAR.GZ"
+    }
+  },
+  "generic_name_tokens": [
+    "download"
+  ],
+  "generic_package_tokens": [
+    "download"
+  ]
+}

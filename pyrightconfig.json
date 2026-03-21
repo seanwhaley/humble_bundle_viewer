@@ -1,0 +1,13 @@
+{
+  "include": ["backend/src", "backend/tests", "tools", "backend/app"],
+  "exclude": [
+    "data/artifacts",
+    "htmlcov",
+    "site",
+    "frontend",
+    "**/__pycache__"
+  ],
+  "extraPaths": ["backend/src", "backend"],
+  "venvPath": ".",
+  "venv": ".venv"
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+- name: Security reporting guidance
+  url: https://github.com/seanwhaley/humble_bundle_viewer/blob/main/SECURITY.md
+  about: Please use the private reporting guidance for security-sensitive issues.
+- name: Documentation and setup guides
+  url: https://github.com/seanwhaley/humble_bundle_viewer/blob/main/docs/index.md
+  about: Check the docs site entry point before opening a setup or usage issue.

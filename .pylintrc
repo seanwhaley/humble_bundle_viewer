@@ -1,0 +1,15 @@
+[MAIN]
+ignore-paths=data/artifacts|htmlcov|site|frontend/dist|tools/logs|__pycache__|tests
+
+[FORMAT]
+max-line-length=100
+
+[TYPECHECK]
+extension-pkg-allow-list=pydantic
+
+[REPORTS]
+score=no
+
+[MESSAGES CONTROL]
+# Keep core rules on; disable selectively in code where intent is clear.
+disable=duplicate-code

@@ -1,0 +1,54 @@
+# Code ownership and review requirements
+
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# cspell:ignore seanwhaley github hb_library_viewer yaml mkdocs pytest copilot
+
+## Global code owners
+
+* @seanwhaley
+
+## Protect repository customizations and ownership rules
+
+/.github/ @seanwhaley
+
+## Configuration and security
+
+backend/.env.example @seanwhaley
+backend/config.yaml @seanwhaley
+backend/src/hb_library_viewer/config.py @seanwhaley
+
+## Agent documentation (changes require review)
+
+.github/AGENTS.md @seanwhaley
+.github/copilot-instructions.md @seanwhaley
+.github/agents/ @seanwhaley
+.github/instructions/ @seanwhaley
+.github/skills/ @seanwhaley
+.github/prompts/ @seanwhaley
+.github/ISSUE_TEMPLATE/ @seanwhaley
+.github/pull_request_template.md @seanwhaley
+
+## Documentation and public project metadata
+
+docs/ @seanwhaley
+mkdocs.yml @seanwhaley
+README.md @seanwhaley
+CONTRIBUTING.md @seanwhaley
+SECURITY.md @seanwhaley
+
+## Tests
+
+backend/tests/ @seanwhaley
+pytest.ini @seanwhaley
+
+## CI workflows
+
+.github/workflows/ @seanwhaley
+
+## Core application surfaces
+
+backend/app/ @seanwhaley
+backend/src/ @seanwhaley
+frontend/ @seanwhaley
+tools/ @seanwhaley

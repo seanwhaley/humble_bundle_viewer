@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hb-library-viewer"
+version = "1.0.0"
+description = "HB Library Viewer with Playwright capture, viewer portal, and typed configuration"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name = "Sean Whaley", email = "crazyandol@gmail.com" },
+]
+maintainers = [
+  { name = "Sean Whaley", email = "crazyandol@gmail.com" },
+]
+dependencies = [
+  "playwright>=1.40.0",
+  "pydantic>=2.5.0",
+  "pydantic-settings>=2.0.0",
+  "pyyaml>=6.0",
+  "requests>=2.31.0",
+  "python-dotenv>=1.0.0",
+  "rich>=13.7.0",
+  "typer>=0.12.0",
+  "tqdm>=4.66.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "backend/src"}
+
+[tool.setuptools.package-data]
+"hb_library_viewer.data" = ["*.json"]
+
+[tool.setuptools.packages.find]
+where = ["backend/src"]
