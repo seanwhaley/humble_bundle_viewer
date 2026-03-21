@@ -330,11 +330,9 @@ def generate_order_models(
 
         data_model_type = cast(Any, DataModelType)
         input_file_type = cast(Any, InputFileType)
-        output_model_type = getattr(
-            data_model_type,
-            "PydanticV2BaseModel",
-            data_model_type.PydanticBaseModel,
-        )
+        output_model_type = getattr(data_model_type, "PydanticV2BaseModel", None)
+        if output_model_type is None:
+            output_model_type = getattr(data_model_type, "PydanticBaseModel")
 
         generate(
             input_=sample_path,

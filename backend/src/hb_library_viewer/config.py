@@ -29,6 +29,8 @@ Load from specific file:
     60000
 """
 
+from __future__ import annotations
+
 # pylint: disable=no-member,too-many-lines
 
 import os

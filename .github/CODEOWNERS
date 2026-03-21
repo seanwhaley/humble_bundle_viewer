@@ -6,7 +6,8 @@
 
 ## Global code owners
 
-- @seanwhaley
+# Match every file in the repository by default.
+* @seanwhaley
 
 ## Protect repository customizations and ownership rules
 
