@@ -7,7 +7,6 @@ by reading cached HTML from ``subproduct_pages`` and writing a dedicated
 
 from __future__ import annotations
 
-import json
 import logging
 import time
 from pathlib import Path
@@ -23,7 +22,6 @@ from .models import (
 )
 from .store import (
     fallback_details_for_entry as _fallback_details_for_entry,
-    load_subproduct_page_metadata,
     metadata_path,
     now_iso as _now_iso,
     write_subproduct_page_metadata as _write_subproduct_page_metadata,

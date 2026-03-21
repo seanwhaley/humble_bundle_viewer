@@ -15,7 +15,7 @@ import time
 from collections import Counter
 from html import unescape
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import requests
@@ -44,7 +44,6 @@ from .models import (
     SiteSearchFetchResult,
     SubproductPageCacheSummary,
     SubproductPageDomainSummary,
-    SubproductPageManifest,
     SubproductPageManifestEntry,
     SubproductPageReference,
     SubproductPageRequestPolicy,

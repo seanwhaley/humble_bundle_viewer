@@ -96,7 +96,9 @@ class TestLibraryApiLoaderFlow:
 
         assert response.status_code == 200
         returned_subproduct = response.json()["products"][0]["subproducts"][0]
-        assert returned_subproduct["page_details"]["title"] == "Recovered Metadata Title"
+        assert (
+            returned_subproduct["page_details"]["title"] == "Recovered Metadata Title"
+        )
         assert returned_subproduct["page_details"]["authors"] == ["Octavia Butler"]
 
     def test_get_subproduct_page_serves_cached_html_next_to_selected_library(
@@ -110,7 +112,9 @@ class TestLibraryApiLoaderFlow:
         self._write_metadata_file(tmp_path, url=subproduct["url"])
         html_path = tmp_path / "subproduct_pages" / "pages" / "sample-book.html"
         html_path.parent.mkdir(parents=True, exist_ok=True)
-        html_path.write_text("<html><body>Integration Sample</body></html>", encoding="utf-8")
+        html_path.write_text(
+            "<html><body>Integration Sample</body></html>", encoding="utf-8"
+        )
         set_library_path(library_path)
         client = api_client_factory(library_api.router)
 

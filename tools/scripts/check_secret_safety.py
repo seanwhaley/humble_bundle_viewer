@@ -49,7 +49,7 @@ ASSIGNMENT_PATTERNS = {
 }
 
 
-@dataclass(slots=True)
+@dataclass
 class SafetyIssue:
     path: Path
     line_number: int

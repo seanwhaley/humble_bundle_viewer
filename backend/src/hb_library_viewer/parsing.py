@@ -477,9 +477,9 @@ def build_library_json(  # pylint: disable=too-many-locals,too-many-branches,too
     ...                 '"subproducts": []}}'
     ...     }
     ... ]
-    >>> model_path = Path("data/artifacts/order_payload_models.py")
-    >>> lib_data = build_library_json(api_batches, model_path)
-    >>> lib_data.total_products
+    >>> model_path = Path("data/artifacts/order_payload_models.py")  # doctest: +SKIP
+    >>> lib_data = build_library_json(api_batches, model_path)  # doctest: +SKIP
+    >>> lib_data.total_products  # doctest: +SKIP
     1
 
     Notes

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib
 from pathlib import Path
-from types import SimpleNamespace
 
 from bs4 import BeautifulSoup
 import pytest

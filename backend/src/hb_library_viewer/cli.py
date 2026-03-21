@@ -136,6 +136,30 @@ def _load_managed_sync_download_config():
     return RuntimeSettings()
 
 
+def _filter_downloads_by_file_types(downloads, file_types):
+    """Backward-compatible wrapper for download file-type filtering."""
+
+    from .download_selection import filter_downloads_by_file_types
+
+    return filter_downloads_by_file_types(downloads, file_types)
+
+
+def _select_downloads_by_size(downloads, size_policy):
+    """Backward-compatible wrapper for download size-policy selection."""
+
+    from .download_selection import select_downloads_by_size
+
+    return select_downloads_by_size(downloads, size_policy)
+
+
+def _download_file_type(download):
+    """Backward-compatible wrapper for effective download file-type lookup."""
+
+    from .download_selection import download_file_type
+
+    return download_file_type(download)
+
+
 def _format_bytes(value: int | None) -> str:
     if value is None:
         return "?"
