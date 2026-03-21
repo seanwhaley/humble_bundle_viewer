@@ -85,15 +85,10 @@ from .download import FileDownloader
 from .download_selection import (
     SIZE_POLICIES,
     collect_downloads as _collect_downloads,
-    download_file_type as _download_file_type,
-    filter_downloads_by_file_types as _filter_downloads_by_file_types,
-    filter_downloads_by_platforms as _filter_downloads_by_platforms,
     normalize_file_types as _normalize_file_types,
-    prepare_downloads_for_product as _prepare_downloads_for_product,
-    select_downloads_by_size as _select_downloads_by_size,
 )
 from .model_generation import find_missing_order_payload_paths
-from .parsing import LibraryData, build_library_json
+from .parsing import build_library_json
 from .runtime_status import estimate_eta_seconds, format_hms
 from .subproducts.metadata.service import (
     build_subproduct_metadata_analysis_report,

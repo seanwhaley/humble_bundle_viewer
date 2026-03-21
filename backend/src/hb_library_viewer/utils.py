@@ -184,7 +184,8 @@ def get_file_extension(format_str: str) -> str:
 
     Notes
     -----
-    Known formats: PDF, EPUB, MOBI, ZIP, M4B, MP3, AZW3, AWZ3
+    Known formats: PDF, EPUB, MOBI, ZIP, M4B, MP3, AZW3
+    Legacy typo "AWZ3" is normalized to ``azw3``.
     """
     if not format_str:
         return "bin"
@@ -198,7 +199,7 @@ def get_file_extension(format_str: str) -> str:
         "zip": "zip",
         "m4b": "m4b",
         "mp3": "mp3",
-        "awz3": "awz3",
+        "awz3": "azw3",
         "azw3": "azw3",
     }
 

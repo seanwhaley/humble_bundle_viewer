@@ -6,7 +6,7 @@ import json
 import logging
 import re
 from datetime import datetime
-from hashlib import sha1
+from hashlib import blake2s
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterable
 from urllib.parse import urlparse
@@ -180,7 +180,7 @@ def build_html_relative_path(
         )
     host_slug = slugify(parsed.netloc or "external")
     item_slug = slugify(name_hint, fallback="page")
-    digest = sha1(url.encode("utf-8")).hexdigest()[:12]
+    digest = blake2s(url.encode("utf-8"), digest_size=6).hexdigest()
     return Path("pages") / f"{host_slug}-{item_slug}-{digest}.html"
 
 

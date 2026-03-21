@@ -13,15 +13,14 @@ Features:
 
 Quick Start
 -----------
+Run the CLI from a shell:
+
+    python -m hb_library_viewer
+
+Or use the library directly:
+
 >>> from hb_library_viewer.config import Settings  # doctest: +SKIP
 >>> from hb_library_viewer.browser.manager import BrowserManager  # doctest: +SKIP
->>> from hb_library_viewer.cli import main  # doctest: +SKIP
->>>
->>> # Option 1: Use CLI entry point
->>> if __name__ == "__main__":  # doctest: +SKIP
-...     exit_code = main()
->>>
->>> # Option 2: Use library directly
 >>> config = Settings()  # doctest: +SKIP
 >>> with BrowserManager(config.browser, config.auth_cookie) as bm:  # doctest: +SKIP
 ...     result = bm.capture_library_page()

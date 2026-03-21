@@ -24,6 +24,26 @@ LibraryNotFoundError = importlib.import_module(
 class TestLibraryApi:
     """Verify library API HTTP contracts in isolation."""
 
+    @pytest.fixture(autouse=True)
+    def restrict_library_roots(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> Path:
+        allowed_root = (tmp_path / "allowed").resolve()
+        allowed_root.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr(
+            library_api,
+            "_library_allowed_roots",
+            lambda: (allowed_root,),
+        )
+        monkeypatch.setattr(
+            library_api,
+            "default_library_dir",
+            lambda: allowed_root,
+        )
+        return allowed_root
+
     @pytest.mark.parametrize(
         ("raw_path", "expected_suffix"),
         [
@@ -222,7 +242,7 @@ class TestLibraryApi:
         self,
         api_client_factory,
         sample_viewer_library_data,
-        tmp_path: Path,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         recorded: dict[str, Path] = {}
@@ -247,7 +267,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": str(tmp_path / "viewer-output"),
+                "output_path": str(restrict_library_roots / "viewer-output"),
                 "download_files": True,
                 "platforms": ["ebook"],
                 "file_types": ["pdf"],
@@ -259,12 +279,50 @@ class TestLibraryApi:
         assert response.json()["files_downloaded"] == 2
         assert (
             recorded["path"]
-            == (tmp_path / "viewer-output" / "library_products.json").resolve()
+            == (
+                restrict_library_roots / "viewer-output" / "library_products.json"
+            ).resolve()
         )
+
+    def test_run_library_rejects_paths_outside_allowed_roots(
+        self,
+        api_client_factory,
+    ) -> None:
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/run",
+            json={
+                "auth_cookie": "cookie-value-123",
+                "output_path": "C:/outside-root/library_products.json",
+            },
+        )
+
+        assert response.status_code == 400
+        assert "configured viewer or artifact directories" in response.json()["detail"]
+
+    def test_run_library_rejects_non_standard_json_filename(
+        self,
+        api_client_factory,
+        restrict_library_roots: Path,
+    ) -> None:
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/run",
+            json={
+                "auth_cookie": "cookie-value-123",
+                "output_path": str(restrict_library_roots / "custom-name.json"),
+            },
+        )
+
+        assert response.status_code == 400
+        assert "library_products.json" in response.json()["detail"]
 
     def test_run_library_maps_config_error_to_400(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         def raise_config(**_kwargs):
@@ -277,7 +335,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -295,6 +353,7 @@ class TestLibraryApi:
     def test_run_library_maps_auth_browser_error_to_401(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
         message: str,
     ) -> None:
@@ -308,7 +367,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -318,6 +377,7 @@ class TestLibraryApi:
     def test_run_library_maps_non_auth_browser_error_to_502(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
@@ -331,7 +391,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -341,6 +401,7 @@ class TestLibraryApi:
     def test_run_library_maps_value_error_to_400(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
@@ -354,7 +415,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -364,6 +425,7 @@ class TestLibraryApi:
     def test_run_library_maps_generic_humble_error_to_500(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         def raise_hb_error(**_kwargs):
@@ -376,7 +438,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -386,6 +448,7 @@ class TestLibraryApi:
     def test_run_library_maps_unexpected_error_to_500(
         self,
         api_client_factory,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(
@@ -399,7 +462,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "viewer-output",
+                "output_path": str(restrict_library_roots / "viewer-output"),
             },
         )
 
@@ -410,10 +473,10 @@ class TestLibraryApi:
         self,
         api_client_factory,
         sample_viewer_library_payload,
-        tmp_path: Path,
+        restrict_library_roots: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        library_path = tmp_path / "selected-library.json"
+        library_path = restrict_library_roots / "library_products.json"
         library_path.write_text(
             json.dumps(sample_viewer_library_payload), encoding="utf-8"
         )
@@ -437,13 +500,15 @@ class TestLibraryApi:
     def test_select_library_returns_404_for_missing_file(
         self,
         api_client_factory,
-        tmp_path: Path,
+        restrict_library_roots: Path,
     ) -> None:
         client = api_client_factory(library_api.router)
 
         response = client.post(
             "/api/library/select",
-            json={"library_path": str(tmp_path / "missing.json")},
+            json={
+                "library_path": str(restrict_library_roots / "library_products.json")
+            },
         )
 
         assert response.status_code == 404
@@ -451,9 +516,9 @@ class TestLibraryApi:
     def test_select_library_returns_400_for_invalid_library_payload(
         self,
         api_client_factory,
-        tmp_path: Path,
+        restrict_library_roots: Path,
     ) -> None:
-        library_path = tmp_path / "invalid-library.json"
+        library_path = restrict_library_roots / "library_products.json"
         library_path.write_text("{}", encoding="utf-8")
         client = api_client_factory(library_api.router)
 
@@ -463,3 +528,20 @@ class TestLibraryApi:
         )
 
         assert response.status_code == 400
+
+    def test_select_library_rejects_paths_outside_allowed_roots(
+        self,
+        api_client_factory,
+        tmp_path: Path,
+    ) -> None:
+        library_path = tmp_path / "library_products.json"
+        library_path.write_text("{}", encoding="utf-8")
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/select",
+            json={"library_path": str(library_path)},
+        )
+
+        assert response.status_code == 400
+        assert "configured viewer or artifact directories" in response.json()["detail"]

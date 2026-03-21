@@ -20,10 +20,76 @@ from app.services.library_loader import (
     set_library_path,
 )
 from app.services.library_runner import run_library_capture
+from hb_library_viewer.config import RuntimeSettings
 from hb_library_viewer.utils import BrowserError, ConfigError, HumbleBundleError
 
 router = APIRouter(prefix="/api", tags=["library"])
 logger = logging.getLogger(__name__)
+_LIBRARY_FILENAME = "library_products.json"
+
+
+def _is_within_root(candidate: Path, root: Path) -> bool:
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def _library_allowed_roots() -> tuple[Path, ...]:
+    """Return the configured directories allowed for library read/write operations."""
+
+    runtime_settings = RuntimeSettings()
+    viewer_config = runtime_settings.viewer
+    artifacts_config = runtime_settings.artifacts
+
+    candidates = [
+        getattr(artifacts_config, "base_dir", None),
+        default_library_dir(),
+        getattr(viewer_config, "default_library_dir", None),
+    ]
+    configured_library_path = getattr(viewer_config, "library_path", None)
+    if configured_library_path is not None:
+        candidates.append(configured_library_path.parent)
+
+    roots: list[Path] = []
+    seen: set[Path] = set()
+    for candidate in candidates:
+        if candidate is None:
+            continue
+        resolved = Path(candidate).expanduser().resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        roots.append(resolved)
+
+    return tuple(roots)
+
+
+def _ensure_allowed_library_path(path: Path) -> Path:
+    """Reject library file paths outside configured viewer/artifact roots."""
+
+    resolved = path.expanduser().resolve()
+    if resolved.name != _LIBRARY_FILENAME:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Library path must target library_products.json or a containing folder."
+            ),
+        )
+
+    allowed_roots = _library_allowed_roots()
+    if any(_is_within_root(resolved, root) for root in allowed_roots):
+        return resolved
+
+    allowed_display = ", ".join(str(root) for root in allowed_roots)
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            "Library paths must stay inside configured viewer or artifact directories. "
+            f"Allowed roots: {allowed_display}"
+        ),
+    )
 
 
 def _resolve_subproduct_page_path(raw_path: str) -> Path:
@@ -157,7 +223,9 @@ def _normalize_output_path(raw_path: str) -> Path:
 def run_library(request: RunLibraryRequest) -> RunLibraryResponse:
     """Capture library data using a provided session cookie."""
     try:
-        output_path = _normalize_output_path(request.output_path)
+        output_path = _ensure_allowed_library_path(
+            _normalize_output_path(request.output_path)
+        )
         result = run_library_capture(
             auth_cookie=request.auth_cookie,
             output_path=output_path,
@@ -197,6 +265,8 @@ def run_library(request: RunLibraryRequest) -> RunLibraryResponse:
             status_code=502,
             detail="Browser capture failed. Check server logs.",
         ) from exc
+    except HTTPException:
+        raise
     except HumbleBundleError as exc:
         logger.warning("Library run failed: %s", exc)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -223,7 +293,9 @@ class SelectLibraryResponse(BaseModel):
 @router.post("/library/select", response_model=SelectLibraryResponse)
 def select_library(request: SelectLibraryRequest) -> SelectLibraryResponse:
     """Set the active library JSON file without running a capture."""
-    output_path = _normalize_output_path(request.library_path)
+    output_path = _ensure_allowed_library_path(
+        _normalize_output_path(request.library_path)
+    )
     if not output_path.exists():
         raise HTTPException(
             status_code=404,

@@ -130,12 +130,17 @@ def _lookup_file_type_label(
     return _fallback_label(file_type)
 
 
+@lru_cache(maxsize=None)
+def _generic_name_tokens(values: tuple[str, ...]) -> frozenset[str]:
+    return frozenset(_normalize_key(value) for value in values if _normalize_key(value))
+
+
 def _is_generic_name(policy: DownloadLabelPolicy, name: str | None) -> bool:
     normalized = _normalize_key(name)
     if not normalized:
         return True
     words = set(normalized.replace("/", " ").replace("-", " ").split())
-    tokens = {_normalize_key(value) for value in policy.generic_name_tokens}
+    tokens = _generic_name_tokens(tuple(policy.generic_name_tokens))
     return normalized in tokens or bool(words & tokens)
 
 
@@ -162,7 +167,6 @@ def derive_download_labels(download: Download) -> DerivedDownloadLabels:
     policy = load_download_label_policy()
     family = _family_for_platform(policy, download.platform)
     platform_label = _platform_label(policy, download.platform)
-    name_label = _lookup_name_label(policy, download.name)
     file_type_label = _lookup_file_type_label(policy, download.file_type)
     meaningful_name = _meaningful_name_label(policy, download.name)
     meaningful_file_type = _meaningful_package_label(file_type_label)

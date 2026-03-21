@@ -22,6 +22,18 @@ class TestLibraryApiLoaderFlow:
         yield
         clear_library_path_override()
 
+    @pytest.fixture(autouse=True)
+    def allow_tmp_library_root(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(
+            library_api,
+            "_library_allowed_roots",
+            lambda: (tmp_path.resolve(),),
+        )
+
     def _write_library_file(
         self,
         tmp_path: Path,

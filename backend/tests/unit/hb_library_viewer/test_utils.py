@@ -145,7 +145,7 @@ class TestGetFileExtension:
             ("M4B (Audiobook)", "m4b"),
             ("MP3", "mp3"),
             ("AZW3", "azw3"),
-            ("AWZ3", "awz3"),
+            ("AWZ3", "azw3"),
             ("", "bin"),
             ("UNKNOWN_FORMAT", "bin"),
             ("PDF (Very High Quality)", "pdf"),
