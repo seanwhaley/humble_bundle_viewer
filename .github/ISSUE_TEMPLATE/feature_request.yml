@@ -1,0 +1,80 @@
+name: Feature request
+description: Suggest an improvement that fits the current local-first project scope.
+title: "[Feature]: "
+labels:
+- enhancement
+- triage
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for suggesting an improvement to **HB Library Viewer**.
+
+      Please focus on concrete user workflows and privacy-aware local usage.
+- type: dropdown
+  id: surface
+  attributes:
+    label: Impacted surface
+    options:
+    - CLI
+    - Backend API
+    - Frontend viewer
+    - Documentation
+    - GitHub templates or workflows
+    - Cross-cutting
+  validations:
+    required: true
+- type: textarea
+  id: workflow-gap
+  attributes:
+    label: Workflow gap
+    description: What user problem, maintenance problem, or workflow gap should this change solve?
+    placeholder: Describe the workflow pain point.
+  validations:
+    required: true
+- type: textarea
+  id: proposal
+  attributes:
+    label: Proposed change
+    description: Describe the behavior or capability you want.
+  validations:
+    required: true
+- type: dropdown
+  id: config-impact
+  attributes:
+    label: Configuration impact
+    description: Does this request likely affect configuration or environment setup?
+    options:
+    - No configuration change expected
+    - New configuration option may be needed
+    - Existing configuration behavior may need to change
+    - Unsure
+  validations:
+    required: true
+- type: textarea
+  id: fit
+  attributes:
+    label: Why this fits the project
+    description: Explain how this supports local-first capture, viewing, downloads, sync, or maintenance workflows.
+  validations:
+    required: true
+- type: textarea
+  id: validation
+  attributes:
+    label: Validation, docs, or test expectations
+    description: Note any tests, docs, or migration concerns you already expect.
+    placeholder: "Example: update CLI docs and add backend unit coverage"
+- type: textarea
+  id: alternatives
+  attributes:
+    label: Alternatives considered
+    description: List any alternatives, workarounds, or rejected ideas.
+- type: checkboxes
+  id: safety
+  attributes:
+    label: Privacy and scope checks
+    options:
+    - label: This request does not require sharing real cookies or signed URLs publicly.
+      required: true
+    - label: This request still fits the project's local-first, non-hosted scope.
+      required: true

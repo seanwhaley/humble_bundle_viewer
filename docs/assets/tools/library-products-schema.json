@@ -1,0 +1,766 @@
+{
+  "$defs": {
+    "Download": {
+      "additionalProperties": true,
+      "description": "Single download file (one platform and format).\n\nRepresents one downloadable file in one specific format (e.g., PDF,\nEPUB, M4B). A product may have multiple downloads for different\nplatforms or formats.\n\nAttributes\n----------\nplatform : str\n    Platform type (e.g., 'ebook', 'audio', 'video')\nname : str\n    Human-readable file name\nurl : str\n    Full download URL (HTTP or HTTPS)\nsize_bytes : int\n    File size in bytes\nchecksums : dict\n    File integrity hashes (keys: 'md5', 'sha1', etc.)\n\nExamples\n--------\n>>> download = Download(\n...     platform='ebook',\n...     name='My_Book.pdf',\n...     url='https://example.com/file.pdf',\n...     size_bytes=1024000,\n...     checksums={'md5': 'abc123', 'sha1': 'def456'}\n... )\n>>> download.platform\n'ebook'\n\n>>> download.model_dump_json()  # doctest: +SKIP\n'{...}'",
+      "properties": {
+        "platform": {
+          "description": "Platform type (e.g., 'ebook', 'audio')",
+          "title": "Platform",
+          "type": "string"
+        },
+        "name": {
+          "description": "File name",
+          "title": "Name",
+          "type": "string"
+        },
+        "url": {
+          "description": "Full download URL",
+          "title": "Url",
+          "type": "string"
+        },
+        "size_bytes": {
+          "default": 0,
+          "description": "File size in bytes",
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "checksums": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Hash checksums (md5, sha1, etc.)",
+          "title": "Checksums",
+          "type": "object"
+        },
+        "file_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "File extension inferred from name or URL (e.g., pdf, epub)",
+          "title": "File Type"
+        },
+        "display_category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Viewer-facing download family (ebook, audiobook, video, software, generic)",
+          "title": "Display Category"
+        },
+        "content_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Primary user-facing content label such as EPUB, MP3, or Linux 64-bit",
+          "title": "Content Label"
+        },
+        "package_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Normalized package or delivery label such as ZIP, DEB, DMG, or Installer",
+          "title": "Package Label"
+        },
+        "display_label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Unique viewer-facing label to show in route actions and filters",
+          "title": "Display Label"
+        },
+        "display_detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional secondary detail for the viewer display label",
+          "title": "Display Detail"
+        }
+      },
+      "required": ["platform", "name", "url"],
+      "title": "Download",
+      "type": "object"
+    },
+    "KeyEntry": {
+      "additionalProperties": true,
+      "description": "Third-party key metadata entry.\n\nRepresents a redeemable key (Steam, Epic, etc.) or entitlement\nfor products that do not expose downloadable files.",
+      "properties": {
+        "key_type": {
+          "description": "Key platform type (steam, epic, etc.)",
+          "title": "Key Type",
+          "type": "string"
+        },
+        "key_type_human_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Human-friendly key type",
+          "title": "Key Type Human Name"
+        },
+        "human_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Display name",
+          "title": "Human Name"
+        },
+        "machine_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Machine name",
+          "title": "Machine Name"
+        },
+        "gamekey": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Associated gamekey",
+          "title": "Gamekey"
+        },
+        "keyindex": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Key index",
+          "title": "Keyindex"
+        },
+        "redeemed_key_val": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Revealed key value (when redeemed)",
+          "title": "Redeemed Key Val"
+        },
+        "sold_out": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Sold out flag",
+          "title": "Sold Out"
+        },
+        "steam_app_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Steam App ID when available",
+          "title": "Steam App Id"
+        },
+        "num_days_until_expired": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Days until expiration when provided",
+          "title": "Num Days Until Expired"
+        },
+        "class": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Grouping or CSS class",
+          "title": "Class"
+        },
+        "is_expired": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Expiration status",
+          "title": "Is Expired"
+        },
+        "is_gift": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Gift flag",
+          "title": "Is Gift"
+        },
+        "direct_redeem": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Direct redeem flag",
+          "title": "Direct Redeem"
+        },
+        "visible": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Visibility flag",
+          "title": "Visible"
+        }
+      },
+      "required": ["key_type"],
+      "title": "KeyEntry",
+      "type": "object"
+    },
+    "Payee": {
+      "additionalProperties": true,
+      "description": "Publisher/payee metadata for a subproduct.",
+      "properties": {
+        "human_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Publisher name",
+          "title": "Human Name"
+        },
+        "machine_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Publisher slug",
+          "title": "Machine Name"
+        }
+      },
+      "title": "Payee",
+      "type": "object"
+    },
+    "Product": {
+      "additionalProperties": true,
+      "description": "One product in the Humble Bundle library.\n\nRepresents a single purchase or bundle with all its downloadable\nfiles across different platforms and formats.\n\nAttributes\n----------\ngamekey : str\n    Unique product identifier\nproduct_name : str\n    Human-readable product name\nmachine_name : str\n    Slug/identifier for the product\ncategory : str\n    Product category (ebook, audiobook, video, etc.)\ncreated_at : str\n    ISO 8601 timestamp of purchase\nsubproducts : list[Subproduct]\n    Normalized subproducts for bundles\ndownloads : list[Download]\n    List of downloadable files\nkeys : list[KeyEntry]\n    List of redeemable keys (when present)\namount_spent : float\n    Amount spent on this product\n\nExamples\n--------\n>>> product = Product(\n...     gamekey='abc123',\n...     product_name='My Book',\n...     machine_name='my_book',\n...     category='ebook',\n...     downloads=[],\n...     amount_spent=9.99\n... )\n>>> product.gamekey\n'abc123'\n\n>>> len(product.downloads)\n0",
+      "properties": {
+        "gamekey": {
+          "description": "Unique product key",
+          "title": "Gamekey",
+          "type": "string"
+        },
+        "product_name": {
+          "description": "Human-readable name",
+          "title": "Product Name",
+          "type": "string"
+        },
+        "machine_name": {
+          "description": "Slug/identifier",
+          "title": "Machine Name",
+          "type": "string"
+        },
+        "category": {
+          "description": "Product category",
+          "title": "Category",
+          "type": "string"
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "ISO 8601 timestamp of purchase",
+          "title": "Created At"
+        },
+        "subproducts": {
+          "description": "Normalized subproducts",
+          "items": {
+            "$ref": "#/$defs/Subproduct"
+          },
+          "title": "Subproducts",
+          "type": "array"
+        },
+        "downloads": {
+          "description": "List of downloadable files",
+          "items": {
+            "$ref": "#/$defs/Download"
+          },
+          "title": "Downloads",
+          "type": "array"
+        },
+        "keys": {
+          "description": "List of redeemable keys",
+          "items": {
+            "$ref": "#/$defs/KeyEntry"
+          },
+          "title": "Keys",
+          "type": "array"
+        },
+        "amount_spent": {
+          "default": 0.0,
+          "description": "Amount spent",
+          "minimum": 0.0,
+          "title": "Amount Spent",
+          "type": "number"
+        }
+      },
+      "required": ["gamekey", "product_name", "machine_name", "category"],
+      "title": "Product",
+      "type": "object"
+    },
+    "Subproduct": {
+      "additionalProperties": true,
+      "description": "Normalized subproduct (bundle item) with downloads and keys.",
+      "properties": {
+        "human_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Display name",
+          "title": "Human Name"
+        },
+        "machine_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Machine name",
+          "title": "Machine Name"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "External info URL for this subproduct when provided",
+          "title": "Url"
+        },
+        "downloads": {
+          "description": "Downloads for this subproduct",
+          "items": {
+            "$ref": "#/$defs/Download"
+          },
+          "title": "Downloads",
+          "type": "array"
+        },
+        "keys": {
+          "description": "Keys scoped to this subproduct",
+          "items": {
+            "$ref": "#/$defs/KeyEntry"
+          },
+          "title": "Keys",
+          "type": "array"
+        },
+        "payee": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Payee"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Publisher/payee info"
+        },
+        "page_details": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SubproductPageDetails"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Structured metadata extracted from a cached external info page"
+        }
+      },
+      "title": "Subproduct",
+      "type": "object"
+    },
+    "SubproductPageDetails": {
+      "description": "Structured metadata extracted from a cached external subproduct page.",
+      "properties": {
+        "url": {
+          "title": "Url",
+          "type": "string"
+        },
+        "final_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Final Url"
+        },
+        "replacement_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Replacement Url"
+        },
+        "page_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Title"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "subtitle": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Subtitle"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "authors": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Authors",
+          "type": "array"
+        },
+        "publisher": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publisher"
+        },
+        "series": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Series"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "image_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Image Url"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "isbns": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Isbns",
+          "type": "array"
+        },
+        "source_host": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Host"
+        },
+        "status_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status Code"
+        },
+        "content_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Type"
+        },
+        "html_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Html Path"
+        },
+        "recovery_method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recovery Method"
+        },
+        "extracted_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Extracted At"
+        }
+      },
+      "required": ["url"],
+      "title": "SubproductPageDetails",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "description": "Complete Humble Bundle library data.\n\nAggregates all products in the user's library along with metadata\nabout when the data was captured.\n\nAttributes\n----------\nproducts : list[Product]\n    All products in the library\ntotal_products : int\n    Number of products\ncaptured_at : str\n    ISO 8601 timestamp of capture\n\nExamples\n--------\n>>> lib_data = LibraryData(\n...     products=[],\n...     total_products=0,\n...     captured_at='2026-01-30T12:00:00'\n... )\n>>> lib_data.total_products\n0\n\n>>> lib_data.model_dump_json()  # doctest: +SKIP\n'{...}'\n\n>>> json_str = lib_data.model_dump_json(indent=2)  # doctest: +SKIP",
+  "properties": {
+    "products": {
+      "description": "All products",
+      "items": {
+        "$ref": "#/$defs/Product"
+      },
+      "title": "Products",
+      "type": "array"
+    },
+    "total_products": {
+      "default": 0,
+      "description": "Total product count",
+      "minimum": 0,
+      "title": "Total Products",
+      "type": "integer"
+    },
+    "captured_at": {
+      "description": "ISO 8601 timestamp when data was captured",
+      "title": "Captured At",
+      "type": "string"
+    }
+  },
+  "required": ["captured_at"],
+  "title": "LibraryData",
+  "type": "object"
+}

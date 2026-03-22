@@ -1,0 +1,306 @@
+# HB Library Viewer Configuration
+# Non-secret settings (backend/config.yaml)
+# Secret settings go in .env file (NEVER commit to git)
+
+app_name: "HB Library Viewer"
+version: "1.0.0"
+
+# Backend runtime settings
+server:
+  # Origins allowed to access the local viewer backend in browser-based workflows.
+  # Use JSON-style env overrides such as:
+  # HUMBLE_SERVER__CORS_ALLOWED_ORIGINS='["http://localhost:5173"]'
+  cors_allowed_origins:
+  - "http://localhost:5173"
+  - "http://127.0.0.1:5173"
+
+# Browser automation settings
+browser:
+  # Run browser without visible window
+  headless: true
+
+  # Page load timeout in milliseconds
+  # Increase if pages take longer to load
+  timeout_ms: 60000
+  # Optional custom user agent
+  # user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+
+  # Library page capture timing controls
+  capture:
+    # Timeout for the final document load wait after initial navigation
+    load_timeout_ms: 30000
+
+    # Timeout for waiting until the page becomes network idle
+    network_idle_timeout_ms: 30000
+
+    # Seconds to wait after load-state checks so in-page JavaScript can settle
+    javascript_settle_seconds: 5
+
+    # Seconds to wait after scrolling to trigger lazy-loaded content
+    scroll_settle_seconds: 2
+
+    # Maximum seconds to wait for Humble API responses to appear
+    api_wait_timeout_seconds: 45
+
+    # Polling interval while waiting for API responses
+    api_poll_interval_seconds: 3
+
+    # Progress log cadence while waiting for API responses
+    api_progress_log_interval_seconds: 15
+
+    # Extra wait after the first API batch appears
+    post_first_batch_delay_seconds: 8
+
+    # Final grace period for additional API batches after capture succeeds
+    post_capture_delay_seconds: 10
+  # Proxy configuration (optional)
+  # Leave enabled: false to disable
+proxy:
+  enabled: false
+  # url: "http://proxy.example.com:8080"
+  # username: "proxy_user"
+  # password: "proxy_password"  # Use HUMBLE_PROXY__PASSWORD in .env
+
+  # Download and file handling
+download:
+  # Directory to save downloaded files
+  # Can use ~ for home directory, relative paths, or absolute paths
+  base_folder: "./Humble_Library_Downloads"
+
+  # Maximum retry attempts for failed downloads
+  max_retries: 3
+
+  # Delay between retry attempts (seconds)
+  retry_delay_seconds: 2
+
+  # Minimum delay between HTTP requests (seconds)
+  # Set to 0.5 or higher to respect server resources
+  # NEVER set below 0.5
+  rate_limit_delay: 0.5
+
+  # Prompt before downloading files
+  prompt_before_download: true
+
+  # Force download decision for individual files
+  # true = always download, false = always skip, null = prompt
+  force_individual_file_downloads: null
+
+  # Seconds to wait for prompt response before skipping downloads
+  prompt_timeout_seconds: 30
+
+  # Timeout for streaming download requests (CLI and viewer proxying)
+  stream_timeout_seconds: 300
+
+  # Timeout for opening streamed download connections before the body begins.
+  connect_timeout_seconds: 10
+
+  # Maximum number of browser-managed local-sync files to process concurrently.
+  # Keep this modest so we improve throughput without overwhelming upstream hosts.
+  managed_sync_max_parallel_downloads: 3
+
+  # Maximum number of managed-sync history entries to keep in
+  # .hb-library-viewer/sync-manifest.json.
+  managed_sync_manifest_history_entries: 5000
+
+# API configuration
+api:
+  # Humble Bundle base site URL used for API retries, library capture, and
+  # expansion of relative download URLs.
+  endpoint: "https://www.humblebundle.com"
+
+  # API request timeout (seconds)
+  timeout: 30
+
+  # Maximum API batch responses to capture
+  max_response_batches: 7
+
+  # Retries per missing gamekey when validating completeness
+  per_key_max_retries: 2
+
+# Logging configuration
+logging:
+  # Log level: debug, info, warning, error
+  level: "info"
+
+  # Log message format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Artifact output settings
+artifacts:
+  # Base directory for artifacts (API batches, captures, models).
+  # Relative paths are resolved from the repository root.
+  base_dir: "./data/artifacts"
+
+  # Save raw /api/v1/orders batch responses
+  save_api_batches: true
+
+  # Save raw captured responses (library HTML + API responses)
+  # Disabled by default to avoid duplicate raw data
+  save_captured_responses: false
+
+  # Save library HTML only when capture fails (no API responses or missing batches)
+  save_html_on_failure: true
+
+  # Save extracted gamekeys to artifacts/gamekeys.json
+  save_gamekeys: false
+
+  # Automatically rebuild order payload models when new fields are detected
+  auto_rebuild_order_models: true
+
+# Viewer UI settings
+viewer:
+  # Hours before expiry to warn about download links
+  link_expiry_warning_hours: 24
+
+  # Treat revealed keys as already redeemed/handled in viewer triage by default.
+  # Set false to keep revealed and unrevealed keys together in key follow-up views.
+  assume_revealed_keys_redeemed: true
+
+  # Keep expired rows visible as historical/reference items even when Humble exposed
+  # the key value before expiry.
+  ignore_revealed_status_for_expired_keys: true
+
+  # Leave revealed, not-yet-expired keys out of open-window triage by default.
+  # Set true if you want revealed unexpired keys to stay in those review queues.
+  ignore_revealed_status_for_unexpired_keys: false
+  # Optional default folder shown by the viewer setup flow when saving/selecting
+  # library_products.json. When omitted, the viewer falls back to ~/Downloads.
+  # default_library_dir: "~/Downloads"
+
+  # Optional default library file used by the viewer backend when no runtime
+  # selection has been made yet.
+  # library_path: "./data/artifacts/library_products.json"
+
+  # Current bundle overlap analysis settings
+current_bundles:
+  # Directory for current bundle overlap artifacts (saved bundle pages + reports)
+  base_dir: "./data/artifacts/current_bundles"
+
+  # Optional default library file used for bundle overlap analysis.
+  # When omitted, the CLI and viewer fall back to viewer.library_path and then
+  # artifacts.base_dir/library_products.json.
+  # library_path: "./data/artifacts/library_products.json"
+
+  # Bundle categories to analyze by default.
+  bundle_types:
+  - "games"
+  - "books"
+  - "software"
+  # Timeout for current bundle index/page requests.
+  timeout_seconds: 30
+
+# Current Humble Choice overlap analysis settings
+current_choice:
+  # Directory for current Humble Choice overlap artifacts.
+  base_dir: "./data/artifacts/current_choice"
+
+  # Optional default library file used for Humble Choice overlap analysis.
+  # When omitted, the CLI and viewer fall back to viewer.library_path and then
+  # artifacts.base_dir/library_products.json.
+  # library_path: "./data/artifacts/library_products.json"
+
+  # Timeout for current Humble Choice page requests.
+  timeout_seconds: 30
+  # External subproduct info page cache settings
+subproduct_pages:
+  # Directory for cached external publisher/product pages and the cache manifest.
+  # Relative paths are resolved from the repository root.
+  base_dir: "./data/artifacts/subproduct_pages"
+
+  # Re-download cached pages on each run
+  # false = reuse cached HTML when available
+  redownload_existing: false
+
+  # Timeout for each external page request (seconds)
+  request_timeout_seconds: 30
+
+  # Connect timeout for each external page request (seconds)
+  # Keep this lower than the full request timeout so dead hosts fail faster
+  connect_timeout_seconds: 10
+
+  # Minimum delay between external page requests (seconds)
+  # Set to 0.5 or higher to respect publisher sites
+  rate_limit_delay: 0.5
+
+  # Process URLs grouped by domain, with up to this many domains handled concurrently.
+  # Each individual domain is still fetched serially and rate-limited.
+  domain_workers: 4
+
+  # Timeout for fast DNS/TCP/TLS domain diagnostics when an unresolved transport
+  # failure suggests the whole domain may be unavailable for the current run.
+  domain_check_timeout_seconds: 3
+
+  # Abort a run after this many consecutive non-HTTP page fetch failures.
+  # HTTP responses like 401/403/404 are still recorded in the manifest, but
+  # they do not count toward this early-stop guardrail. When domain_workers is
+  # greater than 1, this guardrail is evaluated within each active domain worker.
+  # Set to null to continue through all failures
+  max_failures: 5
+
+  # Retry these transient HTTP status codes before recording a failure
+  retry_statuses: [ 429, 500, 502, 503, 504, 522 ]
+
+  # Backoff schedule (seconds) for retryable HTTP and transport failures
+  # Each value adds one more retry attempt
+  retry_backoff_seconds: [ 5, 15, 30 ]
+
+  # Honor Retry-After headers for retryable HTTP responses when present
+  respect_retry_after: true
+
+  # Cap Retry-After waits so a single host cannot stall the run forever
+  max_retry_after_seconds: 120
+
+  # Retry transient transport failures like timeouts and connection resets
+  retry_transport_failures: true
+
+  # Log cache progress after this many processed URLs during long runs.
+  progress_log_every: 25
+
+  # Advanced site-search scoring heuristics for replacement-page discovery.
+  search_scoring:
+    # Score used when all query tokens are present in a candidate title.
+    query_subset_score: 0.96
+
+    # Score used when all candidate-title tokens are present in the query.
+    candidate_subset_score: 0.93
+
+    # Bonus applied when the candidate's media format matches the expected one.
+    matching_format_bonus: 0.05
+
+    # Penalty applied when the candidate's media format conflicts.
+    mismatched_format_penalty: 0.25
+
+  # Optional per-domain overrides for retry pacing and retry behavior
+  host_policies:
+    www.wiley.com:
+      # Wiley often rate-limits bursts, so give it more breathing room than the global default
+      rate_limit_delay: 2.0
+      retry_backoff_seconds: [ 10, 30, 60 ]
+    www.simonandschuster.com:
+      # This host often returns 403 to plain requests but may render in a real browser
+      browser_fallback: true
+      browser_timeout_ms: 45000
+    www.packtpub.com:
+      # Older Packt title URLs often 404 after catalog migrations, but the current search index
+      # usually exposes a canonical /product/ replacement for exact title matches.
+      search_on_404: true
+      min_match_confidence: 0.92
+    www.blacklibrary.com:
+      # Legacy Black Library title pages move between sections; search is reliable enough when
+      # we insist on a high-confidence title match and preserve audio-vs-ebook format hints.
+      search_on_404: true
+      min_match_confidence: 0.9
+  # Optional plain-text log path for cache runs.
+  # Leave commented to use <base_dir>/cache_run.log automatically.
+  # log_path: "./data/artifacts/subproduct_pages/cache_run.log"
+  # Optional custom user agent for external page requests
+  # user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+  # Target platforms to download
+  # Options: ebook, audio, video, music, application, games, ebook_bundle, games_bundle
+platforms:
+- "ebook"
+- "audio"
+
+# - "video"
+# - "music"

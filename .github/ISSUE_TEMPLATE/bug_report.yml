@@ -1,0 +1,106 @@
+name: Bug report
+description: Report a reproducible defect in the CLI, backend, frontend viewer, docs, or GitHub automation.
+title: "[Bug]: "
+labels:
+- bug
+- triage
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for helping improve **HB Library Viewer**.
+
+      Please redact cookies, signed download URLs, private artifacts, and other secrets before submitting.
+- type: checkboxes
+  id: existing-issue
+  attributes:
+    label: Existing issue check
+    description: Help us keep the tracker tidy.
+    options:
+    - label: I searched the existing issues before filing this report.
+      required: true
+- type: dropdown
+  id: surface
+  attributes:
+    label: Affected surface
+    description: Which part of the project appears to be involved?
+    options:
+    - CLI
+    - Backend API
+    - Frontend viewer
+    - Documentation
+    - GitHub templates or workflows
+    - Unsure
+  validations:
+    required: true
+- type: input
+  id: command-or-route
+  attributes:
+    label: Affected command or route
+    description: Include the CLI command, API route, or viewer route if known.
+    placeholder: "Example: python -m hb_library_viewer extract-subproduct-metadata or /api/library/run"
+- type: textarea
+  id: observed
+  attributes:
+    label: Observed behavior
+    description: What happened?
+    placeholder: Describe the failure, regression, or unexpected behavior.
+  validations:
+    required: true
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behavior
+    description: What did you expect to happen instead?
+  validations:
+    required: true
+- type: textarea
+  id: steps
+  attributes:
+    label: Reproduction steps
+    description: Provide a minimal, sanitized reproduction.
+    value: |
+      1.
+      2.
+      3.
+    render: bash
+  validations:
+    required: true
+- type: textarea
+  id: environment
+  attributes:
+    label: Environment details
+    description: Share relevant local environment details.
+    value: |
+      - OS:
+      - Python:
+      - Browser (if viewer-related):
+      - Command or page context:
+    render: markdown
+  validations:
+    required: true
+- type: textarea
+  id: artifacts
+  attributes:
+    label: Artifact paths involved
+    description: List any sanitized local artifact or log paths involved.
+    placeholder: "Example: data/artifacts/subproduct_pages/cache_run.log"
+    render: text
+- type: checkboxes
+  id: privacy-checks
+  attributes:
+    label: Privacy and sanitization checks
+    description: Confirm that the report is safe to share publicly.
+    options:
+    - label: I removed or redacted cookies, signed URLs, and other secrets.
+      required: true
+    - label: I did not attach private artifacts unless they were sanitized first.
+      required: true
+- type: upload
+  id: attachments
+  attributes:
+    label: Optional sanitized files
+    description: Attach screenshots, text logs, or small sanitized artifacts if they help.
+  validations:
+    required: false
+    accept: ".png,.jpg,.jpeg,.webp,.log,.txt,.json,.md,.zip"

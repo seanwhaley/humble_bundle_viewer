@@ -1,0 +1,173 @@
+name: Tests and validation
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -e .
+
+      - name: Check for committed secrets and env files
+        run: python tools/scripts/check_secret_safety.py
+
+      - name: Validate config schema
+        run: |
+          python -c "import sys; sys.path.insert(0, 'backend/src'); from hb_library_viewer.config import Settings; Settings(); print('Config schema valid')"
+        env:
+          HUMBLE_AUTH_COOKIE: test_token_for_validation
+
+      - name: Run unit tests
+        run: pytest backend/tests/unit/ -v --tb=short --no-cov
+
+      - name: Run integration tests
+        run: pytest backend/tests/integration/ -v --tb=short --no-cov
+        env:
+          HUMBLE_AUTH_COOKIE: test_token_for_testing
+
+      - name: Generate coverage report
+        run: pytest backend/tests/unit/ backend/tests/integration/ --cov=backend/src/ --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          fail_ci_if_error: false
+
+  cli-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -e .
+
+      - name: Verify CLI help output
+        run: |
+          python -m hb_library_viewer --help
+          python -m hb_library_viewer cache-subproduct-pages --help
+          python -m hb_library_viewer extract-subproduct-metadata --help
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -e .
+
+      - name: Lint with ruff
+        run: ruff check backend/src/ backend/tests/ tools/
+
+      - name: Type check with mypy
+        run: mypy backend/src/ --ignore-missing-imports
+        continue-on-error: true
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+  doctest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -e .
+
+      - name: Run doctests
+        run: >-
+          pytest --doctest-modules --no-cov
+          backend/src/hb_library_viewer/config.py
+          backend/src/hb_library_viewer/parsing.py
+          backend/src/hb_library_viewer/utils.py
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install mkdocs
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt -e .
+
+      - name: Build documentation
+        run: mkdocs build --strict
+
+      - name: Check for broken links in docs
+        run: |
+          if grep -r "\[.*\](.*404" docs/ 2>/dev/null; then
+            echo "ERROR: Broken links found"
+            exit 1
+          fi
+          echo "No obvious broken links"
+        continue-on-error: true

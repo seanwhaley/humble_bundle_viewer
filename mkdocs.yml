@@ -1,0 +1,107 @@
+site_name: HB Library Viewer
+site_description: Humble Bundle library capture, viewer portal, and optional downloads with Playwright and Pydantic
+site_url: https://seanwhaley.github.io/humble_bundle_viewer/
+repo_url: https://github.com/seanwhaley/humble_bundle_viewer
+repo_name: humble_bundle_viewer
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+  - scheme: default
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  - scheme: slate
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+  features:
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.top
+  - navigation.instant
+  - search.suggest
+  - search.highlight
+
+plugins:
+- search
+- glightbox:
+    zoomable: true
+
+exclude_docs: |
+  development/work-efforts/**
+
+markdown_extensions:
+- pymdownx.highlight:
+    use_pygments: true
+- pymdownx.superfences
+- pymdownx.inlinehilite
+- pymdownx.snippets
+- pymdownx.tasklist:
+    custom_checkbox: true
+- pymdownx.emoji
+- admonition
+- attr_list
+- tables
+- toc:
+    permalink: true
+
+nav:
+- Home: index.md
+
+- Getting Started:
+  - Quick Start: getting-started/quickstart.md
+  - Installation: getting-started/installation.md
+  - Your First Download: getting-started/first-download.md
+
+- User Guides:
+  - Configuration: guides/configuration.md
+  - Authentication: guides/authentication.md
+  - Debugging: guides/debugging.md
+  - Querying Products: guides/querying-products.md
+  - CLI Reference: guides/cli-reference.md
+  - Viewer App: guides/viewer-portal.md
+  - Download Labeling Policy: guides/download-labeling-policy.md
+
+- Architecture:
+  - Overview: architecture/overview.md
+  - Data Flow: architecture/data-flow.md
+  - Component Design: architecture/components.md
+  - Configuration Management: architecture/configuration.md
+
+- Examples:
+  - Basic Usage: examples/basic-usage.md
+  - Advanced Filtering: examples/advanced-filtering.md
+  - Batch Operations: examples/batch-operations.md
+  - Library Products Viewer: examples/library-products-viewer.md
+
+- API Reference:
+  - Config Module: api/config.md
+  - Browser Module: api/browser.md
+  - Parsing Module: api/parsing.md
+  - Download Module: api/download.md
+  - Utilities: api/utils.md
+
+- Maintainers:
+  - Contributing: maintainers/contributing.md
+  - Testing: maintainers/testing.md
+  - Documentation Screenshots: maintainers/documentation-screenshots.md
+  - Repository Customizations: maintainers/github-customizations.md
+
+- Planning:
+  - Changelog: development/changelog.md
+  - Roadmap: development/roadmap.md
+
+- Resources:
+  - Agent Guidelines: agent-guidelines.md
+  - Security: help/security.md
+  - FAQ: help/faq.md
+  - Troubleshooting: help/troubleshooting.md
+
+extra:
+  version:
+    provider: mike
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/seanwhaley/humble_bundle_viewer

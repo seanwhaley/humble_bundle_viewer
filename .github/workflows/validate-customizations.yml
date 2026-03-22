@@ -1,0 +1,31 @@
+name: Validate chat customizations
+
+on:
+    workflow_dispatch:
+    push:
+        branches: [main, develop]
+        paths:
+            - ".github/**"
+            - "tools/scripts/validate_chat_customizations.py"
+    pull_request:
+        branches: [main, develop]
+        paths:
+            - ".github/**"
+            - "tools/scripts/validate_chat_customizations.py"
+
+jobs:
+    validate-customizations:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
+
+            - name: Validate customization files
+              run: python tools/scripts/validate_chat_customizations.py

@@ -1,0 +1,1740 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Library Products Viewer</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              surface: "#0b1120",
+              panel: "#0f172a",
+              accent: "#38bdf8",
+            },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ajv@8/dist/ajv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+      summary::-webkit-details-marker {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-surface text-slate-100 antialiased">
+    <div class="mx-auto max-w-6xl px-6 py-10">
+      <header class="space-y-6">
+        <div class="flex flex-wrap items-center gap-4">
+          <span
+            class="material-symbols-outlined text-4xl text-accent"
+            aria-hidden="true">
+            view_list
+          </span>
+          <div>
+            <h1 class="text-3xl font-semibold">Library Products Viewer</h1>
+            <p class="mt-1 text-slate-300">
+              Explore
+              <span class="font-semibold">library_products.json</span> with
+              search, filters, and expandable detail panels.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="rounded-2xl border border-slate-800 bg-panel/80 p-6 shadow-lg shadow-black/40">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <label class="space-y-2 text-sm text-slate-300">
+              Library file
+              <input
+                id="fileInput"
+                type="file"
+                accept=".json"
+                class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-slate-100" />
+            </label>
+            <label class="space-y-2 text-sm text-slate-300">
+              Search
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Product name, game key, machine name"
+                class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-slate-100" />
+            </label>
+            <label class="space-y-2 text-sm text-slate-300">
+              Category
+              <select
+                id="categoryFilter"
+                class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-slate-100"></select>
+            </label>
+            <label class="space-y-2 text-sm text-slate-300">
+              Download platform
+              <select
+                id="platformFilter"
+                class="w-full rounded-xl border border-slate-700 bg-slate-900/80 px-3 py-2 text-slate-100"></select>
+            </label>
+          </div>
+
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button
+              id="expandAll"
+              class="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium hover:border-accent">
+              Expand all
+            </button>
+            <button
+              id="collapseAll"
+              class="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium hover:border-accent">
+              Collapse all
+            </button>
+            <button
+              id="resetFilters"
+              class="rounded-full border border-slate-700 px-4 py-2 text-sm font-medium hover:border-accent">
+              Reset filters
+            </button>
+            <div
+              class="ml-auto flex flex-wrap items-center gap-4 text-sm text-slate-300">
+              <label class="flex items-center gap-2">
+                <input id="toggleMeta" type="checkbox" checked />
+                Show metadata
+              </label>
+              <label class="flex items-center gap-2">
+                <input id="toggleDownloads" type="checkbox" checked />
+                Show downloads
+              </label>
+              <label class="flex items-center gap-2">
+                <input id="toggleGroups" type="checkbox" checked />
+                Show inferred titles
+              </label>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap items-center gap-3 text-sm">
+            <span class="text-slate-400">View mode:</span>
+            <button
+              id="viewProducts"
+              class="rounded-full border border-slate-700 px-4 py-1 text-xs font-semibold text-slate-200 hover:border-accent">
+              Products
+            </button>
+            <button
+              id="viewSubproducts"
+              class="rounded-full border border-slate-700 px-4 py-1 text-xs font-semibold text-slate-200 hover:border-accent">
+              Subproducts
+            </button>
+            <span id="viewHint" class="text-xs text-slate-400"></span>
+          </div>
+
+          <div
+            class="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+            <span id="stats">Load a file to see results.</span>
+            <span id="schemaStatus" class="text-slate-400"></span>
+          </div>
+          <div id="warning" class="mt-2 text-sm text-amber-300"></div>
+        </div>
+      </header>
+
+      <main class="mt-8 space-y-4">
+        <section
+          id="dashboard"
+          class="rounded-2xl border border-slate-800 bg-panel/80 p-6 shadow-lg shadow-black/30">
+          <h2 class="text-lg font-semibold text-slate-100">
+            Library dashboard
+          </h2>
+          <p class="mt-1 text-sm text-slate-400">
+            Click any chart segment to filter the results below.
+          </p>
+          <div class="mt-4 grid gap-4 lg:grid-cols-2">
+            <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div class="text-xs uppercase text-slate-400">Product type</div>
+              <div id="chartCategory" class="mt-2 h-56"></div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div class="text-xs uppercase text-slate-400">Amount spent</div>
+              <div id="chartSpend" class="mt-2 h-56"></div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div class="text-xs uppercase text-slate-400">Subproducts</div>
+              <div id="chartSubproducts" class="mt-2 h-56"></div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+              <div class="text-xs uppercase text-slate-400">
+                Download file types
+              </div>
+              <div id="chartFileTypes" class="mt-2 h-56"></div>
+            </div>
+            <div
+              class="rounded-xl border border-slate-800 bg-slate-950/60 p-3 lg:col-span-2">
+              <div class="text-xs uppercase text-slate-400">File sizes</div>
+              <div id="chartSizes" class="mt-2 h-56"></div>
+            </div>
+          </div>
+        </section>
+        <section id="datasetDetails" class="space-y-4"></section>
+        <div id="results" class="space-y-4"></div>
+      </main>
+    </div>
+
+    <script>
+      const state = {
+        products: [],
+        filtered: [],
+        filteredSubproducts: [],
+        schemaValidator: null,
+        viewMode: "products",
+        subproductItems: [],
+        dashboardFilters: {
+          category: null,
+          subproduct: null,
+          fileType: null,
+          sizeBucket: null,
+        },
+        charts: {},
+      };
+
+      const fileInput = document.getElementById("fileInput");
+      const searchInput = document.getElementById("searchInput");
+      const categoryFilter = document.getElementById("categoryFilter");
+      const platformFilter = document.getElementById("platformFilter");
+      const datasetDetails = document.getElementById("datasetDetails");
+      const results = document.getElementById("results");
+      const stats = document.getElementById("stats");
+      const warning = document.getElementById("warning");
+      const schemaStatus = document.getElementById("schemaStatus");
+      const toggleMeta = document.getElementById("toggleMeta");
+      const toggleDownloads = document.getElementById("toggleDownloads");
+      const toggleGroups = document.getElementById("toggleGroups");
+      const viewProducts = document.getElementById("viewProducts");
+      const viewSubproducts = document.getElementById("viewSubproducts");
+      const viewHint = document.getElementById("viewHint");
+
+      const formatSize = (bytes) => {
+        if (!bytes || Number.isNaN(bytes)) return "–";
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        let size = bytes;
+        let unitIndex = 0;
+        while (size >= 1024 && unitIndex < units.length - 1) {
+          size /= 1024;
+          unitIndex += 1;
+        }
+        return `${size.toFixed(1)} ${units[unitIndex]}`;
+      };
+
+      const readFile = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(file);
+        });
+
+      const resetFilters = () => {
+        searchInput.value = "";
+        categoryFilter.value = "all";
+        platformFilter.value = "all";
+        state.dashboardFilters = {
+          category: null,
+          subproduct: null,
+          fileType: null,
+          sizeBucket: null,
+        };
+        applyFilters();
+      };
+
+      const buildFilterOptions = () => {
+        const categories = new Set();
+        const platforms = new Set();
+        state.products.forEach((product) => {
+          if (product.category) categories.add(product.category);
+          (product.downloads || []).forEach((download) => {
+            if (download.platform) platforms.add(download.platform);
+          });
+        });
+        state.subproductItems.forEach((item) => {
+          if (item.parent_category) categories.add(item.parent_category);
+          (item.downloads || []).forEach((download) => {
+            if (download.platform) platforms.add(download.platform);
+          });
+        });
+
+        const fillSelect = (select, values, label) => {
+          select.innerHTML = "";
+          const allOption = document.createElement("option");
+          allOption.value = "all";
+          allOption.textContent = `All ${label}`;
+          select.appendChild(allOption);
+          Array.from(values)
+            .sort()
+            .forEach((value) => {
+              const option = document.createElement("option");
+              option.value = value;
+              option.textContent = value;
+              select.appendChild(option);
+            });
+        };
+
+        fillSelect(categoryFilter, categories, "categories");
+        fillSelect(platformFilter, platforms, "platforms");
+      };
+
+      const getSubproducts = (product) => {
+        const subproducts = product?.subproducts;
+        return Array.isArray(subproducts) ? subproducts : [];
+      };
+
+      const getBundleTitles = (product) => {
+        const subproducts = getSubproducts(product);
+        if (subproducts.length) {
+          return subproducts
+            .map(
+              (subproduct) => subproduct.human_name || subproduct.machine_name,
+            )
+            .filter(Boolean);
+        }
+        return groupDownloads(product.downloads || []).map(([title]) => title);
+      };
+
+      const guessFileType = (file, fallbackUrl = "") => {
+        const name = (file?.name || file?.filename || "").toLowerCase();
+        const url = (fallbackUrl || "").toLowerCase();
+        const extension = (value) => {
+          const parts = value.split("?")[0].split("#")[0].split(".");
+          return parts.length > 1 ? parts[parts.length - 1] : "";
+        };
+        return extension(name) || extension(url) || "file";
+      };
+
+      const buildDownloadLink = (url, label = "Download") => {
+        if (!url) return document.createTextNode("–");
+        const link = document.createElement("a");
+        link.href = url;
+        link.textContent = label;
+        link.className = "text-accent underline";
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.addEventListener("click", (event) => {
+          const confirmDownload = window.confirm(
+            "Download this file? It will open in a new tab.",
+          );
+          if (!confirmDownload) {
+            event.preventDefault();
+          }
+        });
+        return link;
+      };
+
+      const buildKeyReveal = (value) => {
+        if (!value) return document.createTextNode("–");
+        const details = document.createElement("details");
+        details.className = "text-slate-300";
+        const summary = document.createElement("summary");
+        summary.className = "cursor-pointer text-accent";
+        summary.textContent = "Reveal";
+        const content = document.createElement("div");
+        content.className = "mt-1 font-mono text-xs break-all text-slate-200";
+        content.textContent = value;
+        details.append(summary, content);
+        return details;
+      };
+
+      const MULTI_PRODUCT_CATEGORIES = new Set([
+        "bundle",
+        "subscriptioncontent",
+        "storefront",
+        "widget",
+      ]);
+
+      const isMultiProductCategory = (category, subproducts) => {
+        const count = Array.isArray(subproducts) ? subproducts.length : 0;
+        return count > 1;
+      };
+
+      const buildSubproductItems = (products) => {
+        const items = [];
+        products.forEach((product) => {
+          const subproducts = getSubproducts(product);
+          if (!subproducts.length) return;
+          if (!isMultiProductCategory(product.category, subproducts)) return;
+
+          subproducts.forEach((subproduct) => {
+            const downloads = [];
+            (subproduct.downloads || []).forEach((download) => {
+              const url = download?.url || "";
+              downloads.push({
+                platform: download.platform || "unknown",
+                name: download.name || "Download",
+                size_bytes: download.size_bytes ?? 0,
+                file_type: download.file_type || guessFileType(download, url),
+                url,
+                raw: download,
+              });
+            });
+
+            items.push({
+              parent_gamekey: product.gamekey,
+              parent_name: product.product_name,
+              parent_category: product.category,
+              parent_amount_spent: product.amount_spent ?? 0,
+              subproduct_name:
+                subproduct.human_name ||
+                subproduct.machine_name ||
+                "Untitled item",
+              subproduct_machine: subproduct.machine_name || "",
+              downloads,
+              raw: subproduct,
+            });
+          });
+        });
+        return items;
+      };
+
+      const sizeBuckets = [
+        { label: "< 50 MB", min: 0, max: 50 * 1024 * 1024 },
+        { label: "50-200 MB", min: 50 * 1024 * 1024, max: 200 * 1024 * 1024 },
+        {
+          label: "200 MB - 1 GB",
+          min: 200 * 1024 * 1024,
+          max: 1024 * 1024 * 1024,
+        },
+        {
+          label: "> 1 GB",
+          min: 1024 * 1024 * 1024,
+          max: Number.POSITIVE_INFINITY,
+        },
+      ];
+
+      const bucketForSize = (size) => {
+        const bytes = size ?? 0;
+        return (
+          sizeBuckets.find(
+            (bucket) => bytes >= bucket.min && bytes < bucket.max,
+          )?.label || "Unknown"
+        );
+      };
+
+      const buildSubproductGroups = (product, platformFilterValue) => {
+        const subproducts = getSubproducts(product);
+        if (!subproducts.length) return [];
+
+        return subproducts.map((subproduct) => {
+          const files = [];
+          (subproduct.downloads || []).forEach((download) => {
+            const platform = download.platform || "unknown";
+            if (
+              platformFilterValue !== "all" &&
+              platform !== platformFilterValue
+            ) {
+              return;
+            }
+            const url = download?.url || "";
+            files.push({
+              platform,
+              name: download.name || "Download",
+              size_bytes: download.size_bytes ?? 0,
+              file_type: download.file_type || guessFileType(download, url),
+              url,
+              raw: download,
+            });
+          });
+
+          return {
+            title:
+              subproduct.human_name ||
+              subproduct.machine_name ||
+              "Untitled item",
+            files,
+            raw: subproduct,
+          };
+        });
+      };
+
+      const collectProductDownloads = (product) => {
+        const subproducts = getSubproducts(product);
+        if (subproducts.length) {
+          const files = [];
+          subproducts.forEach((subproduct) => {
+            (subproduct.downloads || []).forEach((download) => {
+              const url = download?.url || "";
+              files.push({
+                platform: download.platform || "unknown",
+                file_type: download.file_type || guessFileType(download, url),
+                size_bytes: download.size_bytes ?? 0,
+              });
+            });
+          });
+          return files;
+        }
+
+        return (product.downloads || []).map((download) => ({
+          platform: download.platform,
+          file_type: guessFileType(download, download.url),
+          size_bytes: download.size_bytes ?? 0,
+        }));
+      };
+
+      const matchesDashboardFilters = (
+        downloads,
+        category,
+        subproductTitles,
+      ) => {
+        const { dashboardFilters } = state;
+        if (
+          dashboardFilters.category &&
+          dashboardFilters.category !== category
+        ) {
+          return false;
+        }
+
+        if (
+          dashboardFilters.subproduct &&
+          !subproductTitles.some(
+            (title) =>
+              String(title).toLowerCase() ===
+              String(dashboardFilters.subproduct).toLowerCase(),
+          )
+        ) {
+          return false;
+        }
+
+        if (dashboardFilters.fileType) {
+          const match = downloads.some(
+            (download) => download.file_type === dashboardFilters.fileType,
+          );
+          if (!match) return false;
+        }
+
+        if (dashboardFilters.sizeBucket) {
+          const match = downloads.some(
+            (download) =>
+              bucketForSize(download.size_bytes) ===
+              dashboardFilters.sizeBucket,
+          );
+          if (!match) return false;
+        }
+
+        return true;
+      };
+
+      const applyFilters = () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const category = categoryFilter.value;
+        const platform = platformFilter.value;
+
+        state.filtered = state.products.filter((product) => {
+          const subproductTitles = getSubproducts(product)
+            .map(
+              (subproduct) => subproduct.human_name || subproduct.machine_name,
+            )
+            .filter(Boolean);
+          const matchesQuery =
+            !query ||
+            [
+              product.product_name,
+              product.gamekey,
+              product.machine_name,
+              product.category,
+              ...(product._viewer_inferred_titles || []),
+              ...subproductTitles,
+            ]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(query));
+
+          const matchesCategory =
+            category === "all" || product.category === category;
+
+          const downloads = collectProductDownloads(product);
+          const matchesPlatform =
+            platform === "all" ||
+            downloads.some((download) => download.platform === platform);
+
+          const matchesDashboard = matchesDashboardFilters(
+            downloads,
+            product.category,
+            subproductTitles,
+          );
+
+          return (
+            matchesQuery &&
+            matchesCategory &&
+            matchesPlatform &&
+            matchesDashboard
+          );
+        });
+
+        state.filteredSubproducts = state.subproductItems.filter((item) => {
+          const matchesQuery =
+            !query ||
+            [
+              item.subproduct_name,
+              item.subproduct_machine,
+              item.parent_name,
+              item.parent_gamekey,
+              item.parent_category,
+            ]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(query));
+
+          const matchesCategory =
+            category === "all" || item.parent_category === category;
+
+          const matchesPlatform =
+            platform === "all" ||
+            (item.downloads || []).some(
+              (download) => download.platform === platform,
+            );
+
+          const matchesDashboard = matchesDashboardFilters(
+            item.downloads || [],
+            item.parent_category,
+            [item.subproduct_name],
+          );
+
+          return (
+            matchesQuery &&
+            matchesCategory &&
+            matchesPlatform &&
+            matchesDashboard
+          );
+        });
+
+        renderResults();
+        renderDashboard();
+      };
+
+      const inferTitle = (download) => {
+        const source = (() => {
+          if (download.url) {
+            try {
+              const url = new URL(download.url);
+              const parts = url.pathname.split("/").filter(Boolean);
+              return decodeURIComponent(parts[parts.length - 1] || "");
+            } catch {
+              return download.url;
+            }
+          }
+          return download.name || "";
+        })();
+
+        let raw = source.split("?")[0];
+        if (!raw || raw.length < 3) {
+          raw = download.name || "";
+        }
+
+        raw = raw
+          .replace(/directorscut/gi, "directors cut")
+          .replace(/remastered/gi, "remastered")
+          .replace(/reloaded/gi, "reloaded")
+          .replace(/ost/gi, "ost");
+
+        const splitCamel = raw
+          .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+          .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+
+        const cleaned = splitCamel
+          .replace(/\.[a-z0-9]{1,5}$/i, " ")
+          .replace(/[_\-]+/g, " ")
+          .replace(/\d+(\.\d+)+/g, " ")
+          .replace(/[^a-zA-Z0-9 ]+/g, " ")
+          .toLowerCase();
+
+        const stopWords = new Set([
+          "download",
+          "installer",
+          "setup",
+          "windows",
+          "win",
+          "mac",
+          "osx",
+          "linux",
+          "android",
+          "apk",
+          "deb",
+          "rpm",
+          "dmg",
+          "zip",
+          "tar",
+          "gz",
+          "sh",
+          "exe",
+          "msi",
+          "x86",
+          "x64",
+          "amd64",
+          "i386",
+          "noarch",
+          "flac",
+          "mp3",
+          "ost",
+          "audio",
+          "steam",
+          "macos",
+          "v",
+        ]);
+
+        const tokens = cleaned
+          .split(/\s+/)
+          .map((token) => token.trim())
+          .filter(
+            (token) => token && !stopWords.has(token) && !/^\d+$/.test(token),
+          );
+
+        if (!tokens.length) return "Other";
+
+        const title = tokens.slice(0, 5).join(" ");
+        return title.replace(/\b\w/g, (char) => char.toUpperCase());
+      };
+
+      const groupDownloads = (downloads) => {
+        const groups = new Map();
+        downloads.forEach((download) => {
+          const title = inferTitle(download);
+          if (!groups.has(title)) groups.set(title, []);
+          groups.get(title).push(download);
+        });
+        return Array.from(groups.entries())
+          .filter(([title]) => title !== "Other")
+          .sort((a, b) => b[1].length - a[1].length);
+      };
+
+      const renderDatasetDetails = () => {
+        datasetDetails.innerHTML = "";
+        const note = document.createElement("div");
+        note.className =
+          "rounded-2xl border border-slate-800 bg-panel/80 px-5 py-4 text-sm text-slate-300 shadow-lg shadow-black/30";
+        note.textContent =
+          "Raw API batches are stored separately under artifacts/api_responses/ and are not embedded in library_products.json.";
+        datasetDetails.appendChild(note);
+      };
+
+      const ensureChart = (id) => {
+        if (!window.echarts) return null;
+        if (!state.charts[id]) {
+          const container = document.getElementById(id);
+          if (!container) return null;
+          state.charts[id] = window.echarts.init(container);
+        }
+        return state.charts[id];
+      };
+
+      const renderDashboard = () => {
+        if (!window.echarts) return;
+
+        const products = state.filtered;
+        const subproducts = state.filteredSubproducts;
+
+        const categoryCounts = new Map();
+        const spendByCategory = new Map();
+        const subproductCounts = new Map();
+        const fileTypeCounts = new Map();
+        const sizeCounts = new Map();
+
+        products.forEach((product) => {
+          const category = product.category || "unknown";
+          categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+          spendByCategory.set(
+            category,
+            (spendByCategory.get(category) || 0) + (product.amount_spent ?? 0),
+          );
+
+          collectProductDownloads(product).forEach((download) => {
+            const fileType = download.file_type || "file";
+            fileTypeCounts.set(
+              fileType,
+              (fileTypeCounts.get(fileType) || 0) + 1,
+            );
+            const bucket = bucketForSize(download.size_bytes);
+            sizeCounts.set(bucket, (sizeCounts.get(bucket) || 0) + 1);
+          });
+        });
+
+        subproducts.forEach((item) => {
+          const name = item.subproduct_name || "Untitled item";
+          subproductCounts.set(name, (subproductCounts.get(name) || 0) + 1);
+        });
+
+        const toSortedArray = (map) =>
+          Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+
+        const categoryData = toSortedArray(categoryCounts);
+        const spendData = toSortedArray(spendByCategory);
+        const subproductData = toSortedArray(subproductCounts).slice(0, 12);
+        const fileTypeData = toSortedArray(fileTypeCounts).slice(0, 12);
+        const sizeData = sizeBuckets.map((bucket) => [
+          bucket.label,
+          sizeCounts.get(bucket.label) || 0,
+        ]);
+
+        const buildBarSeries = (data, activeValue) =>
+          data.map(([label, value]) => ({
+            name: label,
+            value,
+            itemStyle:
+              activeValue && activeValue === label ?
+                { color: "#38bdf8" }
+              : undefined,
+          }));
+
+        const categoryChart = ensureChart("chartCategory");
+        if (categoryChart) {
+          categoryChart.setOption({
+            grid: {
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 30,
+              containLabel: true,
+            },
+            xAxis: {
+              type: "category",
+              data: categoryData.map(([label]) => label),
+            },
+            yAxis: { type: "value" },
+            series: [
+              {
+                type: "bar",
+                data: buildBarSeries(
+                  categoryData,
+                  state.dashboardFilters.category,
+                ),
+              },
+            ],
+          });
+          categoryChart.off("click");
+          categoryChart.on("click", (params) => {
+            const label = params.name;
+            state.dashboardFilters.category =
+              state.dashboardFilters.category === label ? null : label;
+            applyFilters();
+          });
+        }
+
+        const spendChart = ensureChart("chartSpend");
+        if (spendChart) {
+          spendChart.setOption({
+            grid: {
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 30,
+              containLabel: true,
+            },
+            xAxis: {
+              type: "category",
+              data: spendData.map(([label]) => label),
+            },
+            yAxis: { type: "value" },
+            series: [
+              {
+                type: "bar",
+                data: buildBarSeries(
+                  spendData,
+                  state.dashboardFilters.category,
+                ),
+              },
+            ],
+          });
+          spendChart.off("click");
+          spendChart.on("click", (params) => {
+            const label = params.name;
+            state.dashboardFilters.category =
+              state.dashboardFilters.category === label ? null : label;
+            applyFilters();
+          });
+        }
+
+        const subChart = ensureChart("chartSubproducts");
+        if (subChart) {
+          subChart.setOption({
+            grid: {
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 30,
+              containLabel: true,
+            },
+            xAxis: {
+              type: "category",
+              data: subproductData.map(([label]) => label),
+              axisLabel: { rotate: 30 },
+            },
+            yAxis: { type: "value" },
+            series: [
+              {
+                type: "bar",
+                data: buildBarSeries(
+                  subproductData,
+                  state.dashboardFilters.subproduct,
+                ),
+              },
+            ],
+          });
+          subChart.off("click");
+          subChart.on("click", (params) => {
+            const label = params.name;
+            state.dashboardFilters.subproduct =
+              state.dashboardFilters.subproduct === label ? null : label;
+            applyFilters();
+          });
+        }
+
+        const fileChart = ensureChart("chartFileTypes");
+        if (fileChart) {
+          fileChart.setOption({
+            grid: {
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 30,
+              containLabel: true,
+            },
+            xAxis: {
+              type: "category",
+              data: fileTypeData.map(([label]) => label),
+            },
+            yAxis: { type: "value" },
+            series: [
+              {
+                type: "bar",
+                data: buildBarSeries(
+                  fileTypeData,
+                  state.dashboardFilters.fileType,
+                ),
+              },
+            ],
+          });
+          fileChart.off("click");
+          fileChart.on("click", (params) => {
+            const label = params.name;
+            state.dashboardFilters.fileType =
+              state.dashboardFilters.fileType === label ? null : label;
+            applyFilters();
+          });
+        }
+
+        const sizeChart = ensureChart("chartSizes");
+        if (sizeChart) {
+          sizeChart.setOption({
+            grid: {
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: 30,
+              containLabel: true,
+            },
+            xAxis: { type: "category", data: sizeData.map(([label]) => label) },
+            yAxis: { type: "value" },
+            series: [
+              {
+                type: "bar",
+                data: buildBarSeries(
+                  sizeData,
+                  state.dashboardFilters.sizeBucket,
+                ),
+              },
+            ],
+          });
+          sizeChart.off("click");
+          sizeChart.on("click", (params) => {
+            const label = params.name;
+            state.dashboardFilters.sizeBucket =
+              state.dashboardFilters.sizeBucket === label ? null : label;
+            applyFilters();
+          });
+        }
+      };
+
+      const renderSubproductResults = () => {
+        results.innerHTML = "";
+        if (!state.subproductItems.length) {
+          stats.textContent =
+            "Subproduct view requires API payloads with multiple subproducts.";
+          return;
+        }
+
+        if (!state.filteredSubproducts.length) {
+          stats.textContent = "No subproducts match the current filters.";
+          return;
+        }
+
+        stats.textContent = `Showing ${state.filteredSubproducts.length} subproducts.`;
+
+        const platformFilterValue = platformFilter.value;
+        const { dashboardFilters } = state;
+
+        state.filteredSubproducts.forEach((item) => {
+          const details = document.createElement("details");
+          details.className =
+            "group rounded-2xl border border-slate-800 bg-panel/80 shadow-lg shadow-black/30";
+
+          const summary = document.createElement("summary");
+          summary.className =
+            "flex flex-wrap items-center gap-3 px-5 py-4 cursor-pointer";
+
+          const title = document.createElement("span");
+          title.className = "text-base font-semibold text-slate-100 flex-1";
+          title.textContent = item.subproduct_name || "Untitled subproduct";
+
+          const parentChip = document.createElement("span");
+          parentChip.className =
+            "rounded-full border border-slate-700 bg-slate-900/60 px-3 py-1 text-xs font-semibold text-slate-200";
+          parentChip.textContent = item.parent_name || "Unknown parent";
+
+          const categoryChip = document.createElement("span");
+          categoryChip.className =
+            "rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent";
+          categoryChip.textContent = item.parent_category || "unknown";
+
+          summary.append(title, parentChip, categoryChip);
+          details.appendChild(summary);
+
+          const body = document.createElement("div");
+          body.className =
+            "border-t border-slate-800 bg-slate-900/70 px-5 py-4";
+
+          const metaSection = document.createElement("section");
+          metaSection.className = "product-meta";
+
+          const metaGrid = document.createElement("div");
+          metaGrid.className = "grid gap-3 md:grid-cols-2 lg:grid-cols-4";
+
+          const addMetaItem = (label, value) => {
+            const itemEl = document.createElement("div");
+            itemEl.className =
+              "rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3";
+            const labelEl = document.createElement("div");
+            labelEl.className =
+              "text-xs uppercase tracking-wide text-slate-400";
+            labelEl.textContent = label;
+            const valueEl = document.createElement("div");
+            valueEl.className = "mt-1 text-sm text-slate-100";
+            valueEl.textContent = value ?? "–";
+            itemEl.append(labelEl, valueEl);
+            metaGrid.appendChild(itemEl);
+          };
+
+          addMetaItem("Subproduct machine", item.subproduct_machine || "–");
+          addMetaItem("Amount spent", item.parent_amount_spent ?? "–");
+
+          metaSection.appendChild(metaGrid);
+          body.appendChild(metaSection);
+
+          const downloadsSection = document.createElement("section");
+          downloadsSection.className = "downloads mt-4";
+
+          const filteredDownloads = (item.downloads || []).filter(
+            (download) => {
+              if (
+                platformFilterValue !== "all" &&
+                download.platform !== platformFilterValue
+              ) {
+                return false;
+              }
+              if (
+                dashboardFilters.fileType &&
+                download.file_type !== dashboardFilters.fileType
+              ) {
+                return false;
+              }
+              if (
+                dashboardFilters.sizeBucket &&
+                bucketForSize(download.size_bytes) !==
+                  dashboardFilters.sizeBucket
+              ) {
+                return false;
+              }
+              return true;
+            },
+          );
+
+          if (!filteredDownloads.length) {
+            const empty = document.createElement("div");
+            empty.className = "text-sm text-slate-400";
+            empty.textContent = "No downloads for current filters.";
+            downloadsSection.appendChild(empty);
+          } else {
+            const table = document.createElement("table");
+            table.className = "w-full text-left text-sm";
+            table.innerHTML = `
+              <thead class="text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="py-2 pr-3">Platform</th>
+                  <th class="py-2 pr-3">File type</th>
+                  <th class="py-2 pr-3">Name</th>
+                  <th class="py-2 pr-3">Size</th>
+                  <th class="py-2">URL</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            `;
+            const tbody = table.querySelector("tbody");
+            filteredDownloads.forEach((download) => {
+              const row = document.createElement("tr");
+              row.className = "border-b border-slate-800 last:border-0";
+
+              const platformCell = document.createElement("td");
+              platformCell.className = "py-3 pr-3 text-slate-200";
+              platformCell.textContent = download.platform || "–";
+
+              const typeCell = document.createElement("td");
+              typeCell.className = "py-3 pr-3 text-slate-200";
+              typeCell.textContent = download.file_type || "–";
+
+              const nameCell = document.createElement("td");
+              nameCell.className = "py-3 pr-3 text-slate-200";
+              nameCell.textContent = download.name || "–";
+
+              const sizeCell = document.createElement("td");
+              sizeCell.className = "py-3 pr-3 text-slate-300";
+              sizeCell.textContent = formatSize(download.size_bytes);
+
+              const urlCell = document.createElement("td");
+              urlCell.className = "py-3 text-slate-300";
+              urlCell.appendChild(buildDownloadLink(download.url, "Download"));
+
+              row.append(platformCell, typeCell, nameCell, sizeCell, urlCell);
+              tbody.appendChild(row);
+            });
+            downloadsSection.appendChild(table);
+          }
+
+          body.appendChild(downloadsSection);
+          details.appendChild(body);
+          results.appendChild(details);
+        });
+
+        applySectionToggles();
+      };
+
+      const renderResults = () => {
+        results.innerHTML = "";
+        renderDatasetDetails();
+        if (state.viewMode === "subproducts") {
+          renderSubproductResults();
+          return;
+        }
+        if (!state.filtered.length) {
+          stats.textContent = "No products match the current filters.";
+          return;
+        }
+
+        const platformFilterValue = platformFilter.value;
+        const totalDownloads = state.filtered.reduce((sum, product) => {
+          const downloads = product.downloads || [];
+          if (platformFilterValue === "all") return sum + downloads.length;
+          return (
+            sum +
+            downloads.filter(
+              (download) => download.platform === platformFilterValue,
+            ).length
+          );
+        }, 0);
+
+        stats.textContent = `Showing ${state.filtered.length} of ${state.products.length} products (${totalDownloads} downloads).`;
+
+        state.filtered.forEach((product) => {
+          const subproductGroups = buildSubproductGroups(
+            product,
+            platformFilterValue,
+          );
+          const bundleTitles = getBundleTitles(product);
+          const hasSubproducts = subproductGroups.length > 0;
+
+          const details = document.createElement("details");
+          details.className =
+            "group rounded-2xl border border-slate-800 bg-panel/80 shadow-lg shadow-black/30";
+
+          const summary = document.createElement("summary");
+          summary.className =
+            "flex flex-wrap items-center gap-3 px-5 py-4 cursor-pointer";
+
+          const title = document.createElement("span");
+          title.className = "text-base font-semibold text-slate-100 flex-1";
+          title.textContent = product.product_name || "Untitled product";
+
+          const categoryChip = document.createElement("span");
+          categoryChip.className =
+            "rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent";
+          categoryChip.textContent = product.category || "unknown";
+
+          const downloadCount = document.createElement("span");
+          downloadCount.className = "text-xs text-slate-400";
+          downloadCount.textContent = `${(product.downloads || []).length} downloads`;
+
+          summary.append(title, categoryChip, downloadCount);
+          details.appendChild(summary);
+
+          const body = document.createElement("div");
+          body.className =
+            "border-t border-slate-800 bg-slate-900/70 px-5 py-4";
+
+          const metaSection = document.createElement("section");
+          metaSection.className = "product-meta";
+
+          const metaGrid = document.createElement("div");
+          metaGrid.className = "grid gap-3 md:grid-cols-2 lg:grid-cols-4";
+
+          const addMetaItem = (label, value) => {
+            const item = document.createElement("div");
+            item.className =
+              "rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3";
+            const labelEl = document.createElement("div");
+            labelEl.className =
+              "text-xs uppercase tracking-wide text-slate-400";
+            labelEl.textContent = label;
+            const valueEl = document.createElement("div");
+            valueEl.className = "mt-1 text-sm text-slate-100";
+            valueEl.textContent = value ?? "–";
+            item.append(labelEl, valueEl);
+            metaGrid.appendChild(item);
+          };
+
+          addMetaItem("Game key", product.gamekey);
+          addMetaItem("Machine name", product.machine_name);
+          addMetaItem("Category", product.category);
+          addMetaItem("Amount spent", product.amount_spent ?? "–");
+
+          metaSection.appendChild(metaGrid);
+          body.appendChild(metaSection);
+
+          const inferredSection = document.createElement("section");
+          inferredSection.className = "bundle-titles grouped-downloads mt-4";
+
+          const inferredTitle = document.createElement("div");
+          inferredTitle.className = "text-xs uppercase text-slate-400";
+          inferredTitle.textContent =
+            hasSubproducts ?
+              "Bundle items (normalized)"
+            : "Inferred bundle titles";
+          inferredSection.appendChild(inferredTitle);
+
+          const inferredChips = document.createElement("div");
+          inferredChips.className = "mt-2 flex flex-wrap gap-2";
+
+          if (bundleTitles.length) {
+            bundleTitles.slice(0, 8).forEach((title) => {
+              const chip = document.createElement("span");
+              chip.className =
+                "rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent";
+              chip.textContent = title;
+              inferredChips.appendChild(chip);
+            });
+          } else {
+            const empty = document.createElement("div");
+            empty.className = "text-sm text-slate-400";
+            empty.textContent = "No inferred titles available.";
+            inferredChips.appendChild(empty);
+          }
+          inferredSection.appendChild(inferredChips);
+
+          const downloadsSection = document.createElement("section");
+          downloadsSection.className = "downloads mt-4";
+
+          const downloads = product.downloads || [];
+          const filteredDownloads =
+            platformFilterValue === "all" ? downloads : (
+              downloads.filter(
+                (download) => download.platform === platformFilterValue,
+              )
+            );
+
+          if (!hasSubproducts) {
+            if (!filteredDownloads.length) {
+              const empty = document.createElement("div");
+              empty.className = "text-sm text-slate-400";
+              empty.textContent = "No downloads for current filters.";
+              downloadsSection.appendChild(empty);
+            } else {
+              const table = document.createElement("table");
+              table.className = "w-full text-left text-sm";
+
+              const thead = document.createElement("thead");
+              thead.className = "text-xs uppercase text-slate-400";
+              thead.innerHTML = `
+                <tr>
+                  <th class="py-2 pr-3">Platform</th>
+                  <th class="py-2 pr-3">Name</th>
+                  <th class="py-2 pr-3">Size</th>
+                  <th class="py-2 pr-3">URL</th>
+                  <th class="py-2">Checksums</th>
+                </tr>
+              `;
+              table.appendChild(thead);
+
+              const tbody = document.createElement("tbody");
+              filteredDownloads.forEach((download) => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-slate-800 last:border-0";
+
+                const platformCell = document.createElement("td");
+                platformCell.className = "py-3 pr-3 text-slate-200";
+                platformCell.textContent = download.platform || "–";
+
+                const nameCell = document.createElement("td");
+                nameCell.className = "py-3 pr-3 text-slate-200";
+                nameCell.textContent = download.name || "–";
+
+                const sizeCell = document.createElement("td");
+                sizeCell.className = "py-3 pr-3 text-slate-300";
+                sizeCell.textContent = formatSize(download.size_bytes);
+
+                const urlCell = document.createElement("td");
+                urlCell.className = "py-3 pr-3 text-slate-300";
+                urlCell.appendChild(
+                  buildDownloadLink(download.url, "Download"),
+                );
+
+                const checksumCell = document.createElement("td");
+                checksumCell.className =
+                  "py-3 text-slate-300 whitespace-pre-line";
+                const checksums = download.checksums || {};
+                const checksumParts = [];
+                if (checksums.md5) checksumParts.push(`md5: ${checksums.md5}`);
+                if (checksums.sha1)
+                  checksumParts.push(`sha1: ${checksums.sha1}`);
+                checksumCell.textContent = checksumParts.join("\n") || "–";
+
+                row.append(
+                  platformCell,
+                  nameCell,
+                  sizeCell,
+                  urlCell,
+                  checksumCell,
+                );
+                tbody.appendChild(row);
+              });
+              table.appendChild(tbody);
+              downloadsSection.appendChild(table);
+            }
+          }
+
+          const keys = product.keys || [];
+          let keysSection = null;
+          if (keys.length) {
+            keysSection = document.createElement("section");
+            keysSection.className = "keys mt-4";
+
+            const keysTitle = document.createElement("div");
+            keysTitle.className = "text-xs uppercase text-slate-400";
+            keysTitle.textContent = "Keys";
+            keysSection.appendChild(keysTitle);
+
+            const table = document.createElement("table");
+            table.className = "mt-2 w-full text-left text-sm";
+            table.innerHTML = `
+              <thead class="text-xs uppercase text-slate-400">
+                <tr>
+                  <th class="py-2 pr-3">Type</th>
+                  <th class="py-2 pr-3">Name</th>
+                  <th class="py-2 pr-3">Key</th>
+                  <th class="py-2 pr-3">Status</th>
+                  <th class="py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector("tbody");
+            keys.forEach((key) => {
+              const row = document.createElement("tr");
+              row.className = "border-b border-slate-800 last:border-0";
+
+              const typeCell = document.createElement("td");
+              typeCell.className = "py-3 pr-3 text-slate-200";
+              typeCell.textContent =
+                key.key_type_human_name || key.key_type || "–";
+
+              const nameCell = document.createElement("td");
+              nameCell.className = "py-3 pr-3 text-slate-200";
+              nameCell.textContent = key.human_name || key.machine_name || "–";
+
+              const valueCell = document.createElement("td");
+              valueCell.className = "py-3 pr-3 text-slate-300";
+              valueCell.appendChild(buildKeyReveal(key.redeemed_key_val));
+
+              const statusCell = document.createElement("td");
+              statusCell.className = "py-3 pr-3 text-slate-300";
+              const statusParts = [];
+              if (key.is_expired) statusParts.push("Expired");
+              if (key.sold_out) statusParts.push("Sold out");
+              if (key.is_gift) statusParts.push("Gift");
+              if (key.direct_redeem) statusParts.push("Direct redeem");
+              statusCell.textContent = statusParts.join(" · ") || "Available";
+
+              const notesCell = document.createElement("td");
+              notesCell.className = "py-3 text-slate-300";
+              const noteValue =
+                key.instructions_html ||
+                key.custom_instructions_html ||
+                key.preinstruction_text ||
+                key.disclaimer ||
+                "–";
+              notesCell.textContent = noteValue;
+
+              row.append(typeCell, nameCell, valueCell, statusCell, notesCell);
+              tbody.appendChild(row);
+            });
+
+            keysSection.appendChild(table);
+          }
+
+          const groupedSection = document.createElement("section");
+          groupedSection.className = "grouped-downloads mt-4";
+
+          const groupedHeader = document.createElement("div");
+          groupedHeader.className = "text-xs uppercase text-slate-400";
+          groupedHeader.textContent =
+            rawOrder ?
+              "Bundle item downloads (from API)"
+            : "Inferred titles (best effort)";
+          groupedSection.appendChild(groupedHeader);
+
+          const groupedList = document.createElement("div");
+          groupedList.className = "mt-2 space-y-2";
+
+          if (rawOrder && subproductGroups.length) {
+            subproductGroups.forEach((group) => {
+              const groupDetails = document.createElement("details");
+              groupDetails.className =
+                "rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2";
+
+              const groupSummary = document.createElement("summary");
+              groupSummary.className =
+                "flex cursor-pointer items-center justify-between gap-3 text-sm";
+              groupSummary.innerHTML = `
+                <span class="font-medium text-slate-200">${group.title}</span>
+                <span class="text-xs text-slate-400">${group.files.length} files</span>
+              `;
+
+              const groupTable = document.createElement("table");
+              groupTable.className = "mt-3 w-full text-left text-xs";
+              groupTable.innerHTML = `
+                <thead class="text-[11px] uppercase text-slate-500">
+                  <tr>
+                    <th class="py-2 pr-3">Platform</th>
+                    <th class="py-2 pr-3">File type</th>
+                    <th class="py-2 pr-3">Name</th>
+                    <th class="py-2 pr-3">Size</th>
+                    <th class="py-2">URL</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              `;
+              const groupBody = groupTable.querySelector("tbody");
+
+              if (group.files.length === 0) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td class="py-2 pr-3 text-slate-400" colspan="5">
+                    No files for current platform filter.
+                  </td>
+                `;
+                groupBody.appendChild(row);
+              } else {
+                group.files.forEach((download) => {
+                  const row = document.createElement("tr");
+                  row.className = "border-b border-slate-800 last:border-0";
+
+                  const platformCell = document.createElement("td");
+                  platformCell.className = "py-2 pr-3 text-slate-300";
+                  platformCell.textContent = download.platform || "–";
+
+                  const typeCell = document.createElement("td");
+                  typeCell.className = "py-2 pr-3 text-slate-300";
+                  typeCell.textContent = download.file_type || "–";
+
+                  const nameCell = document.createElement("td");
+                  nameCell.className = "py-2 pr-3 text-slate-300";
+                  nameCell.textContent = download.name || "–";
+
+                  const sizeCell = document.createElement("td");
+                  sizeCell.className = "py-2 pr-3 text-slate-400";
+                  sizeCell.textContent = formatSize(download.size_bytes);
+
+                  const urlCell = document.createElement("td");
+                  urlCell.className = "py-2 text-slate-400";
+                  urlCell.appendChild(
+                    buildDownloadLink(download.url, "Download"),
+                  );
+
+                  row.append(
+                    platformCell,
+                    typeCell,
+                    nameCell,
+                    sizeCell,
+                    urlCell,
+                  );
+                  groupBody.appendChild(row);
+                });
+              }
+
+              groupDetails.appendChild(groupSummary);
+              groupDetails.appendChild(groupTable);
+              groupedList.appendChild(groupDetails);
+            });
+          } else {
+            const groupedDownloads = groupDownloads(filteredDownloads);
+            if (!groupedDownloads.length) {
+              const empty = document.createElement("div");
+              empty.className = "text-sm text-slate-400";
+              empty.textContent = "No inferred titles for this selection.";
+              groupedList.appendChild(empty);
+            }
+
+            groupedDownloads.forEach(([title, items]) => {
+              const groupDetails = document.createElement("details");
+              groupDetails.className =
+                "rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2";
+
+              const groupSummary = document.createElement("summary");
+              groupSummary.className =
+                "flex cursor-pointer items-center justify-between gap-3 text-sm";
+              groupSummary.innerHTML = `
+              <span class="font-medium text-slate-200">${title}</span>
+              <span class="text-xs text-slate-400">${items.length} files</span>
+            `;
+
+              const groupTable = document.createElement("table");
+              groupTable.className = "mt-3 w-full text-left text-xs";
+              groupTable.innerHTML = `
+              <thead class="text-[11px] uppercase text-slate-500">
+                <tr>
+                  <th class="py-2 pr-3">Platform</th>
+                  <th class="py-2 pr-3">Name</th>
+                  <th class="py-2">Size</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            `;
+              const groupBody = groupTable.querySelector("tbody");
+              items.forEach((download) => {
+                const row = document.createElement("tr");
+                row.className = "border-b border-slate-800 last:border-0";
+                row.innerHTML = `
+                <td class="py-2 pr-3 text-slate-300">${download.platform || "–"}</td>
+                <td class="py-2 pr-3 text-slate-300">${download.name || "–"}</td>
+                <td class="py-2 text-slate-400">${formatSize(download.size_bytes)}</td>
+              `;
+                groupBody.appendChild(row);
+              });
+
+              groupDetails.appendChild(groupSummary);
+              groupDetails.appendChild(groupTable);
+              groupedList.appendChild(groupDetails);
+            });
+          }
+
+          groupedSection.appendChild(groupedList);
+
+          const rawSection = document.createElement("section");
+          rawSection.className = "product-meta raw-order mt-4";
+          const rawDetails = document.createElement("details");
+          rawDetails.className =
+            "rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-2";
+          const rawSummary = document.createElement("summary");
+          rawSummary.className =
+            "flex cursor-pointer items-center justify-between text-sm text-slate-300";
+          rawSummary.textContent = "Raw API payload";
+          rawDetails.appendChild(rawSummary);
+
+          const rawPre = document.createElement("pre");
+          rawPre.className =
+            "mt-3 max-h-64 overflow-auto whitespace-pre-wrap text-xs text-slate-300";
+          rawPre.textContent =
+            rawOrder ?
+              JSON.stringify(rawOrder, null, 2)
+            : "No raw API payload available.";
+          rawDetails.appendChild(rawPre);
+          rawSection.appendChild(rawDetails);
+
+          body.appendChild(inferredSection);
+          if (!rawOrder) {
+            body.appendChild(downloadsSection);
+          }
+          if (keysSection) {
+            body.appendChild(keysSection);
+          }
+          body.appendChild(groupedSection);
+          body.appendChild(rawSection);
+          details.appendChild(body);
+          results.appendChild(details);
+        });
+
+        applySectionToggles();
+      };
+
+      const applySectionToggles = () => {
+        document.querySelectorAll(".product-meta").forEach((section) => {
+          section.classList.toggle("hidden", !toggleMeta.checked);
+        });
+        document.querySelectorAll(".downloads").forEach((section) => {
+          section.classList.toggle("hidden", !toggleDownloads.checked);
+        });
+        document.querySelectorAll(".grouped-downloads").forEach((section) => {
+          section.classList.toggle("hidden", !toggleGroups.checked);
+        });
+      };
+
+      const expandCollapseAll = (open) => {
+        document.querySelectorAll("details").forEach((node) => {
+          node.open = open;
+        });
+      };
+
+      const updateSchemaStatus = (message, isWarning = false) => {
+        schemaStatus.textContent = message;
+        schemaStatus.className =
+          isWarning ? "text-amber-300" : "text-slate-400";
+      };
+
+      const loadSchema = async () => {
+        try {
+          const response = await fetch("library-products-schema.json", {
+            cache: "no-store",
+          });
+          if (!response.ok) throw new Error("schema not found");
+          const schema = await response.json();
+          if (window.Ajv) {
+            const ajv = new window.Ajv({ allErrors: true, strict: false });
+            state.schemaValidator = ajv.compile(schema);
+            updateSchemaStatus("Schema loaded (Pydantic v2)");
+          }
+        } catch (error) {
+          updateSchemaStatus(
+            "Schema not available. Run python -m hb_library_viewer build-viewer-assets for validation.",
+            true,
+          );
+        }
+      };
+
+      const fetchText = async (path) => {
+        const response = await fetch(path, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Failed to load ${path}`);
+        }
+        return response.text();
+      };
+
+      const preloadData = async () => {
+        try {
+          const text = await fetchText("../../artifacts/library_products.json");
+          loadJsonText(text);
+          warning.textContent = "";
+          return;
+        } catch (error) {
+          warning.textContent =
+            "Default data not found. Use the file picker to load library_products.json.";
+        }
+      };
+
+      const validateData = (data) => {
+        if (!state.schemaValidator) return { valid: true, errors: [] };
+        const valid = state.schemaValidator(data);
+        return { valid, errors: state.schemaValidator.errors || [] };
+      };
+
+      const loadJsonText = (text) => {
+        warning.textContent = "";
+        const parsed = JSON.parse(text);
+        const { valid, errors } = validateData(parsed);
+        if (!valid) {
+          warning.textContent = `Schema validation failed: ${errors
+            .slice(0, 3)
+            .map((err) => err.message)
+            .join("; ")}`;
+        }
+        if (!parsed || !Array.isArray(parsed.products)) {
+          throw new Error("Expected an object with a 'products' array.");
+        }
+        state.products = parsed.products.map((product) => ({
+          ...product,
+          _viewer_inferred_titles: getBundleTitles(product),
+        }));
+        state.subproductItems = buildSubproductItems(state.products);
+        const breakdownCategories = new Set();
+        state.products.forEach((product) => {
+          const subproducts = getSubproducts(product);
+          if (subproducts.length > 1) {
+            breakdownCategories.add(product.category || "unknown");
+          }
+        });
+        if (!state.subproductItems.length) {
+          viewHint.textContent =
+            "Subproduct view requires orders with 2+ subproducts.";
+        } else {
+          const categories = Array.from(breakdownCategories).sort();
+          viewHint.textContent = `${state.subproductItems.length} subproducts available (categories: ${categories.join(", ")}).`;
+        }
+        buildFilterOptions();
+        resetFilters();
+      };
+
+      const loadJson = async (file) => {
+        warning.textContent = "";
+        try {
+          const text = await readFile(file);
+          loadJsonText(text);
+        } catch (error) {
+          warning.textContent = `Failed to load file: ${error.message}`;
+          state.products = [];
+          state.filtered = [];
+          results.innerHTML = "";
+          stats.textContent = "Load a valid data file to see results.";
+        }
+      };
+
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (file) loadJson(file);
+      });
+
+      searchInput.addEventListener("input", applyFilters);
+      categoryFilter.addEventListener("change", applyFilters);
+      platformFilter.addEventListener("change", applyFilters);
+      document
+        .getElementById("resetFilters")
+        .addEventListener("click", resetFilters);
+      document
+        .getElementById("expandAll")
+        .addEventListener("click", () => expandCollapseAll(true));
+      document
+        .getElementById("collapseAll")
+        .addEventListener("click", () => expandCollapseAll(false));
+      toggleMeta.addEventListener("change", applySectionToggles);
+      toggleDownloads.addEventListener("change", applySectionToggles);
+      toggleGroups.addEventListener("change", applySectionToggles);
+
+      const updateViewButtons = () => {
+        const isProducts = state.viewMode === "products";
+        viewProducts.classList.toggle("border-accent", isProducts);
+        viewSubproducts.classList.toggle("border-accent", !isProducts);
+      };
+
+      viewProducts.addEventListener("click", () => {
+        state.viewMode = "products";
+        updateViewButtons();
+        renderResults();
+      });
+
+      viewSubproducts.addEventListener("click", () => {
+        if (!state.subproductItems.length) {
+          warning.textContent =
+            "Subproduct view requires orders with multiple subproducts.";
+          return;
+        }
+        warning.textContent = "";
+        state.viewMode = "subproducts";
+        updateViewButtons();
+        renderResults();
+      });
+
+      updateViewButtons();
+
+      loadSchema();
+      preloadData();
+    </script>
+  </body>
+</html>

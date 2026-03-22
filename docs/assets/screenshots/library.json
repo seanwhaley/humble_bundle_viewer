@@ -1,0 +1,84 @@
+{
+  "base_url": "http://127.0.0.1:5173",
+  "output_dir": ".",
+  "pages": [
+    {
+      "id": "viewer-home-readme",
+      "route": "/",
+      "output": "viewer-home-readme.png",
+      "viewport": {
+        "width": 1600,
+        "height": 760
+      },
+      "wait_for": {
+        "selector": "[data-doc-id='overview-current-scope-label']"
+      },
+      "fixtures": {
+        "/api/library/status": "fixtures/library-status.json",
+        "/api/library": "fixtures/library-data.json",
+        "/api/viewer/config": "fixtures/viewer-config.json",
+        "/api/current-bundles/status": "fixtures/current-bundles-status.json",
+        "/api/current-choice/status": "fixtures/current-choice-status.json"
+      },
+      "overrides": {
+        "layout-library-total-products": "42",
+        "layout-library-total-subproducts": "186",
+        "layout-library-total-files": "624",
+        "layout-library-total-keys": "128",
+        "layout-download-expiry-label": "README-safe demo screenshot",
+        "overview-current-scope-label": "Showing a documentation-safe demo snapshot with static values.",
+        "overview-current-scope-description": "This screenshot is generated from mocked API responses so README refreshes stay reproducible and do not expose private library details.",
+        "overview-stat-purchases-value": "42",
+        "overview-stat-purchases-subtitle": "Demo purchases",
+        "overview-stat-included-items-value": "186",
+        "overview-stat-included-items-subtitle": "Demo titles or item groups",
+        "overview-stat-downloads-value": "624",
+        "overview-stat-downloads-subtitle": "Demo downloads in scope",
+        "overview-stat-keys-value": "128",
+        "overview-stat-keys-subtitle": "Demo partner keys",
+        "overview-stat-download-size-value": "84.3 GB",
+        "overview-stat-download-size-subtitle": "Demo visible file size",
+        "overview-stat-estimated-spend-value": "$842.00",
+        "overview-stat-estimated-spend-subtitle": "Demo spend across visible purchases"
+      }
+    },
+    {
+      "id": "viewer-setup",
+      "route": "/setup",
+      "output": "viewer-setup.png",
+      "viewport": {
+        "width": 1600,
+        "height": 1180
+      },
+      "wait_for": {
+        "text": "Choose a library workflow"
+      },
+      "fixtures": {
+        "/api/library/status": "fixtures/library-status.json",
+        "/api/library": "fixtures/library-data.json",
+        "/api/viewer/config": "fixtures/viewer-config.json"
+      },
+      "overrides": {
+        "setup-save-location": "D:\\Demo\\HB Library Viewer"
+      }
+    },
+    {
+      "id": "viewer-command-center",
+      "route": "/commands",
+      "output": "viewer-command-center.png",
+      "viewport": {
+        "width": 1600,
+        "height": 1180
+      },
+      "wait_for": {
+        "text": "Maintenance workflows"
+      },
+      "fixtures": {
+        "/api/library/status": "fixtures/library-status.json",
+        "/api/library": "fixtures/library-data.json",
+        "/api/viewer/config": "fixtures/viewer-config.json"
+      },
+      "overrides": {}
+    }
+  ]
+}

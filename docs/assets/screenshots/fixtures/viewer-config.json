@@ -1,0 +1,8 @@
+{
+  "link_expiry_warning_hours": 24,
+  "assume_revealed_keys_redeemed": true,
+  "ignore_revealed_status_for_expired_keys": false,
+  "ignore_revealed_status_for_unexpired_keys": true,
+  "managed_sync_max_parallel_downloads": 4,
+  "managed_sync_manifest_history_entries": 20
+}
