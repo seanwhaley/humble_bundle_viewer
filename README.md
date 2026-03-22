@@ -2,7 +2,7 @@
 
 Local-first tools for capturing, normalizing, and exploring a Humble Bundle library.
 
-![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 ![Workflow: local--first](https://img.shields.io/badge/workflow-local--first-6f42c1)
 
@@ -67,13 +67,13 @@ To keep scope honest and boring-in-a-good-way:
 - **Viewer app** with dashboards, filters, and setup flows for local library inspection
 - **Advanced local sync** for eBooks and audiobooks with skip-existing and manifest support
 - **Type-safe configuration** from CLI options, environment variables, `backend/.env`, and `backend/config.yaml`
-- **Cross-platform** development support for Windows, macOS, and Linux with Python 3.9+
+- **Cross-platform** development support for Windows, macOS, and Linux with Python 3.10+
 
 ## Quick start
 
 ### Requirements
 
-- Python 3.9+
+- Python 3.10+
 - Chromium installed through Playwright
 - a valid Humble Bundle session cookie stored locally as `_simpleauth_sess`
 

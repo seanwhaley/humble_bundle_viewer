@@ -11,7 +11,7 @@ This page summarizes the most important constraints and conventions for AI-assis
 ## CLI & Compatibility
 
 - Preserve the primary entry point: `python -m hb_library_viewer`.
-- Maintain Python **3.9+** compatibility.
+- Maintain Python **3.10+** compatibility.
 
 ## Configuration Sources (Priority)
 

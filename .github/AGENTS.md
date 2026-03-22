@@ -100,7 +100,7 @@ This document describes how GitHub Copilot and other AI agents can interact with
   - Never commit backend/.env containing secrets
   - Respect API rate limits (0.5s minimum delay between requests)
   - No breaking changes to CLI interface (python -m hb_library_viewer)
-  - Maintain Python 3.9+ compatibility
+  - Maintain Python 3.10+ compatibility
   - All public code reviewed for credential leakage before committing
 
 ## Repository Structure (Docs & Tests)
@@ -431,7 +431,7 @@ logger.debug(f"API returned {response.status_code}")
 
 1. **Delete downloaded files** — Downloads are append-only; never delete or overwrite existing files; track what's been downloaded in metadata.
 
-1. **Change Python version below 3.9** — Use modern syntax (match/case 3.10+, type unions 3.10+); type hints on all public functions; no six or future compatibility libraries.
+1. **Change Python version below 3.10** — Use modern syntax (match/case 3.10+, type unions 3.10+); type hints on all public functions; no six or future compatibility libraries.
 
 ---
 

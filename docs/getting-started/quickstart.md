@@ -4,7 +4,7 @@ Get your first capture fast.
 
 ## What you need
 
-- Python 3.9+ installed
+- Python 3.10+ installed
 - `Playwright` browser binaries installed
 - A valid Humble Bundle session cookie (`_simpleauth_sess`)
 

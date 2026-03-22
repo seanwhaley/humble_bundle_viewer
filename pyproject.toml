@@ -7,7 +7,7 @@ name = "hb-library-viewer"
 version = "1.0.0"
 description = "HB Library Viewer with Playwright capture, viewer portal, and typed configuration"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
   { name = "Sean Whaley", email = "crazyandol@gmail.com" },
 ]
@@ -15,7 +15,6 @@ maintainers = [
   { name = "Sean Whaley", email = "crazyandol@gmail.com" },
 ]
 dependencies = [
-  "eval-type-backport>=0.2.0; python_version < '3.10'",
   "playwright>=1.40.0",
   "pydantic>=2.5.0",
   "pydantic-settings>=2.0.0",
