@@ -54,6 +54,10 @@ console windows) and writes logs under `tools/logs/`:
 
 The web app expects the API server at `http://localhost:8000` and proxies `/api/*` requests.
 
+![Documentation-safe Viewer Home screenshot](../assets/screenshots/viewer-home-readme.png)
+
+The committed screenshots in this guide use documentation-safe fixture data and static-value overrides so they stay suitable for public docs and repository landing pages.
+
 ## Data path
 
 By default, the API server uses `viewer.library_path` when it is configured.
@@ -85,6 +89,8 @@ CLI do not drift when started from different working directories.
 ## Setup page
 
 Use `/setup` to load your library data:
+
+![Documentation-safe Setup page screenshot](../assets/screenshots/viewer-setup.png)
 
 - **Capture new library**: paste the `_simpleauth_sess` cookie (used for the run, never stored) and choose a save folder (defaults to `viewer.default_library_dir` when configured, otherwise your Downloads directory).
 - **Use existing library file**: point the viewer at a previously downloaded `library_products.json`.
@@ -229,6 +235,8 @@ rules.
 
 The **Command Center** now also exposes the subproduct enrichment maintenance
 flows used by the CLI:
+
+![Documentation-safe Command Center screenshot](../assets/screenshots/viewer-command-center.png)
 
 - rebuild order models
 - rebuild `library_products.json`

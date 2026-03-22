@@ -318,6 +318,7 @@ export default function LibrarySetup() {
             <Input
               id="saveLocation"
               type="text"
+              data-doc-id="setup-save-location"
               placeholder={
                 libraryStatus?.default_save_dir || "C:\\path\\to\\Downloads"
               }
@@ -424,6 +425,7 @@ export default function LibrarySetup() {
             <Input
               id="existingPath"
               type="text"
+              data-doc-id="setup-existing-path"
               placeholder="C:\\path\\to\\library_products.json"
               value={existingPath}
               onChange={(event) => setExistingPath(event.target.value)}

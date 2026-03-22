@@ -9,6 +9,7 @@ interface StatTileProps {
   subtitle?: string;
   onClick?: () => void;
   className?: string;
+  docId?: string;
 }
 
 /**
@@ -20,6 +21,7 @@ export default function StatTile({
   subtitle,
   onClick,
   className,
+  docId,
 }: StatTileProps) {
   const tileClasses = cn(
     "bg-card text-card-foreground rounded-xl border border-border shadow-sm",
@@ -29,13 +31,23 @@ export default function StatTile({
   );
 
   const content = (
-    <div className="p-4">
-      <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="p-4" data-doc-id={docId}>
+      <div
+        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        data-doc-id={docId ? `${docId}-label` : undefined}>
         {label}
       </div>
-      <div className="mt-1 text-2xl font-bold tracking-tight">{value}</div>
+      <div
+        className="mt-1 text-2xl font-bold tracking-tight"
+        data-doc-id={docId ? `${docId}-value` : undefined}>
+        {value}
+      </div>
       {subtitle && (
-        <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div>
+        <div
+          className="mt-1 text-xs text-muted-foreground"
+          data-doc-id={docId ? `${docId}-subtitle` : undefined}>
+          {subtitle}
+        </div>
       )}
     </div>
   );

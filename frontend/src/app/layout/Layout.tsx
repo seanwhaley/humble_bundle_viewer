@@ -594,21 +594,28 @@ export default function Layout() {
                         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
                           Active library
                         </span>
-                        <span className="truncate text-sm font-medium text-slate-100">
+                        <span
+                          className="truncate text-sm font-medium text-slate-100"
+                          data-doc-id="layout-active-library-name">
                           {currentLibraryName}
                         </span>
                       </div>
-                      <p className="mt-1 truncate text-xs text-slate-400">
+                      <p
+                        className="mt-1 truncate text-xs text-slate-400"
+                        data-doc-id="layout-active-library-path">
                         {libraryStatus?.current_path}
                       </p>
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 text-[11px]">
-                      <span className="rounded-full border border-slate-700 bg-slate-950/80 px-2.5 py-1 text-slate-300">
+                      <span
+                        className="rounded-full border border-slate-700 bg-slate-950/80 px-2.5 py-1 text-slate-300"
+                        data-doc-id="layout-captured-at">
                         Captured {capturedLabel}
                       </span>
                       <span
-                        className={`rounded-full border px-2.5 py-1 ${downloadExpiryBadge.tone}`}>
+                        className={`rounded-full border px-2.5 py-1 ${downloadExpiryBadge.tone}`}
+                        data-doc-id="layout-download-expiry-label">
                         {downloadExpiryBadge.label}
                       </span>
                     </div>
@@ -617,18 +624,22 @@ export default function Layout() {
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     {[
                       {
+                        id: "products",
                         label: "Products",
                         value: formatNumber(libraryTotals.totalProducts),
                       },
                       {
+                        id: "subproducts",
                         label: "Subproducts",
                         value: formatNumber(libraryTotals.totalSubproducts),
                       },
                       {
+                        id: "files",
                         label: "Files",
                         value: formatNumber(libraryTotals.totalFiles),
                       },
                       {
+                        id: "keys",
                         label: "Keys",
                         value: formatNumber(libraryTotals.totalKeys),
                       },
@@ -639,7 +650,9 @@ export default function Layout() {
                         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                           {item.label}
                         </p>
-                        <p className="shrink-0 text-base font-semibold text-white">
+                        <p
+                          className="shrink-0 text-base font-semibold text-white"
+                          data-doc-id={`layout-library-total-${item.id}`}>
                           {item.value}
                         </p>
                       </div>

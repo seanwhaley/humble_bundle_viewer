@@ -67,6 +67,7 @@ The project does **not** currently aim to provide:
 ### Develop on the project
 
 - [Contributing](development/contributing.md)
+- [Documentation screenshots](development/documentation-screenshots.md)
 - [Testing](development/testing.md)
 - [Roadmap](development/roadmap.md)
 - [Changelog](development/changelog.md)

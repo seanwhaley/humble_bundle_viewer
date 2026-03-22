@@ -1,0 +1,15 @@
+{
+  "output_dir": "data/artifacts/temp/current_bundles",
+  "report_json_path": "data/artifacts/temp/current_bundles/current_bundles_report.json",
+  "report_markdown_path": "data/artifacts/temp/current_bundles/current_bundles_report.md",
+  "library_path": "D:/Demo/HB Library Viewer/library_products.json",
+  "bundle_types": [
+    "games",
+    "books",
+    "software"
+  ],
+  "report_exists": true,
+  "markdown_exists": true,
+  "generated_at": "2026-03-21T15:00:00Z",
+  "bundle_count": 9
+}

@@ -140,8 +140,14 @@ export default function Overview() {
                 </span>
               )}
             </div>
-            <p className="mt-2 text-sm font-medium text-slate-100">{filteredLabel}</p>
-            <p className="mt-1 text-xs text-slate-400">
+            <p
+              className="mt-2 text-sm font-medium text-slate-100"
+              data-doc-id="overview-current-scope-label">
+              {filteredLabel}
+            </p>
+            <p
+              className="mt-1 text-xs text-slate-400"
+              data-doc-id="overview-current-scope-description">
               Open filters when you need field-by-field control, or use the tiles and charts below to narrow the dashboard without spending the whole top fold on controls.
             </p>
           </div>
@@ -229,7 +235,7 @@ export default function Overview() {
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Last generated</p>
-            <p className="mt-2 font-medium text-white">
+            <p className="mt-2 font-medium text-white" data-doc-id="overview-current-sales-last-generated">
               {currentBundlesStatus?.generated_at
                 ? formatDateTime(currentBundlesStatus.generated_at)
                 : "Not generated yet"}
@@ -237,7 +243,7 @@ export default function Overview() {
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Bundle types</p>
-            <p className="mt-2 font-medium text-white">
+            <p className="mt-2 font-medium text-white" data-doc-id="overview-current-sales-bundle-types">
               {currentBundlesStatus?.bundle_types?.length
                 ? currentBundlesStatus.bundle_types.join(", ")
                 : "games, books, software"}
@@ -245,7 +251,7 @@ export default function Overview() {
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Bundles analyzed</p>
-            <p className="mt-2 font-medium text-white">
+            <p className="mt-2 font-medium text-white" data-doc-id="overview-current-sales-bundles-analyzed">
               {currentBundlesStatus?.bundle_count !== null &&
               currentBundlesStatus?.bundle_count !== undefined
                 ? formatNumber(currentBundlesStatus.bundle_count)
@@ -254,10 +260,10 @@ export default function Overview() {
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Current Choice</p>
-            <p className="mt-2 font-medium text-white">
+            <p className="mt-2 font-medium text-white" data-doc-id="overview-current-sales-choice-month">
               {currentChoiceStatus?.month_label || "Not generated yet"}
             </p>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-400" data-doc-id="overview-current-sales-choice-helper">
               {currentChoiceStatus?.game_count !== null &&
               currentChoiceStatus?.game_count !== undefined
                 ? `${formatNumber(currentChoiceStatus.game_count)} games captured`
@@ -291,11 +297,13 @@ export default function Overview() {
             value={formatNumber(stats.totalProducts)}
             subtitle={isFiltered ? "Click to reset scope" : "Visible purchases"}
             onClick={isFiltered ? clearFilters : undefined}
+            docId="overview-stat-purchases"
           />
           <StatTile
             label="Included items"
             value={formatNumber(stats.totalContainedItems)}
             subtitle="Titles or item groups"
+            docId="overview-stat-included-items"
           />
           <StatTile
             label="Downloads"
@@ -313,6 +321,7 @@ export default function Overview() {
                     : "has_downloads",
               })
             }
+            docId="overview-stat-downloads"
           />
           <StatTile
             label="Keys"
@@ -328,16 +337,19 @@ export default function Overview() {
                   filters.keyPresence === "has_keys" ? null : "has_keys",
               })
             }
+            docId="overview-stat-keys"
           />
           <StatTile
             label="Download size"
             value={formatBytes(stats.totalBytes)}
             subtitle="Combined visible file size"
+            docId="overview-stat-download-size"
           />
           <StatTile
             label="Estimated spend"
             value={formatCurrency(stats.totalCost)}
             subtitle="Across visible purchases"
+            docId="overview-stat-estimated-spend"
           />
         </div>
       </section>

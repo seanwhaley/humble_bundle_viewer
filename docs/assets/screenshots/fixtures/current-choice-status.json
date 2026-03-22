@@ -1,0 +1,13 @@
+{
+  "output_dir": "data/artifacts/temp/current_choice",
+  "page_html_path": "data/artifacts/temp/current_choice/current_choice_page.html",
+  "snapshot_json_path": "data/artifacts/temp/current_choice/current_choice_snapshot.json",
+  "report_json_path": "data/artifacts/temp/current_choice/current_choice_report.json",
+  "report_markdown_path": "data/artifacts/temp/current_choice/current_choice_report.md",
+  "library_path": "D:/Demo/HB Library Viewer/library_products.json",
+  "report_exists": true,
+  "markdown_exists": true,
+  "generated_at": "2026-03-21T15:00:00Z",
+  "month_label": "March",
+  "game_count": 8
+}
