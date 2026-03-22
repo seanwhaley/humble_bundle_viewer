@@ -34,6 +34,12 @@ Raw API batches remain available under `data/artifacts/api_responses/`.
 
 - Keep a backup of `library_products.json` before running again.
 - Use the `platforms` setting to limit downloads in the next run.
-- For interactive exploration, open the Library Products Viewer in
-  `docs/tools/library-products-viewer.html`.
+- For lightweight interactive exploration without starting the full web app, open the standalone Library Products Viewer in
+  `docs/assets/tools/library-products-viewer.html`.
 - To generate a viewer schema for validation, run `python -m hb_library_viewer build-viewer-assets`.
+
+## Choose the right exploration surface
+
+- Use the standalone **Library Products Viewer** for raw JSON inspection, quick filtering, and schema-aware troubleshooting.
+- Use the main **Viewer App** when you want route-specific dashboards, guided setup, current-sales analysis, or managed download workflows.
+- Use CLI rebuild/export commands when you need to refresh artifacts or generate derived reports before inspecting the results.

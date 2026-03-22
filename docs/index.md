@@ -64,13 +64,19 @@ The project does **not** currently aim to provide:
 - [Component Design](architecture/components.md)
 - [Configuration Management](architecture/configuration.md)
 
-### Develop on the project
+### Maintain or contribute
 
-- [Contributing](development/contributing.md)
-- [Documentation screenshots](development/documentation-screenshots.md)
-- [Testing](development/testing.md)
+- [Contributing](maintainers/contributing.md)
+- [Documentation screenshots](maintainers/documentation-screenshots.md)
+- [Testing](maintainers/testing.md)
+- [Repository Customizations](maintainers/github-customizations.md)
+
+### Planning and active efforts
+
 - [Roadmap](development/roadmap.md)
 - [Changelog](development/changelog.md)
+
+Active work efforts live under `docs/development/work-efforts/` while they are in progress and are intentionally excluded from the published docs navigation.
 
 ## Security and privacy
 

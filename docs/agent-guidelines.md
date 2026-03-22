@@ -37,4 +37,4 @@ This page summarizes the most important constraints and conventions for AI-assis
 For the complete policy and workflow guidance, see the full agent document:
 
 - [AGENTS.md](https://github.com/seanwhaley/humble_bundle_viewer/blob/main/.github/AGENTS.md)
-- [Repository Customizations](development/github-customizations.md) for maintainers extending `.github/**`
+- [Repository Customizations](maintainers/github-customizations.md) for maintainers extending `.github/**`

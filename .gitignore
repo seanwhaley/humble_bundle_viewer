@@ -98,3 +98,5 @@ tools/logs/
 
 # Docs build output
 site/
+
+# Keep active planning docs versioned; docs/development/work-efforts/** is excluded from MkDocs, not from git.

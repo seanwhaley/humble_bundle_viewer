@@ -83,11 +83,13 @@ nav:
   - Download Module: api/download.md
   - Utilities: api/utils.md
 
-- Development:
-  - Testing: development/testing.md
-  - Documentation Screenshots: development/documentation-screenshots.md
-  - Contributing: development/contributing.md
-  - Repository Customizations: development/github-customizations.md
+- Maintainers:
+  - Contributing: maintainers/contributing.md
+  - Testing: maintainers/testing.md
+  - Documentation Screenshots: maintainers/documentation-screenshots.md
+  - Repository Customizations: maintainers/github-customizations.md
+
+- Planning:
   - Changelog: development/changelog.md
   - Roadmap: development/roadmap.md
 

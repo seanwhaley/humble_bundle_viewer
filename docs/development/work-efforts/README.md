@@ -14,5 +14,6 @@ Create `docs/development/work-efforts/<effort-name>/` with:
 
 - do not keep completed work-effort folders around once the resulting product state has been reflected in the actual docs and changelog
 - do not create separate interim, summary, or final-report files for the same effort
+- keep active work-effort folders versioned in git while they are in progress so collaborators can review scope and status; do not add `docs/development/work-efforts/` to `.gitignore`
 
 If this folder is quiet, that is intentional: the current repository state has no active tracked work effort.

@@ -2,6 +2,8 @@
 
 This project keeps a lightweight changelog for user-visible milestones and release-level changes.
 
+Use this page for completed or release-tracked outcomes. Keep active planning detail in `docs/development/work-efforts/` until the work is finished and reflected here.
+
 ## Unreleased
 
 ### Repository and docs

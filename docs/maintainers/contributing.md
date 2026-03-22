@@ -31,9 +31,11 @@ This project is local-first, privacy-sensitive, and intentionally narrow in scop
 ## Documentation expectations
 
 - user-facing behavior belongs in `docs/getting-started/`, `docs/guides/`, or `README.md`
-- architecture and implementation notes belong in `docs/architecture/` or `docs/development/`
+- architecture and implementation notes belong in `docs/architecture/`
+- evergreen maintainer workflow docs belong in `docs/maintainers/`
 - active project-management work, when needed, belongs in `docs/development/work-efforts/<effort-name>/`
-- completed work-effort folders should be removed after the final state is reflected in product docs and changelog entries
+- roadmap/changelog material belongs in `docs/development/`
+- completed work-effort folders should be removed after the final state is reflected in canonical docs and changelog entries
 
 ## Local verification
 

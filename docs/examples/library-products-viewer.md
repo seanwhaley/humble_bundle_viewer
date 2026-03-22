@@ -1,6 +1,8 @@
 # Library Products Viewer
 
-Use the **Library Products Viewer** to explore `data/artifacts/library_products.json` in a search and filter UI.
+Use the **Library Products Viewer** when you want a lightweight, fully client-side way to inspect `data/artifacts/library_products.json` without running the FastAPI + React app.
+
+This standalone HTML helper is best for quick local inspection, schema-aware validation, or sharing a reproducible debugging workflow with another contributor.
 
 ## What it does
 
@@ -23,9 +25,20 @@ Use the **Library Products Viewer** to explore `data/artifacts/library_products.
   and expired selections prompt you to capture a fresh library file. The warning
   window is configurable via `viewer.link_expiry_warning_hours`.
 
+## When to use it
+
+Prefer the standalone viewer when you want:
+
+- a single local HTML file with no backend process
+- a quick look at `library_products.json` during debugging
+- schema validation against the exported viewer schema
+- a focused product/subproduct inspection tool separate from the full viewer portal
+
+Prefer the main web app when you want guided setup, typed API-backed pages, current-sales analysis, or browser-managed download workflows.
+
 ## How to use it
 
-1. Open `docs/tools/library-products-viewer.html` in a browser.
+1. Open `docs/assets/tools/library-products-viewer.html` in a browser.
 2. Load your `library_products.json` file when prompted.
 
 If you are running the viewer app, use the **Setup** page to either capture
@@ -40,6 +53,10 @@ caching subproduct pages, and extracting structured metadata.
 If you want schema validation in the viewer, generate the schema with
 `python -m hb_library_viewer build-viewer-assets`. The command uses the
 `LibraryData` model from the project to export a schema for validation.
+
+The generated schema file lives at:
+
+`docs/assets/tools/library-products-schema.json`
 
 If bundle items are missing, rebuild `data/artifacts/library_products.json` from
 stored API responses with
@@ -60,3 +77,4 @@ The file contains signed download links, so keep it private.
 - Bundle items use normalized `subproducts`; when missing, the viewer falls
   back to top-level downloads and inferred titles based on filenames.
 - If you see a blank page, ensure you selected a valid data file with a `products` array.
+- Keep the loaded JSON private: it can contain signed download links and other local-only data.
