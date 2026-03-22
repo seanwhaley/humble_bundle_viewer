@@ -167,7 +167,9 @@ def capture_page(
             route.fulfill(
                 status=500,
                 content_type="application/json",
-                body=json.dumps({"detail": f"No screenshot fixture for {request_path}"}),
+                body=json.dumps(
+                    {"detail": f"No screenshot fixture for {request_path}"}
+                ),
             )
             return
         route.continue_()
@@ -206,7 +208,9 @@ def run_capture(args: argparse.Namespace) -> int:
     manifest_dir = manifest_path.parent
     base_url = args.base_url or manifest.get("base_url")
     if not base_url:
-        print("The screenshot manifest must define base_url or you must pass --base-url.")
+        print(
+            "The screenshot manifest must define base_url or you must pass --base-url."
+        )
         return 1
 
     all_pages = manifest.get("pages", [])
@@ -253,9 +257,10 @@ def run_capture(args: argparse.Namespace) -> int:
         if args.check:
             mismatches: list[str] = []
             for page_spec, generated_path in generated_outputs:
-                committed_path = resolve_relative_path(
-                    manifest_dir, manifest.get("output_dir", ".")
-                ) / page_spec["output"]
+                committed_path = (
+                    resolve_relative_path(manifest_dir, manifest.get("output_dir", "."))
+                    / page_spec["output"]
+                )
                 if not committed_path.exists():
                     mismatches.append(f"Missing committed screenshot: {committed_path}")
                     continue

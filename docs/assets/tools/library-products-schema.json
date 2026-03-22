@@ -113,11 +113,7 @@
           "title": "Display Detail"
         }
       },
-      "required": [
-        "platform",
-        "name",
-        "url"
-      ],
+      "required": ["platform", "name", "url"],
       "title": "Download",
       "type": "object"
     },
@@ -316,9 +312,7 @@
           "title": "Visible"
         }
       },
-      "required": [
-        "key_type"
-      ],
+      "required": ["key_type"],
       "title": "KeyEntry",
       "type": "object"
     },
@@ -425,12 +419,7 @@
           "type": "number"
         }
       },
-      "required": [
-        "gamekey",
-        "product_name",
-        "machine_name",
-        "category"
-      ],
+      "required": ["gamekey", "product_name", "machine_name", "category"],
       "title": "Product",
       "type": "object"
     },
@@ -742,9 +731,7 @@
           "title": "Extracted At"
         }
       },
-      "required": [
-        "url"
-      ],
+      "required": ["url"],
       "title": "SubproductPageDetails",
       "type": "object"
     }
@@ -773,9 +760,7 @@
       "type": "string"
     }
   },
-  "required": [
-    "captured_at"
-  ],
+  "required": ["captured_at"],
   "title": "LibraryData",
   "type": "object"
 }

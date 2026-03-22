@@ -6,7 +6,7 @@ Thanks for your interest in contributing.
 
 ## Before opening a change
 
-- read [docs/development/contributing.md](docs/development/contributing.md)
+- read [docs/maintainers/contributing.md](docs/maintainers/contributing.md)
 - keep secrets, cookies, signed URLs, and local artifacts out of commits
 - make sure your change matches the project's actual scope: local-first capture, normalization, viewer workflows, and optional downloads/sync
 

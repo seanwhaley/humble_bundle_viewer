@@ -275,7 +275,7 @@ export default function CommandCenter() {
   );
 
   const [schemaOutput, setSchemaOutput] = useState(
-    "docs/tools/library-products-schema.json",
+    "docs/assets/tools/library-products-schema.json",
   );
 
   const runCommand = async <TDetails,>(

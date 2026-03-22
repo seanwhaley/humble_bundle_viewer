@@ -11,7 +11,7 @@
         "height": 760
       },
       "wait_for": {
-        "text": "Core library metrics for the current scope"
+        "selector": "[data-doc-id='overview-current-scope-label']"
       },
       "fixtures": {
         "/api/library/status": "fixtures/library-status.json",

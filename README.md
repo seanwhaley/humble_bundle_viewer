@@ -198,7 +198,7 @@ See [SECURITY.md](SECURITY.md) for reporting guidance.
 Contributions are welcome. Start with:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
-- `docs/development/contributing.md`
+- `docs/maintainers/contributing.md`
 
 For contribution-fit or maintainer questions, contact Sean Whaley at `crazyandol@gmail.com`.
 
