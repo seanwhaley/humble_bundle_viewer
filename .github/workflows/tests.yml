@@ -13,7 +13,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ubuntu-latest, windows-latest, macos-latest]
-            python-version: ["3.10", "3.11", "3.12"]
+                python-version: ["3.10", "3.11", "3.12"]
 
         steps:
             - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
 
             - name: Validate config schema
               run: |
-                python -c "import sys; sys.path.insert(0, 'backend/src'); from hb_library_viewer.config import Settings; Settings(); print('Config schema valid')"
+                  python -c "import sys; sys.path.insert(0, 'backend/src'); from hb_library_viewer.config import Settings; Settings(); print('Config schema valid')"
               env:
                   HUMBLE_AUTH_COOKIE: test_token_for_validation
 
@@ -169,5 +169,5 @@ jobs:
                     echo "ERROR: Broken links found"
                     exit 1
                   fi
-                    echo "No obvious broken links"
+                  echo "No obvious broken links"
               continue-on-error: true
