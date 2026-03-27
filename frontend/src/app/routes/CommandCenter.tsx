@@ -41,7 +41,13 @@ type StatusAction = {
   to: string;
 };
 
-type StatusTone = "fresh" | "stale" | "missing" | "loading";
+type StatusTone = "fresh" | "stale" | "missing" | "loading" | "unavailable";
+
+type StatusQueryState = {
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: unknown;
+};
 
 type CommandOptions<TDetails> = {
   refreshLibrary?: boolean;
@@ -87,6 +93,8 @@ const buildToneClasses = (tone: StatusTone) =>
   tone === "fresh" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
   : tone === "stale" ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
   : tone === "loading" ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
+  : tone === "unavailable" ?
+    "border-rose-500/40 bg-rose-500/10 text-rose-100"
   : "border-slate-700 bg-slate-900/80 text-slate-200";
 
 const ReportStatusPill = ({
@@ -108,7 +116,7 @@ const getReportStatusMeta = (
   generatedAt: string | null | undefined,
   exists: boolean,
 ): { tone: StatusTone; label: string; detail: string } => {
-  if (!exists || !generatedAt) {
+  if (!exists) {
     return {
       tone: "missing",
       label: "Missing",
@@ -116,12 +124,21 @@ const getReportStatusMeta = (
     };
   }
 
+  if (!generatedAt) {
+    return {
+      tone: "unavailable",
+      label: "Unavailable",
+      detail:
+        "A saved report exists, but its generated timestamp is unavailable.",
+    };
+  }
+
   const timestamp = new Date(generatedAt).getTime();
   if (Number.isNaN(timestamp)) {
     return {
-      tone: "missing",
-      label: "Unknown",
-      detail: "A report exists, but its saved timestamp could not be parsed.",
+      tone: "unavailable",
+      label: "Unavailable",
+      detail: "A saved report exists, but its timestamp could not be parsed.",
     };
   }
 
@@ -133,6 +150,9 @@ const getReportStatusMeta = (
     detail: `Last generated ${formatDateTime(generatedAt)}${elapsedLabel ? ` (${elapsedLabel})` : ""}.`,
   };
 };
+
+const buildErrorLines = (error?: unknown): string[] =>
+  error instanceof Error && error.message ? [error.message] : [];
 
 const CurrentSalesStatusSummary = ({
   title,
@@ -159,8 +179,8 @@ const CurrentSalesStatusSummary = ({
     </div>
     {lines.length > 0 && (
       <ul className="mt-3 space-y-1 text-xs text-slate-300">
-        {lines.map((line) => (
-          <li key={line}>{line}</li>
+        {lines.map((line, index) => (
+          <li key={`${title}-${index}`}>{line}</li>
         ))}
       </ul>
     )}
@@ -191,8 +211,8 @@ const StatusMessage = ({ state }: { state: CommandState }) => {
       )}
       {state.detailLines.length > 0 && (
         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-200">
-          {state.detailLines.map((line) => (
-            <li key={line}>{line}</li>
+          {state.detailLines.map((line, index) => (
+            <li key={`${state.status}-${index}`}>{line}</li>
           ))}
         </ul>
       )}
@@ -357,13 +377,133 @@ const buildCurrentChoiceActions = (): StatusAction[] => [
   { label: "Open Current Choice", to: "/venue/choice" },
 ];
 
+const renderCurrentBundlesSummary = (
+  status: CurrentBundlesStatus | undefined,
+  queryState: StatusQueryState,
+) => {
+  if (queryState.isLoading) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="loading"
+        label="Loading"
+        detail="Checking the latest saved current-sales bundle analysis…"
+        lines={[]}
+      />
+    );
+  }
+
+  if (queryState.isError) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Unable to load saved bundle report status right now."
+        lines={buildErrorLines(queryState.error)}
+      />
+    );
+  }
+
+  if (!status) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Saved bundle report status is unavailable right now."
+        lines={[]}
+      />
+    );
+  }
+
+  const meta = getReportStatusMeta(status.generated_at, status.report_exists);
+  return (
+    <CurrentSalesStatusSummary
+      title="Saved bundle report status"
+      tone={meta.tone}
+      label={meta.label}
+      detail={meta.detail}
+      lines={[
+        `Bundle types: ${status.bundle_types.join(", ")}`,
+        `Saved bundles: ${status.bundle_count ?? 0}`,
+        `Output folder: ${status.output_dir}`,
+      ]}
+    />
+  );
+};
+
+const renderCurrentChoiceSummary = (
+  status: CurrentChoiceStatus | undefined,
+  queryState: StatusQueryState,
+) => {
+  if (queryState.isLoading) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="loading"
+        label="Loading"
+        detail="Checking the latest saved current Humble Choice analysis…"
+        lines={[]}
+      />
+    );
+  }
+
+  if (queryState.isError) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Unable to load the latest saved current Humble Choice analysis."
+        lines={buildErrorLines(queryState.error)}
+      />
+    );
+  }
+
+  if (!status) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Saved current Humble Choice status is unavailable right now."
+        lines={[]}
+      />
+    );
+  }
+
+  const meta = getReportStatusMeta(status.generated_at, status.report_exists);
+  return (
+    <CurrentSalesStatusSummary
+      title="Saved Choice report status"
+      tone={meta.tone}
+      label={meta.label}
+      detail={meta.detail}
+      lines={[
+        `Month: ${status.month_label ?? "Not captured yet"}`,
+        `Saved games: ${status.game_count ?? 0}`,
+        `Output folder: ${status.output_dir}`,
+      ]}
+    />
+  );
+};
+
 export default function CommandCenter() {
   const queryClient = useQueryClient();
   const { data: libraryStatus } = useLibraryStatus();
-  const { data: currentBundlesStatus, isLoading: currentBundlesStatusLoading } =
-    useCurrentBundlesStatus();
-  const { data: currentChoiceStatus, isLoading: currentChoiceStatusLoading } =
-    useCurrentChoiceStatus();
+  const {
+    data: currentBundlesStatus,
+    isLoading: currentBundlesStatusLoading,
+    isError: currentBundlesStatusError,
+    error: currentBundlesStatusErrorDetail,
+  } = useCurrentBundlesStatus();
+  const {
+    data: currentChoiceStatus,
+    isLoading: currentChoiceStatusLoading,
+    isError: currentChoiceStatusError,
+    error: currentChoiceStatusErrorDetail,
+  } = useCurrentChoiceStatus();
 
   const [rebuildOrder, setRebuildOrder] =
     useState<CommandState>(createIdleState);
@@ -473,78 +613,6 @@ export default function CommandCenter() {
     }
   };
 
-  const renderCurrentBundlesSummary = (
-    status?: CurrentBundlesStatus,
-    isLoading?: boolean,
-  ) => {
-    if (isLoading) {
-      return (
-        <CurrentSalesStatusSummary
-          title="Saved bundle report status"
-          tone="loading"
-          label="Loading"
-          detail="Checking the latest saved current-sales bundle analysis…"
-          lines={[]}
-        />
-      );
-    }
-
-    if (!status) {
-      return null;
-    }
-
-    const meta = getReportStatusMeta(status.generated_at, status.report_exists);
-    return (
-      <CurrentSalesStatusSummary
-        title="Saved bundle report status"
-        tone={meta.tone}
-        label={meta.label}
-        detail={meta.detail}
-        lines={[
-          `Bundle types: ${status.bundle_types.join(", ")}`,
-          `Saved bundles: ${status.bundle_count ?? 0}`,
-          `Output folder: ${status.output_dir}`,
-        ]}
-      />
-    );
-  };
-
-  const renderCurrentChoiceSummary = (
-    status?: CurrentChoiceStatus,
-    isLoading?: boolean,
-  ) => {
-    if (isLoading) {
-      return (
-        <CurrentSalesStatusSummary
-          title="Saved Choice report status"
-          tone="loading"
-          label="Loading"
-          detail="Checking the latest saved current Humble Choice analysis…"
-          lines={[]}
-        />
-      );
-    }
-
-    if (!status) {
-      return null;
-    }
-
-    const meta = getReportStatusMeta(status.generated_at, status.report_exists);
-    return (
-      <CurrentSalesStatusSummary
-        title="Saved Choice report status"
-        tone={meta.tone}
-        label={meta.label}
-        detail={meta.detail}
-        lines={[
-          `Month: ${status.month_label ?? "Not captured yet"}`,
-          `Saved games: ${status.game_count ?? 0}`,
-          `Output folder: ${status.output_dir}`,
-        ]}
-      />
-    );
-  };
-
   return (
     <div className="w-full space-y-8">
       <div>
@@ -625,7 +693,11 @@ export default function CommandCenter() {
           description="Capture the current games, books, and software sales pages and rebuild the shared bundle-overlap report used by the Current sales routes.">
           {renderCurrentBundlesSummary(
             currentBundlesStatus,
-            currentBundlesStatusLoading,
+            {
+              isLoading: currentBundlesStatusLoading,
+              isError: currentBundlesStatusError,
+              error: currentBundlesStatusErrorDetail,
+            },
           )}
           <Button
             type="button"
@@ -663,7 +735,11 @@ export default function CommandCenter() {
           description="Refresh the saved current-month Humble Choice report that powers the Current sales Choice page.">
           {renderCurrentChoiceSummary(
             currentChoiceStatus,
-            currentChoiceStatusLoading,
+            {
+              isLoading: currentChoiceStatusLoading,
+              isError: currentChoiceStatusError,
+              error: currentChoiceStatusErrorDetail,
+            },
           )}
           <Button
             type="button"
