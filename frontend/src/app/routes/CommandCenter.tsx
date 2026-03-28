@@ -8,7 +8,13 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { useLibraryStatus } from "../../data/api";
+import {
+  type CurrentBundlesStatus,
+  type CurrentChoiceStatus,
+  useCurrentBundlesStatus,
+  useCurrentChoiceStatus,
+  useLibraryStatus,
+} from "../../data/api";
 import {
   CurrentBundlesCommandDetails,
   CurrentChoiceCommandDetails,
@@ -19,6 +25,7 @@ import {
   ViewerSchemaCommandDetails,
   postMaintenanceCommand,
 } from "../../data/maintenance";
+import { formatDateTime } from "../../utils/format";
 
 type CommandStatus = "idle" | "running" | "success" | "error";
 
@@ -26,12 +33,28 @@ type CommandState = {
   status: CommandStatus;
   message: string | null;
   detailLines: string[];
+  actions: StatusAction[];
+};
+
+type StatusAction = {
+  label: string;
+  to: string;
+};
+
+type StatusTone = "fresh" | "stale" | "missing" | "loading" | "unavailable";
+
+type StatusQueryState = {
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: unknown;
 };
 
 type CommandOptions<TDetails> = {
   refreshLibrary?: boolean;
   invalidateQueryKeys?: string[][];
   buildDetailLines?: (details: TDetails) => string[];
+  buildActions?: (details: TDetails) => StatusAction[];
+  runningMessage?: string;
 };
 
 const optionalText = (value: string) => {
@@ -49,7 +72,120 @@ const optionalNumber = (value: string) => {
 const buildMessageClasses = (status: CommandStatus) =>
   status === "success" ?
     "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+  : status === "running" ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
   : "border-rose-500/40 bg-rose-500/10 text-rose-200";
+
+const REPORT_STALE_MS = 24 * 60 * 60 * 1000;
+
+const formatElapsedSince = (dateInput?: string | null) => {
+  if (!dateInput) return null;
+  const timestamp = new Date(dateInput).getTime();
+  if (Number.isNaN(timestamp)) return null;
+  const diffMs = Math.max(0, Date.now() - timestamp);
+  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+  if (diffHours < 1) return "less than an hour ago";
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
+};
+
+const buildToneClasses = (tone: StatusTone) =>
+  tone === "fresh" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+  : tone === "stale" ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
+  : tone === "loading" ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
+  : tone === "unavailable" ?
+    "border-rose-500/40 bg-rose-500/10 text-rose-100"
+  : "border-slate-700 bg-slate-900/80 text-slate-200";
+
+const ReportStatusPill = ({
+  tone,
+  label,
+}: {
+  tone: StatusTone;
+  label: string;
+}) => (
+  <span
+    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${buildToneClasses(
+      tone,
+    )}`}>
+    {label}
+  </span>
+);
+
+const getReportStatusMeta = (
+  generatedAt: string | null | undefined,
+  exists: boolean,
+): { tone: StatusTone; label: string; detail: string } => {
+  if (!exists) {
+    return {
+      tone: "missing",
+      label: "Missing",
+      detail: "No saved report yet. Run the refresh to create one.",
+    };
+  }
+
+  if (!generatedAt) {
+    return {
+      tone: "unavailable",
+      label: "Unavailable",
+      detail:
+        "A saved report exists, but its generated timestamp is unavailable.",
+    };
+  }
+
+  const timestamp = new Date(generatedAt).getTime();
+  if (Number.isNaN(timestamp)) {
+    return {
+      tone: "unavailable",
+      label: "Unavailable",
+      detail: "A saved report exists, but its timestamp could not be parsed.",
+    };
+  }
+
+  const stale = Date.now() - timestamp > REPORT_STALE_MS;
+  const elapsedLabel = formatElapsedSince(generatedAt);
+  return {
+    tone: stale ? "stale" : "fresh",
+    label: stale ? "Stale" : "Fresh",
+    detail: `Last generated ${formatDateTime(generatedAt)}${elapsedLabel ? ` (${elapsedLabel})` : ""}.`,
+  };
+};
+
+const buildErrorLines = (error?: unknown): string[] =>
+  error instanceof Error && error.message ? [error.message] : [];
+
+const CurrentSalesStatusSummary = ({
+  title,
+  tone,
+  label,
+  detail,
+  lines,
+}: {
+  title: string;
+  tone: StatusTone;
+  label: string;
+  detail: string;
+  lines: string[];
+}) => (
+  <div className="rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+          {title}
+        </p>
+        <p className="text-sm text-slate-100">{detail}</p>
+      </div>
+      <ReportStatusPill tone={tone} label={label} />
+    </div>
+    {lines.length > 0 && (
+      <ul className="mt-3 space-y-1 text-xs text-slate-300">
+        {lines.map((line, index) => (
+          <li key={`${title}-${index}`}>{line}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
 
 const StatusMessage = ({ state }: { state: CommandState }) => {
   if (!state.message) return null;
@@ -59,10 +195,24 @@ const StatusMessage = ({ state }: { state: CommandState }) => {
         state.status,
       )}`}>
       <div>{state.message}</div>
+      {state.actions.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {state.actions.map((action) => (
+            <Button
+              key={`${action.to}-${action.label}`}
+              asChild
+              size="sm"
+              variant="outline"
+              className="border-slate-700 bg-slate-950/70 text-slate-100 hover:bg-slate-900">
+              <Link to={action.to}>{action.label}</Link>
+            </Button>
+          ))}
+        </div>
+      )}
       {state.detailLines.length > 0 && (
         <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-200">
-          {state.detailLines.map((line) => (
-            <li key={line}>{line}</li>
+          {state.detailLines.map((line, index) => (
+            <li key={`${state.status}-${index}`}>{line}</li>
           ))}
         </ul>
       )}
@@ -74,6 +224,7 @@ const createIdleState = (): CommandState => ({
   status: "idle",
   message: null,
   detailLines: [],
+  actions: [],
 });
 
 const CommandSection = ({
@@ -90,7 +241,7 @@ const CommandSection = ({
       <h3 className="text-xl font-semibold text-slate-50">{title}</h3>
       <p className="mt-1 text-sm text-slate-400">{description}</p>
     </div>
-    <div className="grid gap-6 lg:grid-cols-2">{children}</div>
+    <div className="space-y-6">{children}</div>
   </section>
 );
 
@@ -188,26 +339,171 @@ const buildSubproductMetadataDetailLines = (
 const buildCurrentBundlesDetailLines = (
   details: CurrentBundlesCommandDetails,
 ): string[] => [
+  ...withOutputPath("Output folder", details.output_dir),
+  ...withOutputPath("Bundle index HTML", details.index_html_path),
+  ...withOutputPath("Bundle links", details.bundle_links_path),
   ...withOutputPath("Catalog", details.catalog_json_path),
   ...withOutputPath("Report JSON", details.report_json_path),
   ...withOutputPath("Report Markdown", details.report_markdown_path),
+  `Generated: ${details.generated_at}`,
+  `Library: ${details.library_path}`,
   `Bundle types: ${details.bundle_types.join(", ")}`,
   `Bundles captured: ${details.bundle_count}`,
+];
+
+const buildCurrentBundlesActions = (): StatusAction[] => [
+  { label: "Open Sales Overview", to: "/venue/overview" },
+  { label: "Open Game Bundles", to: "/venue/bundles/games" },
+  { label: "Open Book Bundles", to: "/venue/bundles/books" },
+  { label: "Open Software Bundles", to: "/venue/bundles/software" },
 ];
 
 const buildCurrentChoiceDetailLines = (
   details: CurrentChoiceCommandDetails,
 ): string[] => [
+  ...withOutputPath("Output folder", details.output_dir),
+  ...withOutputPath("Saved page HTML", details.page_html_path),
   ...withOutputPath("Snapshot", details.snapshot_json_path),
   ...withOutputPath("Report JSON", details.report_json_path),
   ...withOutputPath("Report Markdown", details.report_markdown_path),
+  `Generated: ${details.generated_at}`,
+  `Library: ${details.library_path}`,
   `Month: ${details.month_label}`,
   `Games captured: ${details.game_count}`,
 ];
 
+const buildCurrentChoiceActions = (): StatusAction[] => [
+  { label: "Open Sales Overview", to: "/venue/overview" },
+  { label: "Open Current Choice", to: "/venue/choice" },
+];
+
+const renderCurrentBundlesSummary = (
+  status: CurrentBundlesStatus | undefined,
+  queryState: StatusQueryState,
+) => {
+  if (queryState.isLoading) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="loading"
+        label="Loading"
+        detail="Checking the latest saved current-sales bundle analysis…"
+        lines={[]}
+      />
+    );
+  }
+
+  if (queryState.isError) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Unable to load saved bundle report status right now."
+        lines={buildErrorLines(queryState.error)}
+      />
+    );
+  }
+
+  if (!status) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved bundle report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Saved bundle report status is unavailable right now."
+        lines={[]}
+      />
+    );
+  }
+
+  const meta = getReportStatusMeta(status.generated_at, status.report_exists);
+  return (
+    <CurrentSalesStatusSummary
+      title="Saved bundle report status"
+      tone={meta.tone}
+      label={meta.label}
+      detail={meta.detail}
+      lines={[
+        `Bundle types: ${status.bundle_types.join(", ")}`,
+        `Saved bundles: ${status.bundle_count ?? 0}`,
+        `Output folder: ${status.output_dir}`,
+      ]}
+    />
+  );
+};
+
+const renderCurrentChoiceSummary = (
+  status: CurrentChoiceStatus | undefined,
+  queryState: StatusQueryState,
+) => {
+  if (queryState.isLoading) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="loading"
+        label="Loading"
+        detail="Checking the latest saved current Humble Choice analysis…"
+        lines={[]}
+      />
+    );
+  }
+
+  if (queryState.isError) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Unable to load the latest saved current Humble Choice analysis."
+        lines={buildErrorLines(queryState.error)}
+      />
+    );
+  }
+
+  if (!status) {
+    return (
+      <CurrentSalesStatusSummary
+        title="Saved Choice report status"
+        tone="unavailable"
+        label="Unavailable"
+        detail="Saved current Humble Choice status is unavailable right now."
+        lines={[]}
+      />
+    );
+  }
+
+  const meta = getReportStatusMeta(status.generated_at, status.report_exists);
+  return (
+    <CurrentSalesStatusSummary
+      title="Saved Choice report status"
+      tone={meta.tone}
+      label={meta.label}
+      detail={meta.detail}
+      lines={[
+        `Month: ${status.month_label ?? "Not captured yet"}`,
+        `Saved games: ${status.game_count ?? 0}`,
+        `Output folder: ${status.output_dir}`,
+      ]}
+    />
+  );
+};
+
 export default function CommandCenter() {
   const queryClient = useQueryClient();
   const { data: libraryStatus } = useLibraryStatus();
+  const {
+    data: currentBundlesStatus,
+    isLoading: currentBundlesStatusLoading,
+    isError: currentBundlesStatusError,
+    error: currentBundlesStatusErrorDetail,
+  } = useCurrentBundlesStatus();
+  const {
+    data: currentChoiceStatus,
+    isLoading: currentChoiceStatusLoading,
+    isError: currentChoiceStatusError,
+    error: currentChoiceStatusErrorDetail,
+  } = useCurrentChoiceStatus();
 
   const [rebuildOrder, setRebuildOrder] =
     useState<CommandState>(createIdleState);
@@ -286,13 +582,19 @@ export default function CommandCenter() {
     options?: CommandOptions<TDetails>,
   ) => {
     if (state.status === "running") return;
-    setState({ status: "running", message: null, detailLines: [] });
+    setState({
+      status: "running",
+      message: options?.runningMessage ?? "Running command…",
+      detailLines: [],
+      actions: [],
+    });
     try {
       const data = await postMaintenanceCommand<TDetails>(endpoint, payload);
       setState({
         status: "success",
         message: data.message || "Command completed successfully.",
         detailLines: options?.buildDetailLines?.(data.details) ?? [],
+        actions: options?.buildActions?.(data.details) ?? [],
       });
       if (options?.refreshLibrary) {
         queryClient.invalidateQueries({ queryKey: ["library"] });
@@ -306,6 +608,7 @@ export default function CommandCenter() {
         status: "error",
         message: error instanceof Error ? error.message : "Command failed.",
         detailLines: [],
+        actions: [],
       });
     }
   };
@@ -388,6 +691,14 @@ export default function CommandCenter() {
           eyebrow="Reports"
           title="Current sales bundle analysis"
           description="Capture the current games, books, and software sales pages and rebuild the shared bundle-overlap report used by the Current sales routes.">
+          {renderCurrentBundlesSummary(
+            currentBundlesStatus,
+            {
+              isLoading: currentBundlesStatusLoading,
+              isError: currentBundlesStatusError,
+              error: currentBundlesStatusErrorDetail,
+            },
+          )}
           <Button
             type="button"
             size="sm"
@@ -399,7 +710,10 @@ export default function CommandCenter() {
                 analyzeCurrentBundles,
                 setAnalyzeCurrentBundles,
                 {
+                  runningMessage:
+                    "Refreshing current bundle analysis for games, books, and software. This can take a moment while the backend captures the live sales pages.",
                   buildDetailLines: buildCurrentBundlesDetailLines,
+                  buildActions: buildCurrentBundlesActions,
                   invalidateQueryKeys: [
                     ["current-bundles-status"],
                     ["current-bundles"],
@@ -419,6 +733,14 @@ export default function CommandCenter() {
           eyebrow="Reports"
           title="Current sales Choice analysis"
           description="Refresh the saved current-month Humble Choice report that powers the Current sales Choice page.">
+          {renderCurrentChoiceSummary(
+            currentChoiceStatus,
+            {
+              isLoading: currentChoiceStatusLoading,
+              isError: currentChoiceStatusError,
+              error: currentChoiceStatusErrorDetail,
+            },
+          )}
           <Button
             type="button"
             size="sm"
@@ -430,7 +752,10 @@ export default function CommandCenter() {
                 analyzeCurrentChoice,
                 setAnalyzeCurrentChoice,
                 {
+                  runningMessage:
+                    "Refreshing the current Humble Choice analysis. This can take a moment while the backend fetches the latest saved month snapshot.",
                   buildDetailLines: buildCurrentChoiceDetailLines,
+                  buildActions: buildCurrentChoiceActions,
                   invalidateQueryKeys: [
                     ["current-choice-status"],
                     ["current-choice"],

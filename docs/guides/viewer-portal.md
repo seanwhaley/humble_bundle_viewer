@@ -245,6 +245,19 @@ flows used by the CLI:
 - cache external subproduct pages
 - extract structured subproduct metadata and an optional markdown report
 
+Current bundle and Choice refreshes now keep the result panel more explicit:
+the viewer shows the generated artifact paths, the library file used for the
+analysis, the saved output folder, and quick links to the refreshed Current
+sales routes so you can move straight from the maintenance run to the report.
+
+The report-refresh cards also now stay full width in Command Center so the
+result details have room to breathe, and each card shows a saved-report status
+summary up front (`Fresh`, `Stale`, `Missing`, `Loading`, or `Unavailable`)
+based on the latest generated timestamp before you trigger another refresh.
+`Loading` appears while the viewer checks the saved report status, and
+`Unavailable` is used when the status request fails or a saved report is
+missing required timestamp metadata.
+
 The route now groups commands by intent — guided workflows, rebuilds/exports,
 and metadata enrichment — and keeps path-heavy overrides behind expandable
 advanced sections so the default action remains visible first.
