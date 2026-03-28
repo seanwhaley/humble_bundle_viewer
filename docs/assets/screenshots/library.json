@@ -76,7 +76,9 @@
       "fixtures": {
         "/api/library/status": "fixtures/library-status.json",
         "/api/library": "fixtures/library-data.json",
-        "/api/viewer/config": "fixtures/viewer-config.json"
+        "/api/viewer/config": "fixtures/viewer-config.json",
+        "/api/current-bundles/status": "fixtures/current-bundles-status.json",
+        "/api/current-choice/status": "fixtures/current-choice-status.json"
       },
       "overrides": {}
     }
