@@ -1,13 +1,16 @@
 /**
  * Command center for running CLI workflows from the viewer.
  */
-import { type ReactNode, useState } from "react";
+import { type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
+import { Badge, type BadgeProps } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import { usePersistentState } from "../../hooks/usePersistentState";
 import {
   type CurrentBundlesStatus,
   type CurrentChoiceStatus,
@@ -69,11 +72,14 @@ const optionalNumber = (value: string) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+type StatusVariant = NonNullable<BadgeProps["variant"]>;
+
 const buildMessageClasses = (status: CommandStatus) =>
   status === "success" ?
-    "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-  : status === "running" ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
-  : "border-rose-500/40 bg-rose-500/10 text-rose-200";
+    "border-status-success/40 bg-status-success/10 text-status-success-foreground"
+  : status === "running" ?
+    "border-status-info/40 bg-status-info/10 text-status-info-foreground"
+  : "border-status-error/40 bg-status-error/10 text-status-error-foreground";
 
 const REPORT_STALE_MS = 24 * 60 * 60 * 1000;
 
@@ -89,13 +95,12 @@ const formatElapsedSince = (dateInput?: string | null) => {
   return diffDays === 1 ? "1 day ago" : `${diffDays} days ago`;
 };
 
-const buildToneClasses = (tone: StatusTone) =>
-  tone === "fresh" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-  : tone === "stale" ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
-  : tone === "loading" ? "border-sky-500/40 bg-sky-500/10 text-sky-100"
-  : tone === "unavailable" ?
-    "border-rose-500/40 bg-rose-500/10 text-rose-100"
-  : "border-slate-700 bg-slate-900/80 text-slate-200";
+const getStatusVariant = (tone: StatusTone): StatusVariant =>
+  tone === "fresh" ? "success"
+  : tone === "stale" ? "warning"
+  : tone === "loading" ? "info"
+  : tone === "unavailable" ? "error"
+  : "neutral";
 
 const ReportStatusPill = ({
   tone,
@@ -104,12 +109,9 @@ const ReportStatusPill = ({
   tone: StatusTone;
   label: string;
 }) => (
-  <span
-    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] ${buildToneClasses(
-      tone,
-    )}`}>
+  <Badge variant={getStatusVariant(tone)}>
     {label}
-  </span>
+  </Badge>
 );
 
 const getReportStatusMeta = (
@@ -167,24 +169,24 @@ const CurrentSalesStatusSummary = ({
   detail: string;
   lines: string[];
 }) => (
-  <div className="rounded-lg border border-slate-800 bg-slate-950/80 p-3">
+  <Card className="rounded-lg bg-card/80 p-3">
     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {title}
         </p>
-        <p className="text-sm text-slate-100">{detail}</p>
+        <p className="text-sm text-foreground">{detail}</p>
       </div>
       <ReportStatusPill tone={tone} label={label} />
     </div>
     {lines.length > 0 && (
-      <ul className="mt-3 space-y-1 text-xs text-slate-300">
+      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
         {lines.map((line, index) => (
           <li key={`${title}-${index}`}>{line}</li>
         ))}
       </ul>
     )}
-  </div>
+  </Card>
 );
 
 const StatusMessage = ({ state }: { state: CommandState }) => {
@@ -203,14 +205,14 @@ const StatusMessage = ({ state }: { state: CommandState }) => {
               asChild
               size="sm"
               variant="outline"
-              className="border-slate-700 bg-slate-950/70 text-slate-100 hover:bg-slate-900">
+              className="bg-background/70">
               <Link to={action.to}>{action.label}</Link>
             </Button>
           ))}
         </div>
       )}
       {state.detailLines.length > 0 && (
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-200">
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs opacity-90">
           {state.detailLines.map((line, index) => (
             <li key={`${state.status}-${index}`}>{line}</li>
           ))}
@@ -227,19 +229,35 @@ const createIdleState = (): CommandState => ({
   actions: [],
 });
 
+export const sanitizePersistedCommandState = (
+  state: CommandState,
+): CommandState =>
+  state.status === "running" ? createIdleState() : state;
+
+const useCommandStatePersistence = (key: string) =>
+  usePersistentState<CommandState>(key, createIdleState, {
+    storage: "session",
+    serialize: (value) => JSON.stringify(sanitizePersistedCommandState(value)),
+    deserialize: (value) =>
+      sanitizePersistedCommandState(JSON.parse(value) as CommandState),
+  });
+
 const CommandSection = ({
   title,
   description,
+  note,
   children,
 }: {
   title: string;
   description: string;
+  note?: ReactNode;
   children: ReactNode;
 }) => (
   <section className="space-y-4">
     <div>
-      <h3 className="text-xl font-semibold text-slate-50">{title}</h3>
-      <p className="mt-1 text-sm text-slate-400">{description}</p>
+      <h3 className="text-xl font-semibold text-foreground">{title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      {note && <div className="mt-2 text-sm text-muted-foreground">{note}</div>}
     </div>
     <div className="space-y-6">{children}</div>
   </section>
@@ -247,42 +265,60 @@ const CommandSection = ({
 
 const CommandCard = ({
   eyebrow,
+  eyebrowVariant = "neutral",
   title,
   description,
+  note,
   children,
 }: {
   eyebrow: string;
+  eyebrowVariant?: StatusVariant;
   title: string;
   description: string;
+  note?: string;
   children: ReactNode;
 }) => (
-  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-5 shadow-sm">
-    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-      {eyebrow}
-    </p>
-    <h4 className="mt-2 text-lg font-semibold text-slate-50">{title}</h4>
-    <p className="mt-2 text-sm text-slate-300">{description}</p>
-    <div className="mt-4 space-y-3">{children}</div>
-  </div>
+  <Card className="bg-card/60">
+    <CardHeader className="pb-4">
+      <div>
+        <Badge variant={eyebrowVariant}>{eyebrow}</Badge>
+      </div>
+      <h4 className="text-lg font-semibold text-card-foreground">{title}</h4>
+      {note && <p className="text-sm font-medium text-muted-foreground">{note}</p>}
+      <p className="text-sm text-muted-foreground">{description}</p>
+    </CardHeader>
+    <CardContent className="space-y-3">{children}</CardContent>
+  </Card>
 );
 
 const AdvancedOptions = ({
   summary,
   hint,
+  onReset,
   children,
 }: {
   summary: string;
   hint: string;
+  onReset?: () => void;
   children: ReactNode;
 }) => (
-  <details className="rounded-lg border border-slate-800 bg-slate-950/80">
-    <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-slate-200 marker:content-none">
+  <details className="rounded-lg border border-border bg-card/80">
+    <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground marker:content-none">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <span>{summary}</span>
-        <span className="text-xs text-slate-400">{hint}</span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
       </div>
     </summary>
-    <div className="border-t border-slate-800 p-3">{children}</div>
+    <div className="border-t border-border p-3">
+      {onReset && (
+        <div className="mb-3 flex justify-end">
+          <Button type="button" size="sm" variant="ghost" onClick={onReset}>
+            Reset to defaults
+          </Button>
+        </div>
+      )}
+      {children}
+    </div>
   </details>
 );
 
@@ -505,74 +541,157 @@ export default function CommandCenter() {
     error: currentChoiceStatusErrorDetail,
   } = useCurrentChoiceStatus();
 
-  const [rebuildOrder, setRebuildOrder] =
-    useState<CommandState>(createIdleState);
-  const [generateOrder, setGenerateOrder] =
-    useState<CommandState>(createIdleState);
-  const [rebuildLibrary, setRebuildLibrary] =
-    useState<CommandState>(createIdleState);
-  const [buildSchema, setBuildSchema] = useState<CommandState>(createIdleState);
-  const [cachePages, setCachePages] = useState<CommandState>(createIdleState);
-  const [extractMetadata, setExtractMetadata] =
-    useState<CommandState>(createIdleState);
-  const [analyzeCurrentBundles, setAnalyzeCurrentBundles] =
-    useState<CommandState>(createIdleState);
-  const [analyzeCurrentChoice, setAnalyzeCurrentChoice] =
-    useState<CommandState>(createIdleState);
+  const [rebuildOrder, setRebuildOrder] = useCommandStatePersistence(
+    "humble.session.commands.rebuildOrderModels",
+  );
+  const [generateOrder, setGenerateOrder] = useCommandStatePersistence(
+    "humble.session.commands.generateOrderModels",
+  );
+  const [rebuildLibrary, setRebuildLibrary] = useCommandStatePersistence(
+    "humble.session.commands.rebuildLibraryArtifacts",
+  );
+  const [buildSchema, setBuildSchema] = useCommandStatePersistence(
+    "humble.session.commands.buildViewerSchema",
+  );
+  const [cachePages, setCachePages] = useCommandStatePersistence(
+    "humble.session.commands.cacheSubproductPages",
+  );
+  const [extractMetadata, setExtractMetadata] = useCommandStatePersistence(
+    "humble.session.commands.extractSubproductMetadata",
+  );
+  const [analyzeCurrentBundles, setAnalyzeCurrentBundles] = useCommandStatePersistence(
+    "humble.session.commands.analyzeCurrentBundles",
+  );
+  const [analyzeCurrentChoice, setAnalyzeCurrentChoice] = useCommandStatePersistence(
+    "humble.session.commands.analyzeCurrentChoice",
+  );
 
-  const [rebuildArtifactsDir, setRebuildArtifactsDir] =
-    useState("data/artifacts");
-  const [rebuildPattern, setRebuildPattern] = useState("orders_batch_*.json");
-  const [rebuildOrderModelPath, setRebuildOrderModelPath] = useState(
-    "data/artifacts/order_payload_models.py",
-  );
-  const [rebuildOrderClass, setRebuildOrderClass] =
-    useState("OrderPayloadList");
+  const [rebuildArtifactsDir, setRebuildArtifactsDir, resetRebuildArtifactsDir] =
+    usePersistentState("humble.commands.rebuildArtifactsDir", "data/artifacts");
+  const [rebuildPattern, setRebuildPattern, resetRebuildPattern] =
+    usePersistentState("humble.commands.rebuildPattern", "orders_batch_*.json");
+  const [rebuildOrderModelPath, setRebuildOrderModelPath, resetRebuildOrderModelPath] =
+    usePersistentState(
+      "humble.commands.rebuildOrderModelPath",
+      "data/artifacts/order_payload_models.py",
+    );
+  const [rebuildOrderClass, setRebuildOrderClass, resetRebuildOrderClass] =
+    usePersistentState("humble.commands.rebuildOrderClass", "OrderPayloadList");
 
-  const [generateApiDir, setGenerateApiDir] = useState(
-    "data/artifacts/api_responses",
-  );
-  const [generatePattern, setGeneratePattern] = useState("orders_batch_*.json");
-  const [generateOutputModels, setGenerateOutputModels] = useState(
-    "data/artifacts/order_payload_models.py",
-  );
-  const [generateClassName, setGenerateClassName] =
-    useState("OrderPayloadList");
+  const [generateApiDir, setGenerateApiDir, resetGenerateApiDir] =
+    usePersistentState("humble.commands.generateApiDir", "data/artifacts/api_responses");
+  const [generatePattern, setGeneratePattern, resetGeneratePattern] =
+    usePersistentState("humble.commands.generatePattern", "orders_batch_*.json");
+  const [generateOutputModels, setGenerateOutputModels, resetGenerateOutputModels] =
+    usePersistentState(
+      "humble.commands.generateOutputModels",
+      "data/artifacts/order_payload_models.py",
+    );
+  const [generateClassName, setGenerateClassName, resetGenerateClassName] =
+    usePersistentState("humble.commands.generateClassName", "OrderPayloadList");
 
-  const [libraryApiDir, setLibraryApiDir] = useState(
-    "data/artifacts/api_responses",
-  );
-  const [libraryPattern, setLibraryPattern] = useState("orders_batch_*.json");
-  const [libraryOutputProducts, setLibraryOutputProducts] = useState(
-    "data/artifacts/library_products.json",
-  );
-  const [libraryOrderModelPath, setLibraryOrderModelPath] = useState(
-    "data/artifacts/order_payload_models.py",
-  );
-  const [libraryOrderModelClass, setLibraryOrderModelClass] =
-    useState("OrderPayloadList");
+  const [libraryApiDir, setLibraryApiDir, resetLibraryApiDir] =
+    usePersistentState("humble.commands.libraryApiDir", "data/artifacts/api_responses");
+  const [libraryPattern, setLibraryPattern, resetLibraryPattern] =
+    usePersistentState("humble.commands.libraryPattern", "orders_batch_*.json");
+  const [libraryOutputProducts, setLibraryOutputProducts, resetLibraryOutputProducts] =
+    usePersistentState(
+      "humble.commands.libraryOutputProducts",
+      "data/artifacts/library_products.json",
+    );
+  const [libraryOrderModelPath, setLibraryOrderModelPath, resetLibraryOrderModelPath] =
+    usePersistentState(
+      "humble.commands.libraryOrderModelPath",
+      "data/artifacts/order_payload_models.py",
+    );
+  const [libraryOrderModelClass, setLibraryOrderModelClass, resetLibraryOrderModelClass] =
+    usePersistentState("humble.commands.libraryOrderModelClass", "OrderPayloadList");
 
-  const [cacheLibraryFile, setCacheLibraryFile] = useState(
-    "data/artifacts/library_products.json",
-  );
-  const [cacheDir, setCacheDir] = useState("data/artifacts/subproduct_pages");
-  const [cacheQuery, setCacheQuery] = useState("");
-  const [cacheUrl, setCacheUrl] = useState("");
-  const [cacheLimit, setCacheLimit] = useState("");
-  const [cacheMaxFailures, setCacheMaxFailures] = useState("1");
-  const [cacheDomainWorkers, setCacheDomainWorkers] = useState("");
-
-  const [metadataCacheDir, setMetadataCacheDir] = useState(
+  const [cacheLibraryFile, setCacheLibraryFile, resetCacheLibraryFile] =
+    usePersistentState(
+      "humble.commands.cacheLibraryFile",
+      "data/artifacts/library_products.json",
+    );
+  const [cacheDir, setCacheDir, resetCacheDir] = usePersistentState(
+    "humble.commands.cacheDir",
     "data/artifacts/subproduct_pages",
   );
-  const [metadataOutputFile, setMetadataOutputFile] = useState("");
-  const [metadataReportFile, setMetadataReportFile] = useState(
-    "data/artifacts/temp/subproduct_metadata_coverage_summary.md",
+  const [cacheQuery, setCacheQuery, resetCacheQuery] = usePersistentState(
+    "humble.commands.cacheQuery",
+    "",
   );
+  const [cacheUrl, setCacheUrl, resetCacheUrl] = usePersistentState(
+    "humble.commands.cacheUrl",
+    "",
+  );
+  const [cacheLimit, setCacheLimit, resetCacheLimit] = usePersistentState(
+    "humble.commands.cacheLimit",
+    "",
+  );
+  const [cacheMaxFailures, setCacheMaxFailures, resetCacheMaxFailures] =
+    usePersistentState("humble.commands.cacheMaxFailures", "1");
+  const [cacheDomainWorkers, setCacheDomainWorkers, resetCacheDomainWorkers] =
+    usePersistentState("humble.commands.cacheDomainWorkers", "");
 
-  const [schemaOutput, setSchemaOutput] = useState(
+  const [metadataCacheDir, setMetadataCacheDir, resetMetadataCacheDir] =
+    usePersistentState(
+      "humble.commands.metadataCacheDir",
+      "data/artifacts/subproduct_pages",
+    );
+  const [metadataOutputFile, setMetadataOutputFile, resetMetadataOutputFile] =
+    usePersistentState("humble.commands.metadataOutputFile", "");
+  const [metadataReportFile, setMetadataReportFile, resetMetadataReportFile] =
+    usePersistentState(
+      "humble.commands.metadataReportFile",
+      "data/artifacts/temp/subproduct_metadata_coverage_summary.md",
+    );
+
+  const [schemaOutput, setSchemaOutput, resetSchemaOutput] = usePersistentState(
+    "humble.commands.schemaOutput",
     "docs/assets/tools/library-products-schema.json",
   );
+
+  const resetLibraryArtifactOptions = () => {
+    resetLibraryApiDir();
+    resetLibraryPattern();
+    resetLibraryOutputProducts();
+    resetLibraryOrderModelPath();
+    resetLibraryOrderModelClass();
+  };
+
+  const resetSchemaOptions = () => {
+    resetSchemaOutput();
+  };
+
+  const resetRebuildOrderOptions = () => {
+    resetRebuildArtifactsDir();
+    resetRebuildPattern();
+    resetRebuildOrderModelPath();
+    resetRebuildOrderClass();
+  };
+
+  const resetGenerateOrderOptions = () => {
+    resetGenerateApiDir();
+    resetGeneratePattern();
+    resetGenerateOutputModels();
+    resetGenerateClassName();
+  };
+
+  const resetCacheOptions = () => {
+    resetCacheLibraryFile();
+    resetCacheDir();
+    resetCacheQuery();
+    resetCacheUrl();
+    resetCacheLimit();
+    resetCacheMaxFailures();
+    resetCacheDomainWorkers();
+  };
+
+  const resetMetadataOptions = () => {
+    resetMetadataCacheDir();
+    resetMetadataOutputFile();
+    resetMetadataReportFile();
+  };
 
   const runCommand = async <TDetails,>(
     endpoint: string,
@@ -623,72 +742,72 @@ export default function CommandCenter() {
           Run the same workflows available in the CLI. The cards below keep the
           default action visible first and tuck path overrides into expandable
           advanced sections. Editing
-          <code className="mx-1 text-xs text-slate-200">.env</code> and
-          <code className="ml-1 text-xs text-slate-200">config.yaml</code> still
+          <code className="mx-1 text-xs text-foreground">.env</code> and
+          <code className="ml-1 text-xs text-foreground">config.yaml</code> still
           requires the CLI or manual updates.
         </p>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-            Guided first
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Start with the safe defaults
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Capture flows and report refreshes stay one click away. Expand the
-            advanced sections only when you need path overrides or scoped runs.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">
-            Rebuilds and exports
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Refresh saved artifacts deliberately
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Library rebuilds and schema exports stay grouped together so it is
-            clearer when you are regenerating files versus just inspecting data.
-          </p>
-        </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
-            Enrichment pipeline
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Cache, then extract metadata
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            External subproduct enrichment is still available here, but it now
-            reads as a two-step workflow instead of another pile of textboxes.
-          </p>
-        </div>
+        <Card className="bg-card/60">
+          <CardHeader className="pb-2">
+            <div>
+              <Badge variant="success">Guided first</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Start with the safe defaults
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Capture flows and report refreshes stay one click away. Expand the
+              advanced sections only when you need path overrides or scoped runs.
+            </p>
+          </CardHeader>
+        </Card>
+        <Card className="bg-card/60">
+          <CardHeader className="pb-2">
+            <div>
+              <Badge variant="neutral">Rebuilds and exports</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Refresh saved artifacts deliberately
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Library rebuilds and schema exports stay grouped together so it is
+              clearer when you are regenerating files versus just inspecting data.
+            </p>
+          </CardHeader>
+        </Card>
+        <Card className="bg-card/60">
+          <CardHeader className="pb-2">
+            <div>
+              <Badge variant="info">Enrichment pipeline</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Cache, then extract metadata
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              External subproduct enrichment is still available here, but it now
+              reads as a two-step workflow instead of another pile of textboxes.
+            </p>
+          </CardHeader>
+        </Card>
       </div>
 
       <CommandSection
         title="Guided workflows"
-        description="Fast entry points for setup and report refreshes with safe defaults and minimal input.">
-        <CommandCard
-          eyebrow="Setup"
-          title="Capture + Download"
-          description="Use the Setup page to run the full capture workflow with your session cookie and optional downloads.">
-          <div className="flex flex-wrap gap-3">
-            <Button asChild size="sm">
-              <Link to="/setup">Open setup</Link>
-            </Button>
-            {libraryStatus && (
-              <span className="text-xs text-slate-400">
-                Current file: {libraryStatus.current_path}
-              </span>
-            )}
-          </div>
-        </CommandCard>
-
+        description="Fast entry points for report refreshes with safe defaults and minimal input."
+        note={
+          <>
+            Need a full capture or file switch first?{" "}
+            <Link className="font-medium text-primary hover:underline" to="/setup">
+              Open Setup
+            </Link>
+            .
+          </>
+        }>
         <CommandCard
           eyebrow="Reports"
+          eyebrowVariant="info"
           title="Current sales bundle analysis"
           description="Capture the current games, books, and software sales pages and rebuild the shared bundle-overlap report used by the Current sales routes.">
           {renderCurrentBundlesSummary(
@@ -731,6 +850,7 @@ export default function CommandCenter() {
 
         <CommandCard
           eyebrow="Reports"
+          eyebrowVariant="info"
           title="Current sales Choice analysis"
           description="Refresh the saved current-month Humble Choice report that powers the Current sales Choice page.">
           {renderCurrentChoiceSummary(
@@ -777,6 +897,7 @@ export default function CommandCenter() {
         description="File-generating commands stay grouped here so schema, artifact, and model rebuilds are easier to scan before you run them.">
         <CommandCard
           eyebrow="Rebuild"
+          eyebrowVariant="warning"
           title="Rebuild library artifacts"
           description="Regenerate `library_products.json` from stored API batches and refresh the viewer.">
           <form
@@ -811,7 +932,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced paths and model settings"
-              hint="Change paths or class names only when you are rebuilding from non-default artifacts.">
+              hint="Change paths or class names only when you are rebuilding from non-default artifacts."
+              onReset={resetLibraryArtifactOptions}>
               <div className="space-y-3">
                 <Input
                   value={libraryApiDir}
@@ -852,6 +974,7 @@ export default function CommandCenter() {
 
         <CommandCard
           eyebrow="Export"
+          eyebrowVariant="neutral"
           title="Build viewer schema"
           description="Export the schema used by the standalone viewer validation tools.">
           <form
@@ -877,7 +1000,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced output path"
-              hint="Change the destination only when you need to export the schema somewhere else.">
+              hint="Change the destination only when you need to export the schema somewhere else."
+              onReset={resetSchemaOptions}>
               <Input
                 value={schemaOutput}
                 onChange={(event) => setSchemaOutput(event.target.value)}
@@ -890,7 +1014,9 @@ export default function CommandCenter() {
 
         <CommandCard
           eyebrow="Rebuild"
+          eyebrowVariant="warning"
           title="Rebuild order models"
+          note="Requires saved API batches in the artifacts directory and is best when you are regenerating the default shared model file."
           description="Regenerate the order payload models from saved API batches.">
           <form
             className="space-y-3"
@@ -920,7 +1046,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced paths and class names"
-              hint="Adjust these only when the saved API batches or model destination differ from the defaults.">
+              hint="Adjust these only when the saved API batches or model destination differ from the defaults."
+              onReset={resetRebuildOrderOptions}>
               <div className="space-y-3">
                 <Input
                   value={rebuildArtifactsDir}
@@ -954,7 +1081,9 @@ export default function CommandCenter() {
 
         <CommandCard
           eyebrow="Rebuild"
+          eyebrowVariant="warning"
           title="Generate order models"
+          note="Requires an explicit API response directory input and is best when you are generating a model for a different source or output path."
           description="Build a fresh order payload model from API batch files.">
           <form
             className="space-y-3"
@@ -984,7 +1113,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced input and output paths"
-              hint="Use these when you want to build a model from a different API batch location or output file.">
+              hint="Use these when you want to build a model from a different API batch location or output file."
+              onReset={resetGenerateOrderOptions}>
               <div className="space-y-3">
                 <Input
                   value={generateApiDir}
@@ -1020,6 +1150,7 @@ export default function CommandCenter() {
         description="Use these two commands together when you want richer authors, publishers, summaries, and descriptions throughout the viewer.">
         <CommandCard
           eyebrow="Enrichment"
+          eyebrowVariant="info"
           title="Cache subproduct pages"
           description="Fetch and cache external publisher or product pages so the viewer can surface richer title metadata.">
           <form
@@ -1053,7 +1184,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced cache scope"
-              hint="Use filters only when you need a smaller or custom scrape target.">
+              hint="Use filters only when you need a smaller or custom scrape target."
+              onReset={resetCacheOptions}>
               <div className="space-y-3">
                 <Input
                   value={cacheLibraryFile}
@@ -1104,6 +1236,7 @@ export default function CommandCenter() {
 
         <CommandCard
           eyebrow="Enrichment"
+          eyebrowVariant="info"
           title="Extract subproduct metadata"
           description="Parse cached external pages into structured metadata that the Purchases and media routes can display.">
           <form
@@ -1136,7 +1269,8 @@ export default function CommandCenter() {
             </Button>
             <AdvancedOptions
               summary="Advanced metadata outputs"
-              hint="Override these only when you want custom cache or report destinations.">
+              hint="Override these only when you want custom cache or report destinations."
+              onReset={resetMetadataOptions}>
               <div className="space-y-3">
                 <Input
                   value={metadataCacheDir}

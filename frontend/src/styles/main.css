@@ -32,6 +32,17 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    --status-success: 152 60% 28%;
+    --status-success-foreground: 152 60% 85%;
+    --status-warning: 38 90% 30%;
+    --status-warning-foreground: 38 90% 90%;
+    --status-info: 205 85% 32%;
+    --status-info-foreground: 205 85% 88%;
+    --status-error: 0 60% 30%;
+    --status-error-foreground: 0 60% 88%;
+    --status-neutral: 217 30% 18%;
+    --status-neutral-foreground: 215 20% 70%;
  
     --radius: 0.5rem;
     
@@ -50,6 +61,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
