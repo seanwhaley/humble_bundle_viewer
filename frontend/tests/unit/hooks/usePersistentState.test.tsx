@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { usePersistentState } from "../../../src/hooks/usePersistentState";
 
@@ -70,5 +70,29 @@ describe("usePersistentState", () => {
     });
 
     expect(window.localStorage.getItem("humble.test.custom")).toBe("wrapped:9");
+  });
+
+  it("falls back to in-memory state when storage access throws", () => {
+    const storageGetter = vi
+      .spyOn(window, "localStorage", "get")
+      .mockImplementation(() => {
+        throw new Error("storage blocked");
+      });
+
+    try {
+      const { result } = renderHook(() =>
+        usePersistentState("humble.test.blocked", "fallback"),
+      );
+
+      expect(result.current[0]).toBe("fallback");
+
+      act(() => {
+        result.current[1]("updated in memory");
+      });
+
+      expect(result.current[0]).toBe("updated in memory");
+    } finally {
+      storageGetter.mockRestore();
+    }
   });
 });

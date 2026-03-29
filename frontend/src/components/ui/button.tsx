@@ -5,6 +5,22 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
+const assignRef = <T,>(ref: React.Ref<T> | undefined, value: T | null) => {
+  if (!ref) return;
+
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+
+  (ref as React.MutableRefObject<T | null>).current = value;
+};
+
+const mergeRefs = <T,>(...refs: Array<React.Ref<T> | undefined>) =>
+  (value: T | null) => {
+    refs.forEach((ref) => assignRef(ref, value));
+  };
+
 // Variant map shared by all button instances.
 const buttonVariants = cva(
   "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
@@ -49,9 +65,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const classes = cn(buttonVariants({ variant, size, className }));
 
     if (asChild && React.isValidElement(children)) {
-      return React.cloneElement(children, {
+      const child = children as React.ReactElement<{ className?: string }> & {
+        ref?: React.Ref<HTMLElement>;
+      };
+
+      return React.cloneElement(child, {
         ...props,
-        className: cn(classes, children.props.className),
+        ref: mergeRefs(ref as React.Ref<HTMLElement>, child.ref),
+        className: cn(classes, child.props.className),
       });
     }
 

@@ -23,25 +23,31 @@ const parseList = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const serializeStoredLibraryPath = (value: string) => value;
+
+const deserializeStoredLibraryPath = (value: string) => value;
+
 /**
  * Form for running a one-time library capture without storing credentials.
  */
 export default function LibrarySetup() {
   const queryClient = useQueryClient();
   const { data: libraryStatus } = useLibraryStatus();
+  const [storedLibraryPath, setStoredLibraryPath] = usePersistentState(
+    STORAGE_KEY,
+    "",
+    {
+      serialize: serializeStoredLibraryPath,
+      deserialize: deserializeStoredLibraryPath,
+    },
+  );
   const [mode, setMode] = usePersistentState<"capture" | "existing">(
     "humble.setup.mode",
     "capture",
   );
   const [authCookie, setAuthCookie] = useState("");
-  const [outputPath, setOutputPath] = useState(
-    () =>
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) ?? "" : "",
-  );
-  const [existingPath, setExistingPath] = useState(
-    () =>
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) ?? "" : "",
-  );
+  const [outputPath, setOutputPath] = useState(() => storedLibraryPath);
+  const [existingPath, setExistingPath] = useState(() => storedLibraryPath);
   const [downloadFiles, setDownloadFiles] = useState(false);
   const [platformsInput, setPlatformsInput] = usePersistentState(
     "humble.setup.platforms",
@@ -98,7 +104,7 @@ export default function LibrarySetup() {
     );
     setSuccessSummary({ path, total });
     setRedirectCountdown(5);
-    localStorage.setItem(STORAGE_KEY, path);
+    setStoredLibraryPath(path);
     queryClient.invalidateQueries({ queryKey: ["library"] });
     queryClient.invalidateQueries({ queryKey: ["library-status"] });
     setOutputPath(path);
@@ -173,8 +179,8 @@ export default function LibrarySetup() {
 
     setStatus("running");
     setMessage(null);
-  setSuccessSummary(null);
-  setRedirectCountdown(null);
+    setSuccessSummary(null);
+    setRedirectCountdown(null);
 
     try {
       const response = await fetch("/api/library/select", {

@@ -15,7 +15,12 @@ const canUseWindow = () => typeof window !== "undefined";
 
 const getStorage = (kind: StorageKind): Storage | null => {
   if (!canUseWindow()) return null;
-  return kind === "session" ? window.sessionStorage : window.localStorage;
+
+  try {
+    return kind === "session" ? window.sessionStorage : window.localStorage;
+  } catch {
+    return null;
+  }
 };
 
 const resolveInitialValue = <T,>(value: T | (() => T)) =>

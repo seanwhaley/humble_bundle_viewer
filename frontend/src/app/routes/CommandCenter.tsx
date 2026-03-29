@@ -234,12 +234,17 @@ export const sanitizePersistedCommandState = (
 ): CommandState =>
   state.status === "running" ? createIdleState() : state;
 
+const serializeCommandState = (value: CommandState) =>
+  JSON.stringify(sanitizePersistedCommandState(value));
+
+const deserializeCommandState = (value: string): CommandState =>
+  sanitizePersistedCommandState(JSON.parse(value) as CommandState);
+
 const useCommandStatePersistence = (key: string) =>
   usePersistentState<CommandState>(key, createIdleState, {
     storage: "session",
-    serialize: (value) => JSON.stringify(sanitizePersistedCommandState(value)),
-    deserialize: (value) =>
-      sanitizePersistedCommandState(JSON.parse(value) as CommandState),
+    serialize: serializeCommandState,
+    deserialize: deserializeCommandState,
   });
 
 const CommandSection = ({

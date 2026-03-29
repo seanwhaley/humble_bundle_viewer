@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -35,5 +36,20 @@ describe("Button", () => {
     expect(button.className).toContain("bg-secondary");
     expect(button.className).toContain("h-11");
     expect(button.className).toContain("tracking-wide");
+  });
+
+  it("forwards refs to the child element when asChild is enabled", () => {
+    let renderedNode: Element | null = null;
+    const ref = ((value: HTMLButtonElement | null) => {
+      renderedNode = value as unknown as Element | null;
+    }) as Ref<HTMLButtonElement>;
+
+    render(
+      <Button asChild ref={ref}>
+        <a href="/docs">Docs</a>
+      </Button>,
+    );
+
+    expect(renderedNode).toBe(screen.getByRole("link", { name: "Docs" }));
   });
 });
