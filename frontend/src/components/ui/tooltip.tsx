@@ -46,10 +46,10 @@ export function Tooltip({
       {children}
       {show && content && createPortal(
         <div
-          className="tooltip-portal absolute px-2 py-1 text-xs text-slate-100 bg-slate-800 border border-slate-700 rounded shadow-xl whitespace-nowrap z-[9999] pointer-events-none animate-in fade-in zoom-in-95 duration-100 -translate-x-1/2 -translate-y-[calc(100%+8px)]"
+          className="tooltip-portal absolute z-[9999] whitespace-nowrap rounded border border-border bg-popover px-2 py-1 text-xs text-popover-foreground shadow-xl pointer-events-none animate-in fade-in zoom-in-95 duration-100 -translate-x-1/2 -translate-y-[calc(100%+8px)]"
         >
            {content}
-           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+           <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-popover" />
         </div>,
         document.body
       )}

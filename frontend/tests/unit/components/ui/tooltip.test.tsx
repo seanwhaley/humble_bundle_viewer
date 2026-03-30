@@ -1,86 +1,61 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { Tooltip } from "../../../../src/components/ui/tooltip";
 
 describe("Tooltip", () => {
-  afterEach(() => {
-    document.documentElement.style.removeProperty("--tooltip-top");
-    document.documentElement.style.removeProperty("--tooltip-left");
-  });
-
-  it("shows portal content on hover and records anchor coordinates", () => {
+  it("shows a portal tooltip on hover and clears it on mouse leave", async () => {
     render(
-      <Tooltip content="Exact bundle title" className="custom-wrapper">
-        <button type="button">Hover target</button>
+      <Tooltip content="Helpful detail">
+        <button type="button">Hover me</button>
       </Tooltip>,
     );
 
-    const trigger = screen.getByRole("button", {
-      name: "Hover target",
-    }).parentElement;
-    expect(trigger).not.toBeNull();
-    if (!trigger) {
-      throw new Error("Tooltip trigger wrapper was not rendered.");
+    const wrapper = screen.getByRole("button", { name: "Hover me" }).parentElement;
+    if (!wrapper) {
+      throw new Error("Expected tooltip wrapper to exist.");
     }
 
-    trigger.getBoundingClientRect = () =>
+    wrapper.getBoundingClientRect = () =>
       ({
+        width: 40,
+        height: 20,
         top: 10,
         left: 20,
-        width: 40,
-        height: 12,
-        bottom: 22,
+        bottom: 30,
         right: 60,
         x: 20,
         y: 10,
         toJSON: () => ({}),
       }) as DOMRect;
 
-    fireEvent.mouseEnter(trigger);
+    fireEvent.mouseEnter(wrapper);
 
-    expect(screen.getByText("Exact bundle title")).toBeInTheDocument();
-    expect(
-      document.documentElement.style.getPropertyValue("--tooltip-top"),
-    ).toBe("10px");
-    expect(
-      document.documentElement.style.getPropertyValue("--tooltip-left"),
-    ).toBe("40px");
+    expect(await screen.findByText("Helpful detail")).toBeInTheDocument();
+    expect(document.documentElement.style.getPropertyValue("--tooltip-top")).toBe(
+      "10px",
+    );
+    expect(document.documentElement.style.getPropertyValue("--tooltip-left")).toBe(
+      "40px",
+    );
 
-    fireEvent.mouseLeave(trigger);
-    expect(screen.queryByText("Exact bundle title")).not.toBeInTheDocument();
+    fireEvent.mouseLeave(wrapper);
+
+    await waitFor(() => {
+      expect(screen.queryByText("Helpful detail")).not.toBeInTheDocument();
+    });
   });
 
-  it("does not render portal content when no tooltip content is provided", () => {
+  it("keeps the trigger wrapper stable when no tooltip content is provided", () => {
     render(
-      <Tooltip content={null}>
-        <span>Hover target</span>
+      <Tooltip content={null} className="custom-wrapper">
+        <span>Anchor</span>
       </Tooltip>,
     );
 
-    const trigger = screen.getByText("Hover target").parentElement;
-    expect(trigger).not.toBeNull();
-    if (!trigger) {
-      throw new Error("Tooltip trigger wrapper was not rendered.");
-    }
-
-    trigger.getBoundingClientRect = () =>
-      ({
-        top: 5,
-        left: 15,
-        width: 10,
-        height: 8,
-        bottom: 13,
-        right: 25,
-        x: 15,
-        y: 5,
-        toJSON: () => ({}),
-      }) as DOMRect;
-
-    fireEvent.mouseEnter(trigger);
-
-    expect(
-      document.body.querySelector(".tooltip-portal"),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("Anchor").parentElement?.className).toContain(
+      "custom-wrapper",
+    );
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 });

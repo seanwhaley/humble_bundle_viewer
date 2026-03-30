@@ -6,9 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
+import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { useLibraryStatus } from "../../data/api";
+import { usePersistentState } from "../../hooks/usePersistentState";
+import { cn } from "../../lib/utils";
 
 // Persists the last successful capture path for auto-load on refresh.
 const STORAGE_KEY = "humble.libraryPath";
@@ -19,28 +23,53 @@ const parseList = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const serializeStoredLibraryPath = (value: string) => value;
+
+const deserializeStoredLibraryPath = (value: string) => value;
+
 /**
  * Form for running a one-time library capture without storing credentials.
  */
 export default function LibrarySetup() {
   const queryClient = useQueryClient();
   const { data: libraryStatus } = useLibraryStatus();
-  const [mode, setMode] = useState<"capture" | "existing">("capture");
+  const [storedLibraryPath, setStoredLibraryPath] = usePersistentState(
+    STORAGE_KEY,
+    "",
+    {
+      serialize: serializeStoredLibraryPath,
+      deserialize: deserializeStoredLibraryPath,
+    },
+  );
+  const [mode, setMode] = usePersistentState<"capture" | "existing">(
+    "humble.setup.mode",
+    "capture",
+  );
   const [authCookie, setAuthCookie] = useState("");
-  const [outputPath, setOutputPath] = useState(
-    () => localStorage.getItem(STORAGE_KEY) ?? "",
-  );
-  const [existingPath, setExistingPath] = useState(
-    () => localStorage.getItem(STORAGE_KEY) ?? "",
-  );
+  const [outputPath, setOutputPath] = useState(() => storedLibraryPath);
+  const [existingPath, setExistingPath] = useState(() => storedLibraryPath);
   const [downloadFiles, setDownloadFiles] = useState(false);
-  const [platformsInput, setPlatformsInput] = useState("ebook, audio");
-  const [fileTypesInput, setFileTypesInput] = useState("");
-  const [sizePolicy, setSizePolicy] = useState("all");
+  const [platformsInput, setPlatformsInput] = usePersistentState(
+    "humble.setup.platforms",
+    "ebook, audio",
+  );
+  const [fileTypesInput, setFileTypesInput] = usePersistentState(
+    "humble.setup.fileTypes",
+    "",
+  );
+  const [sizePolicy, setSizePolicy] = usePersistentState(
+    "humble.setup.sizePolicy",
+    "all",
+  );
   const [status, setStatus] = useState<
     "idle" | "running" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [successSummary, setSuccessSummary] = useState<{
+    path: string;
+    total: number;
+  } | null>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     if (!libraryStatus) return;
@@ -52,17 +81,34 @@ export default function LibrarySetup() {
     }
   }, [libraryStatus, outputPath, existingPath]);
 
+  useEffect(() => {
+    if (status !== "success" || redirectCountdown === null) return;
+    if (redirectCountdown <= 0) {
+      window.location.assign("/");
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setRedirectCountdown((current) =>
+        current === null ? null : Math.max(0, current - 1),
+      );
+    }, 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [redirectCountdown, status]);
+
   const finishSuccess = (path: string, total: number) => {
     setStatus("success");
     setMessage(
-      `Loaded ${total} products. Viewer now points to ${path}. Refreshing...`,
+      `Loaded ${total} products. Viewer now points to ${path}.`,
     );
-    localStorage.setItem(STORAGE_KEY, path);
+    setSuccessSummary({ path, total });
+    setRedirectCountdown(5);
+    setStoredLibraryPath(path);
     queryClient.invalidateQueries({ queryKey: ["library"] });
     queryClient.invalidateQueries({ queryKey: ["library-status"] });
-    setTimeout(() => {
-      window.location.assign("/");
-    }, 800);
+    setOutputPath(path);
+    setExistingPath(path);
   };
 
   /**
@@ -88,6 +134,8 @@ export default function LibrarySetup() {
 
     setStatus("running");
     setMessage(null);
+    setSuccessSummary(null);
+    setRedirectCountdown(null);
 
     try {
       const platforms = parseList(platformsInput);
@@ -111,7 +159,6 @@ export default function LibrarySetup() {
       }
 
       finishSuccess(payload.output_path, payload.total_products || 0);
-      setOutputPath(payload.output_path);
       setAuthCookie("");
     } catch (error) {
       setStatus("error");
@@ -132,6 +179,8 @@ export default function LibrarySetup() {
 
     setStatus("running");
     setMessage(null);
+    setSuccessSummary(null);
+    setRedirectCountdown(null);
 
     try {
       const response = await fetch("/api/library/select", {
@@ -146,7 +195,6 @@ export default function LibrarySetup() {
       }
 
       finishSuccess(payload.output_path, payload.total_products || 0);
-      setExistingPath(payload.output_path);
     } catch (error) {
       setStatus("error");
       setMessage(
@@ -169,72 +217,56 @@ export default function LibrarySetup() {
       </div>
 
       {libraryStatus && !libraryStatus.exists && (
-        <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-slate-200">
+        <div className="rounded-lg border border-status-info/40 bg-status-info/10 p-4 text-sm text-status-info-foreground">
           No library file was found at
-          <span className="mx-1 font-semibold text-white">
+          <span className="mx-1 font-semibold text-foreground">
             {libraryStatus.current_path}
           </span>
           . Start a capture or select an existing file to continue.
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">
-            Capture once
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Create a fresh library snapshot
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Use your current `_simpleauth_sess` cookie to capture a new
-            `library_products.json` and optionally download matching files.
-          </p>
-        </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card className="bg-card/60">
+          <CardHeader className="pb-2">
+            <div>
+              <Badge variant="neutral">Capture once</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Create a fresh library snapshot
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Use your current `_simpleauth_sess` cookie to capture a new
+              `library_products.json` and optionally download matching files.
+            </p>
+          </CardHeader>
+        </Card>
 
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
-            Reuse existing data
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Point the viewer at a saved file
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            Switch quickly between previously captured libraries without
-            rerunning the browser capture workflow.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-300">
-            Next tools
-          </p>
-          <h3 className="mt-2 text-lg font-semibold text-slate-50">
-            Continue with maintenance or inspection
-          </h3>
-          <p className="mt-2 text-sm text-slate-300">
-            After loading a library, jump to Command Center for refresh tasks or
-            Schema to inspect the normalized data model.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/commands">Open Command Center</Link>
-            </Button>
-            <Button asChild size="sm" variant="ghost">
-              <Link to="/structure">Open Schema</Link>
-            </Button>
-          </div>
-        </div>
+        <Card className="bg-card/60">
+          <CardHeader className="pb-2">
+            <div>
+              <Badge variant="success">Reuse existing data</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-card-foreground">
+              Point the viewer at a saved file
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Switch quickly between previously captured libraries without
+              rerunning the browser capture workflow.
+            </p>
+          </CardHeader>
+        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <label
           htmlFor="mode-capture"
-          className={`cursor-pointer rounded-lg border p-4 text-left transition ${
-            mode === "capture" ?
-              "border-indigo-500/60 bg-indigo-500/10"
-            : "border-slate-800 bg-slate-950/60"
-          }`}>
+          className={cn(
+            "cursor-pointer rounded-lg border p-4 text-left transition",
+            mode === "capture"
+              ? "border-primary/60 bg-accent/40"
+              : "border-border bg-card/60",
+          )}>
           <div className="flex items-center gap-2">
             <input
               id="mode-capture"
@@ -245,7 +277,7 @@ export default function LibrarySetup() {
             />
             <span className="font-semibold">Capture new library</span>
           </div>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             Provide your session cookie and a save folder (defaults to your
             Downloads directory).
           </p>
@@ -253,11 +285,12 @@ export default function LibrarySetup() {
 
         <label
           htmlFor="mode-existing"
-          className={`cursor-pointer rounded-lg border p-4 text-left transition ${
-            mode === "existing" ?
-              "border-indigo-500/60 bg-indigo-500/10"
-            : "border-slate-800 bg-slate-950/60"
-          }`}>
+          className={cn(
+            "cursor-pointer rounded-lg border p-4 text-left transition",
+            mode === "existing"
+              ? "border-primary/60 bg-accent/40"
+              : "border-border bg-card/60",
+          )}>
           <div className="flex items-center gap-2">
             <input
               id="mode-existing"
@@ -268,28 +301,30 @@ export default function LibrarySetup() {
             />
             <span className="font-semibold">Use existing library file</span>
           </div>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-muted-foreground">
             Point the viewer at an existing library_products.json file on disk.
           </p>
         </label>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Current workflow
-        </p>
-        <h3 className="mt-2 text-lg font-semibold text-slate-50">
-          {mode === "capture" ?
-            "Capture a fresh library file"
-          : "Load a previously captured library"}
-        </h3>
-        <p className="mt-2 text-sm text-slate-300">
-          {mode === "capture" ?
-            "Best for first-time setup, refreshing stale library data, or producing a new snapshot in another folder."
-          : "Best for switching between saved snapshots or reopening a known-good library file without using your browser session again."
-          }
-        </p>
-      </div>
+      <Card className="bg-card/60">
+        <CardHeader className="pb-4">
+          <div>
+            <Badge variant="neutral">Current workflow</Badge>
+          </div>
+          <h3 className="text-lg font-semibold text-card-foreground">
+            {mode === "capture" ?
+              "Capture a fresh library file"
+            : "Load a previously captured library"}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {mode === "capture" ?
+              "Best for first-time setup, refreshing stale library data, or producing a new snapshot in another folder."
+            : "Best for switching between saved snapshots or reopening a known-good library file without using your browser session again."
+            }
+          </p>
+        </CardHeader>
+      </Card>
 
       {mode === "capture" ?
         <form onSubmit={handleCapture} className="space-y-4 max-w-2xl">
@@ -305,7 +340,7 @@ export default function LibrarySetup() {
               onChange={(event) => setAuthCookie(event.target.value)}
               autoComplete="off"
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Grab the <code className="text-xs">_simpleauth_sess</code> cookie
               from the Humble Bundle session you want to capture.
             </p>
@@ -325,9 +360,9 @@ export default function LibrarySetup() {
               value={outputPath}
               onChange={(event) => setOutputPath(event.target.value)}
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               A folder path writes
-              <span className="font-medium text-slate-200">
+              <span className="font-medium text-foreground">
                 {" "}
                 library_products.json
               </span>
@@ -343,23 +378,24 @@ export default function LibrarySetup() {
               checked={downloadFiles}
               onChange={(event) => setDownloadFiles(event.target.checked)}
             />
-            <label htmlFor="downloadFiles" className="text-sm text-slate-300">
+            <label htmlFor="downloadFiles" className="text-sm text-muted-foreground">
               Download files after capture (uses the download folder in
-              <code className="ml-1 text-xs text-slate-200">config.yaml</code>).
+              <code className="ml-1 text-xs text-foreground">config.yaml</code>).
             </label>
           </div>
 
           {downloadFiles && (
-            <div className="grid gap-4 rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-              <div>
-                <h3 className="text-sm font-semibold text-slate-100">
+            <Card className="rounded-lg bg-card/60">
+              <CardContent className="grid gap-4 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-card-foreground">
                   Optional download scope
-                </h3>
-                <p className="mt-1 text-xs text-slate-400">
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
                   Narrow the follow-up downloads only when you need a targeted
                   capture. Leaving the defaults broad keeps the workflow simple.
-                </p>
-              </div>
+                  </p>
+                </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Platforms</label>
                 <Input
@@ -367,7 +403,7 @@ export default function LibrarySetup() {
                   onChange={(event) => setPlatformsInput(event.target.value)}
                   placeholder="ebook, audio"
                 />
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Comma-separated platforms (example: ebook, audio).
                 </p>
               </div>
@@ -378,7 +414,7 @@ export default function LibrarySetup() {
                   onChange={(event) => setFileTypesInput(event.target.value)}
                   placeholder="pdf, epub, mp3"
                 />
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Optional comma-separated file extensions to download.
                 </p>
               </div>
@@ -388,7 +424,7 @@ export default function LibrarySetup() {
                 </label>
                 <select
                   id="sizePolicy"
-                  className="w-full rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   value={sizePolicy}
                   onChange={(event) => setSizePolicy(event.target.value)}>
                   <option value="all">Download all files</option>
@@ -396,7 +432,8 @@ export default function LibrarySetup() {
                   <option value="largest">Largest per product</option>
                 </select>
               </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
           <Button type="submit" disabled={status === "running"}>
@@ -410,8 +447,8 @@ export default function LibrarySetup() {
             <div
               className={`rounded-md border px-3 py-2 text-sm ${
                 status === "success" ?
-                  "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                : "border-rose-500/40 bg-rose-500/10 text-rose-200"
+                  "border-status-success/40 bg-status-success/10 text-status-success-foreground"
+                : "border-status-error/40 bg-status-error/10 text-status-error-foreground"
               }`}>
               {message}
             </div>
@@ -430,7 +467,7 @@ export default function LibrarySetup() {
               value={existingPath}
               onChange={(event) => setExistingPath(event.target.value)}
             />
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-muted-foreground">
               Point to an existing file downloaded previously.
             </p>
           </div>
@@ -446,14 +483,59 @@ export default function LibrarySetup() {
             <div
               className={`rounded-md border px-3 py-2 text-sm ${
                 status === "success" ?
-                  "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                : "border-rose-500/40 bg-rose-500/10 text-rose-200"
+                  "border-status-success/40 bg-status-success/10 text-status-success-foreground"
+                : "border-status-error/40 bg-status-error/10 text-status-error-foreground"
               }`}>
               {message}
             </div>
           )}
         </form>
       }
+
+      {successSummary && (
+        <Card className="max-w-3xl border-status-success/40 bg-status-success/10">
+          <CardHeader className="pb-4">
+            <div>
+              <Badge variant="success">Next tools</Badge>
+            </div>
+            <h3 className="text-lg font-semibold text-status-success-foreground">
+              Continue with maintenance or inspection
+            </h3>
+            <p className="text-sm text-status-success-foreground/90">
+              {successSummary.total} products were loaded from
+              <span className="mx-1 font-medium text-foreground">
+                {successSummary.path}
+              </span>
+              and the viewer is ready for the next step.
+            </p>
+            <p className="text-xs text-status-success-foreground/80">
+              {redirectCountdown === null
+                ? "Automatic redirect paused."
+                : `Redirecting to overview in ${redirectCountdown}s unless you choose a destination first.`}
+            </p>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild size="sm">
+              <Link to="/commands">Open Command Center</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/structure">Open Schema</Link>
+            </Button>
+            <Button asChild size="sm" variant="ghost">
+              <Link to="/">Open Overview</Link>
+            </Button>
+            {redirectCountdown !== null && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setRedirectCountdown(null)}>
+                Stay here
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

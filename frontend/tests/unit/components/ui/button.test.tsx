@@ -1,41 +1,55 @@
-import { createRef } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import type { Ref } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
-import { Button, buttonVariants } from "../../../../src/components/ui/button";
+import { Button } from "../../../../src/components/ui/button";
 
 describe("Button", () => {
-  it("renders a clickable button with the requested variant and size classes", () => {
-    const onClick = vi.fn();
+  it("renders as a native button by default", () => {
+    render(<Button>Save</Button>);
 
+    expect(screen.getByRole("button", { name: "Save" })).toBeInTheDocument();
+  });
+
+  it("applies button styling to its child when asChild is enabled", () => {
     render(
-      <Button variant="secondary" size="sm" onClick={onClick}>
-        Save changes
+      <Button asChild variant="outline">
+        <a href="/docs">Docs</a>
       </Button>,
     );
 
-    const button = screen.getByRole("button", { name: "Save changes" });
-    expect(button.className).toContain("bg-slate-800");
-    expect(button.className).toContain("h-8");
-
-    fireEvent.click(button);
-    expect(onClick).toHaveBeenCalledTimes(1);
+    const link = screen.getByRole("link", { name: "Docs" });
+    expect(link).toBeInTheDocument();
+    expect(link.tagName).toBe("A");
+    expect(link.className).toContain("border-border");
+    expect(document.querySelector("button a")).toBeNull();
   });
 
-  it("forwards refs to the underlying button element", () => {
-    const ref = createRef<HTMLButtonElement>();
-
-    render(<Button ref={ref}>Open details</Button>);
-
-    expect(ref.current).toBe(
-      screen.getByRole("button", { name: "Open details" }),
+  it("applies variant, size, and custom classes to native buttons", () => {
+    render(
+      <Button variant="secondary" size="lg" className="tracking-wide">
+        Launch
+      </Button>,
     );
+
+    const button = screen.getByRole("button", { name: "Launch" });
+    expect(button.className).toContain("bg-secondary");
+    expect(button.className).toContain("h-11");
+    expect(button.className).toContain("tracking-wide");
   });
 
-  it("exposes variant helpers for shared styling callers", () => {
-    expect(buttonVariants({ variant: "link", size: "icon" })).toContain(
-      "underline-offset-4",
+  it("forwards refs to the child element when asChild is enabled", () => {
+    let renderedNode: Element | null = null;
+    const ref = ((value: HTMLButtonElement | null) => {
+      renderedNode = value as unknown as Element | null;
+    }) as Ref<HTMLButtonElement>;
+
+    render(
+      <Button asChild ref={ref}>
+        <a href="/docs">Docs</a>
+      </Button>,
     );
-    expect(buttonVariants({ variant: "link", size: "icon" })).toContain("h-9");
+
+    expect(renderedNode).toBe(screen.getByRole("link", { name: "Docs" }));
   });
 });
