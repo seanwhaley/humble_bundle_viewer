@@ -9,7 +9,7 @@ The Setup route supports two workflows:
 - **Capture new library** — run a fresh capture using the current `_simpleauth_sess` value
 - **Use existing library file** — point the viewer at a previously captured `library_products.json`
 
-### Command Center behavior
+### Setup behavior
 
 - Setup mode is persisted in `localStorage`
 - Download preference inputs (`platforms`, `fileTypes`, `sizePolicy`) are persisted in `localStorage`

@@ -28,17 +28,28 @@ const badgeVariants = cva(
   },
 );
 
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+
+export interface BadgeProps {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+  title?: string;
+  variant?: BadgeVariant;
+  "aria-label"?: string;
+}
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, ...props }, ref) => (
+  ({ "aria-label": ariaLabel, children, className, id, title, variant }, ref) => (
     <div
       ref={ref}
+      aria-label={ariaLabel}
+      id={id}
+      title={title}
       className={cn(badgeVariants({ variant }), className)}
-      {...props}
-    />
+    >
+      {children}
+    </div>
   ),
 );
 Badge.displayName = "Badge";

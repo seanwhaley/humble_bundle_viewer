@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 
 import { Badge } from "../../../../src/components/ui/badge";
 
@@ -18,5 +18,17 @@ describe("Badge", () => {
     const badge = screen.getByText("Fresh");
     expect(badge.className).toContain("border-status-success");
     expect(badge.className).toContain("text-status-success-foreground");
+  });
+
+  it("does not forward interactive props to the rendered badge", () => {
+    const handleClick = vi.fn();
+    const unsafeProps = {
+      onClick: handleClick,
+    } as unknown as React.ComponentProps<typeof Badge>;
+
+    render(<Badge {...unsafeProps}>Idle</Badge>);
+
+    fireEvent.click(screen.getByText("Idle"));
+    expect(handleClick).not.toHaveBeenCalled();
   });
 });
