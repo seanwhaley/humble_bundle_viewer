@@ -1,7 +1,7 @@
 /**
  * Ebook library route grouped by subproduct downloads.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
   Download,
@@ -23,6 +23,8 @@ import {
 import { formatBytes, formatDate, formatNumber } from "../../utils/format";
 import { DataTable } from "../../components/DataTable";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
 import FilterBar, { type FilterBarField } from "../../components/FilterBar";
@@ -204,7 +206,33 @@ export default function Ebooks() {
       formatFilter,
     ],
   );
+  const showFiltersPanel = showPageFilters || activePageFilterCount > 0;
+  const showBulkActionsPanel =
+    showBulkActions || selectedCount > 0 || bulkPlannerError !== null;
   const bulkPlannerActive = bulkPlannerBusy !== null;
+
+  const scopedBulkFormats = useMemo(() => {
+    const sourceRows = selectedCount > 0 ? selectedRows : filteredEbooks;
+    const counts = new Map<string, number>();
+    sourceRows.forEach((book) => {
+      book.downloads.forEach((download) => {
+        const format = getDownloadLabel(download, "contentLabel");
+        counts.set(format, (counts.get(format) || 0) + 1);
+      });
+    });
+
+    return Array.from(counts.keys()).sort((a, b) => {
+      const diff = (counts.get(b) || 0) - (counts.get(a) || 0);
+      if (diff !== 0) return diff;
+      return a.localeCompare(b);
+    });
+  }, [filteredEbooks, selectedCount, selectedRows]);
+
+  useEffect(() => {
+    if (selectedFormat && !scopedBulkFormats.includes(selectedFormat)) {
+      setSelectedFormat("");
+    }
+  }, [scopedBulkFormats, selectedFormat]);
 
   const triggerPlannedBulkDownload = async (
     busyState: "format" | "smallest" | "largest",
@@ -483,56 +511,78 @@ export default function Ebooks() {
 
   return (
     <div className="flex w-full flex-col space-y-4">
-      <div className="rounded-md border border-slate-800 bg-slate-900/70 px-4 py-3">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-slate-100">
-              {formatNumber(filteredEbooks.length)} eBooks in the current
-              collection view
-            </p>
-            <p className="text-xs text-slate-400">
-              Official product links and cached viewer pages appear when
-              enrichment data is available, and download actions stay with each
-              title’s collection metadata.
+      <Card className="bg-card/60">
+        <CardHeader className="space-y-4 pb-4">
+          <div>
+            <Badge variant="info">Reader-friendly layout</Badge>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold text-card-foreground">
+              Start with the table, then open filters, browser downloads, or
+              local sync only when you need them
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Keep discovery focused on titles, authors, and metadata first.
+              Official product links and cached viewer pages stay visible in the
+              table, while heavier route-level controls remain one click away.
             </p>
           </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Collection view
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {formatNumber(filteredEbooks.length)} eBooks in the current view.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Active selection
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {selectedCount} title{selectedCount === 1 ? "" : "s"} selected for route-level actions.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Format coverage
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {scopedBulkFormats.length} formats in the current bulk-download scope.
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <Button
-              variant={showPageFilters ? "secondary" : "outline"}
+              variant={showFiltersPanel ? "default" : "outline"}
               size="sm"
               className="h-8 gap-2 text-xs"
-              aria-expanded={showPageFilters}
+              aria-expanded={showFiltersPanel}
               onClick={() => setShowPageFilters((current) => !current)}>
-              {showPageFilters ?
+              {showFiltersPanel ?
                 <ChevronDown className="h-4 w-4" />
               : <ChevronRight className="h-4 w-4" />}
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
-              {activePageFilterCount > 0 && (
-                <span className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-1.5 py-0.5 text-[10px] text-indigo-200">
-                  {activePageFilterCount}
-                </span>
-              )}
+              Filters{activePageFilterCount > 0 ? ` (${activePageFilterCount})` : ""}
             </Button>
             <Button
-              variant={showBulkActions ? "secondary" : "outline"}
+              variant={showBulkActionsPanel ? "default" : "outline"}
               size="sm"
               className="h-8 gap-2 text-xs"
-              aria-expanded={showBulkActions}
+              aria-expanded={showBulkActionsPanel}
               onClick={() => setShowBulkActions((current) => !current)}>
-              {showBulkActions ?
+              {showBulkActionsPanel ?
                 <ChevronDown className="h-4 w-4" />
               : <ChevronRight className="h-4 w-4" />}
               <Download className="h-4 w-4" />
-              Bulk browser downloads
-              {selectedCount > 0 && (
-                <span className="rounded-full border border-slate-700 bg-slate-950/80 px-1.5 py-0.5 text-[10px] text-slate-200">
-                  {selectedCount}
-                </span>
-              )}
+              Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
             </Button>
             <Button
-              variant={showManagedSync ? "secondary" : "outline"}
+              variant={showManagedSync ? "default" : "outline"}
               size="sm"
               className="h-8 gap-2 text-xs"
               aria-expanded={showManagedSync}
@@ -544,10 +594,16 @@ export default function Ebooks() {
               Advanced local sync
             </Button>
           </div>
-        </div>
-      </div>
 
-      {showPageFilters && (
+          <p className="text-xs text-muted-foreground">
+            Downloads still use your browser’s normal save flow. Browsers may
+            prompt before allowing multiple files to open at once.
+            {hasExpiringSelection && " Some selected links expire soon."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {showFiltersPanel && (
         <FilterBar
           categories={options.categories}
           platforms={options.platforms}
@@ -601,19 +657,26 @@ export default function Ebooks() {
         <DownloadRouteEmptyState routeLabel="E-books" />
       )}
 
-      {!!filteredEbooks.length && showBulkActions && (
-        <div className="rounded-md border border-slate-800 bg-slate-900 p-3.5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <p className="text-sm font-medium text-slate-200">
-                Bulk browser downloads for {selectedCount} selected title
-                {selectedCount === 1 ? "" : "s"}
-              </p>
-              <p className="text-xs text-slate-400">
-                Select rows in the table, then open downloads in your browser’s
-                normal save location.
-              </p>
+      {!!filteredEbooks.length && showBulkActionsPanel && (
+        <Card className="bg-card/60">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-card-foreground">
+                  Bulk browser downloads
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Select titles in the table first, then choose whether you want
+                  every file, one matching format, or a planned smallest/largest
+                  download per title.
+                </p>
+              </div>
+              <Badge variant={selectedCount > 0 ? "success" : "neutral"}>
+                Selected titles: {selectedCount}
+              </Badge>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 size="sm"
@@ -636,13 +699,13 @@ export default function Ebooks() {
                 Download all
               </Button>
               <select
-                className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
                 value={selectedFormat}
                 onChange={(event) => setSelectedFormat(event.target.value)}
-                disabled={!selectedCount}
+                disabled={!selectedCount || bulkPlannerActive}
                 aria-label="Download format">
                 <option value="">Select format</option>
-                {uniqueFormats.map((format) => (
+                {scopedBulkFormats.map((format) => (
                   <option key={format} value={format}>
                     {format}
                   </option>
@@ -653,7 +716,10 @@ export default function Ebooks() {
                 variant="outline"
                 className="h-8 text-xs"
                 disabled={
-                  !selectedCount || !selectedFormat || bulkPlannerActive
+                  !selectedCount ||
+                  !selectedFormat ||
+                  hasExpiredSelection ||
+                  bulkPlannerActive
                 }
                 onClick={() => {
                   void triggerPlannedBulkDownload(
@@ -704,15 +770,16 @@ export default function Ebooks() {
                 Largest
               </Button>
             </div>
-          </div>
-          <p className="mt-2 text-xs text-slate-400">
-            Browsers may prompt before allowing multiple file downloads.
-            {hasExpiringSelection && " Some selected links expire soon."}
-          </p>
-          {bulkPlannerError && (
-            <p className="mt-2 text-xs text-rose-300">{bulkPlannerError}</p>
-          )}
-        </div>
+            <p className="text-xs text-muted-foreground">
+              {selectedCount > 0 ?
+                "Format choices are scoped to the currently selected titles so the picker stays focused on relevant reader formats."
+              : "Select one or more rows in the table to enable bulk downloads and narrow the format list."}
+            </p>
+            {bulkPlannerError && (
+              <p className="text-xs text-rose-300">{bulkPlannerError}</p>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {!!filteredEbooks.length && showManagedSync && (

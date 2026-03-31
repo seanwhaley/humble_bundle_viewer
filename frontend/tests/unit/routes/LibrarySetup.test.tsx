@@ -34,7 +34,11 @@ vi.mock("../../../src/data/api", () => ({
 
 const renderRoute = () =>
   render(
-    <MemoryRouter>
+    <MemoryRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}>
       <LibrarySetup />
     </MemoryRouter>,
   );
@@ -65,6 +69,33 @@ describe("LibrarySetup", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.useRealTimers();
+  });
+
+  it("collapses orientation cards for returning users and shows the last used library", () => {
+    window.localStorage.setItem(
+      "humble.libraryPath",
+      "C:\\Saved\\library_products.json",
+    );
+
+    mocks.useLibraryStatus.mockReturnValue({
+      data: {
+        current_path: "C:\\Saved\\library_products.json",
+        exists: true,
+        default_save_dir: "C:\\Downloads",
+        default_library_path: "C:\\Saved\\library_products.json",
+      },
+    });
+
+    renderRoute();
+
+    expect(screen.getByText("Last used library")).toBeInTheDocument();
+    expect(screen.getByText("C:\\Saved\\library_products.json")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Create a fresh library snapshot"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Point the viewer at a saved file"),
+    ).not.toBeInTheDocument();
   });
 
   it("submits the capture workflow with parsed filters and shows follow-up actions", async () => {

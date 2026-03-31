@@ -1,7 +1,7 @@
 /**
  * Software library route grouped by subproduct downloads.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2, Download, Monitor } from "lucide-react";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
@@ -18,6 +18,8 @@ import {
 import { formatBytes, formatDate } from "../../utils/format";
 import { DataTable } from "../../components/DataTable";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -66,6 +68,9 @@ export default function Software() {
   const { filters, setFilters } = useFilters();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectedVariant, setSelectedVariant] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [showBulkDownloads, setShowBulkDownloads] = useState(false);
+  const [showManagedSync, setShowManagedSync] = useState(false);
   const [showExpiredDialog, setShowExpiredDialog] = useState(false);
   const [bulkPlannerBusy, setBulkPlannerBusy] = useState<
     "smallest" | "largest" | null
@@ -171,6 +176,41 @@ export default function Software() {
     [selectedDownloads, expiringSoonMs],
   );
   const bulkPlannerActive = bulkPlannerBusy !== null;
+  const activeFilterCount = useMemo(
+    () =>
+      [
+        filters.category,
+        filters.platform,
+        filters.startDate,
+        filters.endDate,
+      ].filter(Boolean).length,
+    [filters.category, filters.endDate, filters.platform, filters.startDate],
+  );
+  const showFiltersPanel = showFilters || activeFilterCount > 0;
+  const showBulkDownloadsPanel =
+    showBulkDownloads || selectedCount > 0 || bulkPlannerError !== null;
+  const variantOptions = useMemo(() => {
+    const sourceRows = selectedCount > 0 ? selectedRows : softwareRows;
+    const counts = new Map<string, number>();
+    sourceRows.forEach((row) => {
+      row.downloads.forEach((download) => {
+        const key = getDownloadLabel(download, "displayLabel");
+        counts.set(key, (counts.get(key) || 0) + 1);
+      });
+    });
+
+    return Array.from(counts.keys()).sort((a, b) => {
+      const diff = (counts.get(b) || 0) - (counts.get(a) || 0);
+      if (diff !== 0) return diff;
+      return a.localeCompare(b);
+    });
+  }, [selectedCount, selectedRows, softwareRows]);
+
+  useEffect(() => {
+    if (selectedVariant && !variantOptions.includes(selectedVariant)) {
+      setSelectedVariant("");
+    }
+  }, [selectedVariant, variantOptions]);
 
   const triggerPlannedBulkDownload = async (
     sizePolicy: "smallest" | "largest",
@@ -211,7 +251,7 @@ export default function Software() {
       accessorKey: "publisher",
       header: "Publisher",
       cell: ({ getValue }) => (
-        <div className="whitespace-normal break-words text-sm text-slate-200">
+        <div className="whitespace-normal break-words text-sm text-foreground">
           {(getValue() as string) || "—"}
         </div>
       ),
@@ -234,7 +274,7 @@ export default function Software() {
           content={
             row.original.descriptionSnippet || "No summary metadata yet"
           }>
-          <p className="line-clamp-3 whitespace-normal break-words text-xs text-slate-300">
+          <p className="line-clamp-3 whitespace-normal break-words text-xs text-muted-foreground">
             {row.original.descriptionSnippet || "No summary metadata yet"}
           </p>
         </Tooltip>
@@ -259,7 +299,7 @@ export default function Software() {
       accessorKey: "variants",
       header: "Files",
       cell: ({ getValue }) => (
-        <div className="whitespace-normal break-words text-xs text-slate-300">
+        <div className="whitespace-normal break-words text-xs text-muted-foreground">
           {(getValue() as string[]).join(", ")}
         </div>
       ),
@@ -366,174 +406,278 @@ export default function Software() {
         </p>
       </div>
 
-      <FilterBar
-        categories={options.categories}
-        platforms={options.platforms}
-        keyTypes={options.keyTypes}
-        fields={SOFTWARE_FILTER_FIELDS}
-      />
-
       {!softwareRows.length && (
         <DownloadRouteEmptyState routeLabel="Software" />
       )}
 
       {!!softwareRows.length && (
         <>
-          <div className="rounded-md border border-slate-800 bg-slate-900 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+          <Card className="bg-card/60">
+            <CardHeader className="space-y-4 pb-4">
               <div>
-                <p className="text-sm font-medium text-slate-200">
-                  Selected titles: {selectedCount}
-                </p>
-                <p className="text-xs text-slate-400">
-                  Bulk download across selected software titles.
+                <Badge variant="info">Browse-first layout</Badge>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-card-foreground">
+                  Start with the table, then open filters, bulk downloads, or
+                  managed sync only when you need them
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Software titles tend to have the noisiest variant lists, so
+                  the heavier tools stay tucked away until you are ready to use
+                  them. Bulk variant downloads also scope themselves to the
+                  titles you selected in the table.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="default"
-                  className="h-8 text-xs"
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    if (hasExpiredSelection) {
-                      setShowExpiredDialog(true);
-                      return;
-                    }
-                    triggerDownloadUrls(
-                      collectDownloadUrls(
-                        selectedRows.flatMap((row) => row.downloads),
-                      ),
-                    );
-                  }}>
-                  Download all
-                </Button>
-                <select
-                  className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
-                  value={selectedVariant}
-                  onChange={(event) => setSelectedVariant(event.target.value)}
-                  disabled={!selectedCount || bulkPlannerActive}
-                  aria-label="Download software variant">
-                  <option value="">Select platform + type</option>
-                  {uniqueVariants.map((variant) => (
-                    <option key={variant} value={variant}>
-                      {variant}
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs"
-                  disabled={
-                    !selectedCount ||
-                    !selectedVariant ||
-                    hasExpiredSelection ||
-                    bulkPlannerActive
-                  }
-                  onClick={() => {
-                    const items = selectedRows
-                      .map((row) => {
-                        const downloads = filterDownloadsByLabel(
-                          row.downloads,
-                          selectedVariant,
-                          "displayLabel",
-                        );
-                        return downloads.length ?
-                            {
-                              title_id: row.id,
-                              title: row.subproductName,
-                              downloads,
-                            }
-                          : null;
-                      })
-                      .filter(Boolean) as {
-                      title_id: string;
-                      title: string;
-                      downloads: DownloadRecord[];
-                    }[];
-                    if (
-                      hasExpiredLinks(
-                        items.flatMap((item) => item.downloads),
-                        expiringSoonMs,
-                      )
-                    ) {
-                      setShowExpiredDialog(true);
-                      return;
-                    }
-                    triggerDownloadUrls(
-                      collectDownloadUrls(
-                        items.flatMap((item) => item.downloads),
-                      ),
-                    );
-                  }}>
-                  Download variant
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs"
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    void triggerPlannedBulkDownload("smallest");
-                  }}>
-                  {bulkPlannerBusy === "smallest" && (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  )}
-                  Smallest
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 text-xs"
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    void triggerPlannedBulkDownload("largest");
-                  }}>
-                  {bulkPlannerBusy === "largest" && (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  )}
-                  Largest
-                </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Library scope
+                  </p>
+                  <p className="mt-2 text-sm text-card-foreground">
+                    {softwareRows.length} software titles are ready to browse.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Active selection
+                  </p>
+                  <p className="mt-2 text-sm text-card-foreground">
+                    {selectedCount} title{selectedCount === 1 ? "" : "s"} selected for bulk actions.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-muted/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Variant coverage
+                  </p>
+                  <p className="mt-2 text-sm text-card-foreground">
+                    {variantOptions.length} platform and file-type variants in the current scope.
+                  </p>
+                </div>
               </div>
-            </div>
-            <p className="mt-2 text-xs text-slate-400">
-              Downloads open in your browser and save to this device using the
-              browser's normal download location. Browsers may prompt before
-              allowing multiple file downloads.
-              {hasExpiringSelection && " Some selected links expire soon."}
-            </p>
-            {bulkPlannerError && (
-              <p className="mt-2 text-xs text-rose-300">{bulkPlannerError}</p>
-            )}
-          </div>
 
-          <AdvancedManagedSyncPanel
-            rows={softwareRows.map((row) => ({
-              id: row.id,
-              subproductName: row.subproductName,
-              sourceBundle: row.sourceBundle,
-              downloads: row.downloads,
-            }))}
-            selectedRows={selectedRows.map((row) => ({
-              id: row.id,
-              subproductName: row.subproductName,
-              sourceBundle: row.sourceBundle,
-              downloads: row.downloads,
-            }))}
-            uniqueFormats={uniqueVariants}
-            expiringSoonMs={expiringSoonMs}
-            onExpiredLinks={() => setShowExpiredDialog(true)}
-            mediaLabel="software"
-            formatStrategy="displayLabel"
-            pickerId="hb-library-viewer-managed-sync-software"
-          />
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant={showFiltersPanel ? "default" : "outline"}
+                  onClick={() => setShowFilters((value) => !value)}>
+                  Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={showBulkDownloadsPanel ? "default" : "outline"}
+                  onClick={() => setShowBulkDownloads((value) => !value)}>
+                  Bulk downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={showManagedSync ? "default" : "outline"}
+                  onClick={() => setShowManagedSync((value) => !value)}>
+                  Managed sync
+                </Button>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Downloads still use your browser's normal save flow. Browsers
+                may prompt before allowing multiple files to open at once.
+                {hasExpiringSelection && " Some selected links expire soon."}
+              </p>
+            </CardContent>
+          </Card>
+
+          {showFiltersPanel && (
+            <Card className="bg-card/60">
+              <CardHeader className="pb-3">
+                <h3 className="text-base font-semibold text-card-foreground">
+                  Narrow the library before you download
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Category, platform, and acquisition date filters reduce table
+                  noise without changing the global search box.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <FilterBar
+                  categories={options.categories}
+                  platforms={options.platforms}
+                  keyTypes={options.keyTypes}
+                  fields={SOFTWARE_FILTER_FIELDS}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {showBulkDownloadsPanel && (
+            <Card className="bg-card/60">
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-card-foreground">
+                      Bulk downloads
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Select titles in the table first, then choose whether you
+                      want every file, one matching variant, or a planned
+                      smallest/largest download per title.
+                    </p>
+                  </div>
+                  <Badge variant={selectedCount > 0 ? "success" : "neutral"}>
+                    Selected titles: {selectedCount}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="h-8 text-xs"
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
+                    }
+                    onClick={() => {
+                      if (hasExpiredSelection) {
+                        setShowExpiredDialog(true);
+                        return;
+                      }
+                      triggerDownloadUrls(
+                        collectDownloadUrls(
+                          selectedRows.flatMap((row) => row.downloads),
+                        ),
+                      );
+                    }}>
+                    Download all
+                  </Button>
+                  <select
+                    className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                    value={selectedVariant}
+                    onChange={(event) => setSelectedVariant(event.target.value)}
+                    disabled={!selectedCount || bulkPlannerActive}
+                    aria-label="Download software variant">
+                    <option value="">Select platform + type</option>
+                    {variantOptions.map((variant) => (
+                      <option key={variant} value={variant}>
+                        {variant}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={
+                      !selectedCount ||
+                      !selectedVariant ||
+                      hasExpiredSelection ||
+                      bulkPlannerActive
+                    }
+                    onClick={() => {
+                      const items = selectedRows
+                        .map((row) => {
+                          const downloads = filterDownloadsByLabel(
+                            row.downloads,
+                            selectedVariant,
+                            "displayLabel",
+                          );
+                          return downloads.length ?
+                              {
+                                title_id: row.id,
+                                title: row.subproductName,
+                                downloads,
+                              }
+                            : null;
+                        })
+                        .filter(Boolean) as {
+                        title_id: string;
+                        title: string;
+                        downloads: DownloadRecord[];
+                      }[];
+                      if (
+                        hasExpiredLinks(
+                          items.flatMap((item) => item.downloads),
+                          expiringSoonMs,
+                        )
+                      ) {
+                        setShowExpiredDialog(true);
+                        return;
+                      }
+                      triggerDownloadUrls(
+                        collectDownloadUrls(
+                          items.flatMap((item) => item.downloads),
+                        ),
+                      );
+                    }}>
+                    Download variant
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
+                    }
+                    onClick={() => {
+                      void triggerPlannedBulkDownload("smallest");
+                    }}>
+                    {bulkPlannerBusy === "smallest" && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    Smallest
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
+                    }
+                    onClick={() => {
+                      void triggerPlannedBulkDownload("largest");
+                    }}>
+                    {bulkPlannerBusy === "largest" && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    Largest
+                  </Button>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {selectedCount > 0 ?
+                    "Variant options are scoped to the currently selected titles so you do not have to scroll through irrelevant file types."
+                  : "Select one or more rows in the table to enable bulk downloads and narrow the variant list."}
+                </p>
+
+                {bulkPlannerError && (
+                  <p className="text-xs text-rose-300">{bulkPlannerError}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {showManagedSync && (
+            <AdvancedManagedSyncPanel
+              rows={softwareRows.map((row) => ({
+                id: row.id,
+                subproductName: row.subproductName,
+                sourceBundle: row.sourceBundle,
+                downloads: row.downloads,
+              }))}
+              selectedRows={selectedRows.map((row) => ({
+                id: row.id,
+                subproductName: row.subproductName,
+                sourceBundle: row.sourceBundle,
+                downloads: row.downloads,
+              }))}
+              uniqueFormats={uniqueVariants}
+              expiringSoonMs={expiringSoonMs}
+              onExpiredLinks={() => setShowExpiredDialog(true)}
+              mediaLabel="software"
+              formatStrategy="displayLabel"
+              pickerId="hb-library-viewer-managed-sync-software"
+            />
+          )}
 
           <DataTable
             columns={columns}

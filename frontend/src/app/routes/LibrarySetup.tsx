@@ -83,6 +83,7 @@ export default function LibrarySetup() {
     total: number;
   } | null>(null);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const hasStoredLibraryPath = storedLibraryPath.trim().length > 0;
 
   useEffect(() => {
     if (!libraryStatus) return;
@@ -239,37 +240,61 @@ export default function LibrarySetup() {
         </div>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      {hasStoredLibraryPath ? (
         <Card className="bg-card/60">
-          <CardHeader className="pb-2">
+          <CardContent className="space-y-3 p-4">
             <div>
-              <Badge variant="neutral">Capture once</Badge>
+              <Badge variant={libraryStatus?.exists ? "success" : "info"}>
+                Last used
+              </Badge>
             </div>
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Create a fresh library snapshot
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Use your current `_simpleauth_sess` cookie to capture a new
-              `library_products.json` and optionally download matching files.
-            </p>
-          </CardHeader>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-card-foreground">
+                Last used library
+              </h3>
+              <p className="break-all text-sm text-muted-foreground">
+                {storedLibraryPath}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Choose a workflow below to refresh this snapshot or switch to a
+                different saved file.
+              </p>
+            </div>
+          </CardContent>
         </Card>
+      ) : (
+        <div className="grid gap-4 xl:grid-cols-2">
+          <Card className="bg-card/60">
+            <CardHeader className="pb-2">
+              <div>
+                <Badge variant="neutral">Capture once</Badge>
+              </div>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                Create a fresh library snapshot
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Use your current `_simpleauth_sess` cookie to capture a new
+                `library_products.json` and optionally download matching files.
+              </p>
+            </CardHeader>
+          </Card>
 
-        <Card className="bg-card/60">
-          <CardHeader className="pb-2">
-            <div>
-              <Badge variant="success">Reuse existing data</Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Point the viewer at a saved file
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Switch quickly between previously captured libraries without
-              rerunning the browser capture workflow.
-            </p>
-          </CardHeader>
-        </Card>
-      </div>
+          <Card className="bg-card/60">
+            <CardHeader className="pb-2">
+              <div>
+                <Badge variant="success">Reuse existing data</Badge>
+              </div>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                Point the viewer at a saved file
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Switch quickly between previously captured libraries without
+                rerunning the browser capture workflow.
+              </p>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <label

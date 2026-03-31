@@ -7,6 +7,7 @@ import { ArrowRight, Filter, Loader2, Sparkles } from "lucide-react";
 
 import LineChart from "../../components/charts/LineChart";
 import PieChart from "../../components/charts/PieChart";
+import { Button } from "../../components/ui/button";
 import {
   type CurrentBundleSummary,
   type CurrentBundleTierOverlap,
@@ -33,6 +34,11 @@ type BundleCriteriaCard = {
     label: string;
     value: number;
     details?: string;
+  }>;
+  matchingRoutes: Array<{
+    id: CurrentBundleType;
+    label: string;
+    route: string;
   }>;
 };
 
@@ -104,6 +110,9 @@ const getBundleTypeLabel = (bundleType: CurrentBundleType) =>
   bundleType;
 
 const formatDaysLabel = (days: number) => `${days} day${days === 1 ? "" : "s"}`;
+
+const buildBundleFocusRoute = (bundleType: CurrentBundleType, focus: string) =>
+  `/venue/bundles/${bundleType}?focus=${focus}`;
 
 const getTopTiers = (bundles: CurrentBundleSummary[]) =>
   bundles.map(getBundleTopTier).filter(Boolean) as CurrentBundleTierOverlap[];
@@ -397,6 +406,18 @@ export default function CurrentSalesOverview() {
         percent: totalBundles > 0 ? (breakdown.count / totalBundles) * 100 : 0,
         chartTitle: criterion.chartTitle,
         chartData: breakdown.chartData,
+        matchingRoutes: selectedBundleTypes
+          .filter((bundleType) =>
+            filteredBundles.some(
+              (bundle) =>
+                bundle.category === bundleType && criterion.predicate(bundle),
+            ),
+          )
+          .map((bundleType) => ({
+            id: bundleType,
+            label: getBundleTypeLabel(bundleType),
+            route: buildBundleFocusRoute(bundleType, criterion.id),
+          })),
       };
     });
   }, [filteredBundles, selectedBundleTypes]);
@@ -711,20 +732,20 @@ export default function CurrentSalesOverview() {
             <div className="flex items-center gap-2 text-indigo-300">
               <Sparkles className="h-4 w-4" />
               <p className="text-xs font-semibold uppercase tracking-[0.18em]">
-                Bundle criteria summary
+                Decision shortcuts
               </p>
             </div>
             <div className="mt-3 space-y-2 text-sm text-slate-300">
               <p>
-                These four topline analysis cards now roll up the currently
-                selected bundle types into one shared view instead of repeating
-                separate source boxes.
+                Start with the four high-signal bundle questions below, then
+                jump directly into the matching bundle-type route when you know
+                what kind of decision you need to make next.
               </p>
               <p className="text-slate-400">
-                Current Choice remains part of the totals above when selected,
-                but the criteria below are bundle-only because they depend on
-                bundle tier overlap, saved bundle countdowns, and tracked bundle
-                MSRP data.
+                Current Choice still stays in the summary totals above when
+                selected, but these shortcut cards stay bundle-only because the
+                criteria depend on bundle tier overlap, expiry countdowns, and
+                tracked tier savings.
               </p>
             </div>
 
@@ -749,6 +770,24 @@ export default function CurrentSalesOverview() {
                   <p className="mt-1 text-sm text-slate-400">
                     {card.description}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {card.matchingRoutes.length > 0 ?
+                      card.matchingRoutes.map((route) => (
+                        <Button
+                          key={`${card.id}-${route.id}`}
+                          asChild
+                          size="sm"
+                          variant="outline"
+                          className="border-slate-700 bg-slate-950/40 text-slate-100 hover:border-indigo-500/40 hover:bg-slate-900">
+                          <Link to={route.route}>Review {route.label}</Link>
+                        </Button>
+                      ))
+                    : <span className="text-xs text-slate-500">
+                        No matching bundle-type routes in the current source
+                        filter.
+                      </span>
+                    }
+                  </div>
                 </section>
               ))}
             </div>
@@ -810,13 +849,19 @@ export default function CurrentSalesOverview() {
             />
           </div>
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 shadow-sm shadow-black/20">
-            <div className="flex items-center gap-2 text-indigo-300">
-              <Sparkles className="h-4 w-4" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em]">
-                Reading the charts
+          <details className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 shadow-sm shadow-black/20">
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-center gap-2 text-indigo-300">
+                <Sparkles className="h-4 w-4" />
+                <p className="text-xs font-semibold uppercase tracking-[0.18em]">
+                  How to read the charts
+                </p>
+              </div>
+              <p className="mt-3 max-w-3xl text-sm text-slate-400">
+                Open this guide only when you need the extra interpretation
+                details.
               </p>
-            </div>
+            </summary>
             <div className="mt-4 space-y-4 text-sm text-slate-300">
               <p>
                 <span className="font-semibold text-white">
@@ -864,11 +909,11 @@ export default function CurrentSalesOverview() {
                 <span className="font-semibold text-white">Current Choice</span>{" "}
                 still contributes to the totals in the summary strip above when
                 selected, but it is intentionally excluded from these
-                bundle-only match pies because it is not part of the
+                bundle-only match charts because it is not part of the
                 games/books/software bundle-type breakdown.
               </p>
             </div>
-          </section>
+          </details>
         </>
       }
     </div>
