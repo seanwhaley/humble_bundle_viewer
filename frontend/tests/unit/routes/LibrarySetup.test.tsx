@@ -4,6 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import LibrarySetup from "../../../src/app/routes/LibrarySetup";
 
+const getStorageEntries = (storage: Storage) =>
+  Array.from({ length: storage.length }, (_, index) => {
+    const key = storage.key(index);
+    return key ? [key, storage.getItem(key)] : null;
+  }).filter((entry): entry is [string, string | null] => entry !== null);
+
 const mocks = vi.hoisted(() => ({
   useLibraryStatus: vi.fn(),
   invalidateQueries: vi.fn(),
@@ -88,6 +94,13 @@ describe("LibrarySetup", () => {
       target: { value: "largest" },
     });
 
+    expect(JSON.stringify(getStorageEntries(window.localStorage))).not.toContain(
+      "session-cookie",
+    );
+    expect(JSON.stringify(getStorageEntries(window.sessionStorage))).not.toContain(
+      "session-cookie",
+    );
+
     fireEvent.click(screen.getByRole("button", { name: "Run capture now" }));
 
     await waitFor(() => {
@@ -124,10 +137,40 @@ describe("LibrarySetup", () => {
     expect(window.localStorage.getItem("humble.setup.platforms")).toBe(
       JSON.stringify("ebook, audio, "),
     );
+    expect(JSON.stringify(getStorageEntries(window.localStorage))).not.toContain(
+      "session-cookie",
+    );
+    expect(JSON.stringify(getStorageEntries(window.sessionStorage))).not.toContain(
+      "session-cookie",
+    );
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"] });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["library-status"],
     });
+  });
+
+  it("falls back to default setup values when localStorage is unavailable", async () => {
+    const storageGetter = vi
+      .spyOn(window, "localStorage", "get")
+      .mockImplementation(() => {
+        throw new Error("storage blocked");
+      });
+
+    try {
+      renderRoute();
+
+      expect(await screen.findByDisplayValue("C:\\Downloads")).toBeInTheDocument();
+      expect(
+        screen.getByRole("radio", { name: /Capture new library/i }),
+      ).toBeChecked();
+
+      fireEvent.click(screen.getByLabelText(/Download files after capture/i));
+
+      expect(await screen.findByDisplayValue("ebook, audio")).toBeInTheDocument();
+      expect(screen.getByLabelText("Size policy")).toHaveValue("all");
+    } finally {
+      storageGetter.mockRestore();
+    }
   });
 
   it("validates required fields and supports selecting an existing library file", async () => {

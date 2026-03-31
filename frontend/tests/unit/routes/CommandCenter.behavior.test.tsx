@@ -307,6 +307,47 @@ describe("CommandCenter", () => {
     expect(window.localStorage.getItem("humble.commands.generateClassName")).toBeNull();
   });
 
+  it("falls back to default command inputs when browser storage is unavailable", () => {
+    const localStorageGetter = vi
+      .spyOn(window, "localStorage", "get")
+      .mockImplementation(() => {
+        throw new Error("localStorage blocked");
+      });
+    const sessionStorageGetter = vi
+      .spyOn(window, "sessionStorage", "get")
+      .mockImplementation(() => {
+        throw new Error("sessionStorage blocked");
+      });
+
+    try {
+      renderRoute();
+
+      const generateForm = getFormForButton("Generate order models");
+      expect(
+        within(generateForm).getByDisplayValue("data/artifacts/api_responses"),
+      ).toBeInTheDocument();
+      expect(
+        within(generateForm).getByDisplayValue("orders_batch_*.json"),
+      ).toBeInTheDocument();
+      expect(
+        within(generateForm).getByDisplayValue(
+          "data/artifacts/order_payload_models.py",
+        ),
+      ).toBeInTheDocument();
+      expect(within(generateForm).getByDisplayValue("OrderPayloadList")).toBeInTheDocument();
+
+      const schemaForm = getFormForButton("Build viewer schema");
+      expect(
+        within(schemaForm).getByDisplayValue(
+          "docs/assets/tools/library-products-schema.json",
+        ),
+      ).toBeInTheDocument();
+    } finally {
+      localStorageGetter.mockRestore();
+      sessionStorageGetter.mockRestore();
+    }
+  });
+
   it("submits cache-page filters with trimmed optional values and shows command errors", async () => {
     mocks.postMaintenanceCommand
       .mockResolvedValueOnce({
