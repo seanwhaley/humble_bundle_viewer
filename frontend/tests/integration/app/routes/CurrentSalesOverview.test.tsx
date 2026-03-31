@@ -130,16 +130,13 @@ describe("CurrentSalesOverview", () => {
     const gameShortcutHrefs = screen
       .getAllByRole("link", { name: "Review Game bundles" })
       .map((link) => link.getAttribute("href"));
-    expect(gameShortcutHrefs).toContain(
-      "/venue/bundles/games?focus=all-new",
-    );
+    expect(gameShortcutHrefs).toContain("/venue/bundles/games?focus=all-new");
     expect(gameShortcutHrefs).toContain(
       "/venue/bundles/games?focus=expiring-soon",
     );
-    expect(screen.getByRole("link", { name: "Review Book bundles" })).toHaveAttribute(
-      "href",
-      "/venue/bundles/books?focus=partial-overlap",
-    );
+    expect(
+      screen.getByRole("link", { name: "Review Book bundles" }),
+    ).toHaveAttribute("href", "/venue/bundles/books?focus=partial-overlap");
     expect(screen.getByText("How to read the charts")).toBeInTheDocument();
   });
 });

@@ -111,10 +111,8 @@ const getBundleTypeLabel = (bundleType: CurrentBundleType) =>
 
 const formatDaysLabel = (days: number) => `${days} day${days === 1 ? "" : "s"}`;
 
-const buildBundleFocusRoute = (
-  bundleType: CurrentBundleType,
-  focus: string,
-) => `/venue/bundles/${bundleType}?focus=${focus}`;
+const buildBundleFocusRoute = (bundleType: CurrentBundleType, focus: string) =>
+  `/venue/bundles/${bundleType}?focus=${focus}`;
 
 const getTopTiers = (bundles: CurrentBundleSummary[]) =>
   bundles.map(getBundleTopTier).filter(Boolean) as CurrentBundleTierOverlap[];
@@ -785,8 +783,10 @@ export default function CurrentSalesOverview() {
                         </Button>
                       ))
                     : <span className="text-xs text-slate-500">
-                        No matching bundle-type routes in the current source filter.
-                      </span>}
+                        No matching bundle-type routes in the current source
+                        filter.
+                      </span>
+                    }
                   </div>
                 </section>
               ))}
@@ -858,7 +858,8 @@ export default function CurrentSalesOverview() {
                 </p>
               </div>
               <p className="mt-3 max-w-3xl text-sm text-slate-400">
-                Open this guide only when you need the extra interpretation details.
+                Open this guide only when you need the extra interpretation
+                details.
               </p>
             </summary>
             <div className="mt-4 space-y-4 text-sm text-slate-300">

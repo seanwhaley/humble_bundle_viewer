@@ -194,72 +194,70 @@ export default function Overview() {
     <div className="w-full flex flex-col space-y-6">
       <Card className="rounded-md bg-card/70">
         <CardContent className="px-4 py-3">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="info">Current scope</Badge>
+                {isFiltered && (
+                  <span className={surfaceChipClass}>
+                    {activeFilterCount} active filter
+                    {activeFilterCount === 1 ? "" : "s"}
+                  </span>
+                )}
+              </div>
+              <p
+                className="mt-2 text-sm font-medium text-foreground"
+                data-doc-id="overview-current-scope-label">
+                {filteredLabel}
+              </p>
+              <p
+                className="mt-1 text-xs text-muted-foreground"
+                data-doc-id="overview-current-scope-description">
+                Open filters when you need field-by-field control, or use the
+                tiles and charts below to narrow the dashboard without spending
+                the whole top fold on controls.
+              </p>
+            </div>
+
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="info">Current scope</Badge>
+              <Button
+                variant={showOverviewFilters ? "secondary" : "outline"}
+                size="sm"
+                className="h-8 gap-2 text-xs"
+                aria-expanded={showOverviewFilters}
+                onClick={() => setShowOverviewFilters((current) => !current)}>
+                {showOverviewFilters ?
+                  <ChevronDown className="h-4 w-4" />
+                : <ChevronRight className="h-4 w-4" />}
+                <SlidersHorizontal className="h-4 w-4" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="rounded-full border border-border bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
               {isFiltered && (
-                <span className={surfaceChipClass}>
-                  {activeFilterCount} active filter
-                  {activeFilterCount === 1 ? "" : "s"}
-                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs"
+                  onClick={clearFilters}>
+                  Clear overview filters
+                </Button>
               )}
             </div>
-            <p
-              className="mt-2 text-sm font-medium text-foreground"
-              data-doc-id="overview-current-scope-label">
-              {filteredLabel}
-            </p>
-            <p
-              className="mt-1 text-xs text-muted-foreground"
-              data-doc-id="overview-current-scope-description">
-              Open filters when you need field-by-field control, or use the
-              tiles and charts below to narrow the dashboard without spending
-              the whole top fold on controls.
-            </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant={showOverviewFilters ? "secondary" : "outline"}
-              size="sm"
-              className="h-8 gap-2 text-xs"
-              aria-expanded={showOverviewFilters}
-              onClick={() => setShowOverviewFilters((current) => !current)}>
-              {showOverviewFilters ?
-                <ChevronDown className="h-4 w-4" />
-              : <ChevronRight className="h-4 w-4" />}
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="rounded-full border border-border bg-background/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                  {activeFilterCount}
+          {isFiltered && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {activeScopeChips.map((chip) => (
+                <span key={chip} className={surfaceChipClass}>
+                  {chip}
                 </span>
-              )}
-            </Button>
-            {isFiltered && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 text-xs"
-                onClick={clearFilters}>
-                Clear overview filters
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {isFiltered && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {activeScopeChips.map((chip) => (
-              <span
-                key={chip}
-                className={surfaceChipClass}>
-                {chip}
-              </span>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -280,76 +278,77 @@ export default function Overview() {
         title="Track live bundles and this month’s Choice against what you already own"
         description="Put the active buying view first: check today’s live bundles and the current Humble Choice month before you drop into the deeper ownership and library charts below.">
         <p className="text-xs text-muted-foreground">
-          Use the sidebar’s <span className="font-medium text-foreground">Current sales</span>{" "}
+          Use the sidebar’s{" "}
+          <span className="font-medium text-foreground">Current sales</span>{" "}
           section when you want the full Sales Overview, Current Choice, or
           bundle-specific pages.
         </p>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <Card className="rounded-xl bg-muted/30 shadow-none">
             <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Last generated
-            </p>
-            <p
-              className="mt-2 font-medium text-card-foreground"
-              data-doc-id="overview-current-sales-last-generated">
-              {currentBundlesStatus?.generated_at ?
-                formatDateTime(currentBundlesStatus.generated_at)
-              : "Not generated yet"}
-            </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Last generated
+              </p>
+              <p
+                className="mt-2 font-medium text-card-foreground"
+                data-doc-id="overview-current-sales-last-generated">
+                {currentBundlesStatus?.generated_at ?
+                  formatDateTime(currentBundlesStatus.generated_at)
+                : "Not generated yet"}
+              </p>
             </CardContent>
           </Card>
           <Card className="rounded-xl bg-muted/30 shadow-none">
             <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Bundle types
-            </p>
-            <p
-              className="mt-2 font-medium text-card-foreground"
-              data-doc-id="overview-current-sales-bundle-types">
-              {currentBundlesStatus?.bundle_types?.length ?
-                currentBundlesStatus.bundle_types.join(", ")
-              : "games, books, software"}
-            </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Bundle types
+              </p>
+              <p
+                className="mt-2 font-medium text-card-foreground"
+                data-doc-id="overview-current-sales-bundle-types">
+                {currentBundlesStatus?.bundle_types?.length ?
+                  currentBundlesStatus.bundle_types.join(", ")
+                : "games, books, software"}
+              </p>
             </CardContent>
           </Card>
           <Card className="rounded-xl bg-muted/30 shadow-none">
             <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Bundles analyzed
-            </p>
-            <p
-              className="mt-2 font-medium text-card-foreground"
-              data-doc-id="overview-current-sales-bundles-analyzed">
-              {(
-                currentBundlesStatus?.bundle_count !== null &&
-                currentBundlesStatus?.bundle_count !== undefined
-              ) ?
-                formatNumber(currentBundlesStatus.bundle_count)
-              : "Refresh required"}
-            </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Bundles analyzed
+              </p>
+              <p
+                className="mt-2 font-medium text-card-foreground"
+                data-doc-id="overview-current-sales-bundles-analyzed">
+                {(
+                  currentBundlesStatus?.bundle_count !== null &&
+                  currentBundlesStatus?.bundle_count !== undefined
+                ) ?
+                  formatNumber(currentBundlesStatus.bundle_count)
+                : "Refresh required"}
+              </p>
             </CardContent>
           </Card>
           <Card className="rounded-xl bg-muted/30 shadow-none">
             <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-              Current Choice
-            </p>
-            <p
-              className="mt-2 font-medium text-card-foreground"
-              data-doc-id="overview-current-sales-choice-month">
-              {currentChoiceStatus?.month_label || "Not generated yet"}
-            </p>
-            <p
-              className="mt-1 text-sm text-muted-foreground"
-              data-doc-id="overview-current-sales-choice-helper">
-              {(
-                currentChoiceStatus?.game_count !== null &&
-                currentChoiceStatus?.game_count !== undefined
-              ) ?
-                `${formatNumber(currentChoiceStatus.game_count)} games captured`
-              : "Refresh required"}
-            </p>
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Current Choice
+              </p>
+              <p
+                className="mt-2 font-medium text-card-foreground"
+                data-doc-id="overview-current-sales-choice-month">
+                {currentChoiceStatus?.month_label || "Not generated yet"}
+              </p>
+              <p
+                className="mt-1 text-sm text-muted-foreground"
+                data-doc-id="overview-current-sales-choice-helper">
+                {(
+                  currentChoiceStatus?.game_count !== null &&
+                  currentChoiceStatus?.game_count !== undefined
+                ) ?
+                  `${formatNumber(currentChoiceStatus.game_count)} games captured`
+                : "Refresh required"}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -442,7 +441,9 @@ export default function Overview() {
             {showDeeperAnalytics ?
               <ChevronDown className="mr-2 h-4 w-4" />
             : <ChevronRight className="mr-2 h-4 w-4" />}
-            {showDeeperAnalytics ? "Hide deeper analytics" : "Show deeper analytics"}
+            {showDeeperAnalytics ?
+              "Hide deeper analytics"
+            : "Show deeper analytics"}
           </Button>
         }>
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
@@ -450,7 +451,8 @@ export default function Overview() {
             Click category, platform, and key-type bars to filter the dashboard
           </span>
           <span className={surfaceChipClass}>
-            Use the grouped breakdowns below after the top-of-page buyer view answers the urgent question
+            Use the grouped breakdowns below after the top-of-page buyer view
+            answers the urgent question
           </span>
         </div>
       </OverviewSection>
@@ -570,7 +572,9 @@ export default function Overview() {
                 data={keyTypeCounts}
                 selected={filters.keyType}
                 onSelect={(value) =>
-                  setFilters({ keyType: filters.keyType === value ? null : value })
+                  setFilters({
+                    keyType: filters.keyType === value ? null : value,
+                  })
                 }
               />
             </div>
@@ -578,27 +582,29 @@ export default function Overview() {
 
           <Card className="bg-card/60">
             <CardHeader className="p-6 pb-0">
-            <h3 className="text-lg font-semibold tracking-tight text-card-foreground">
-              Browse by category
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Jump into category-specific detail views after using the overview to
-              narrow your scope.
-            </p>
+              <h3 className="text-lg font-semibold tracking-tight text-card-foreground">
+                Browse by category
+              </h3>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Jump into category-specific detail views after using the
+                overview to narrow your scope.
+              </p>
             </CardHeader>
             <CardContent className="p-6 pt-4">
-            <div className="mt-4 flex flex-wrap gap-2">
-              {options.categories.map((category) => (
-                <Button
-                  key={category}
-                  asChild
-                  variant="outline"
-                  size="sm"
-                  className="h-auto py-2">
-                  <Link to={`/category/${category}`}>{normalizeCategoryLabel(category)}</Link>
-                </Button>
-              ))}
-            </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {options.categories.map((category) => (
+                  <Button
+                    key={category}
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="h-auto py-2">
+                    <Link to={`/category/${category}`}>
+                      {normalizeCategoryLabel(category)}
+                    </Link>
+                  </Button>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </>

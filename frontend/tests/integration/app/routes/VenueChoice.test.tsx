@@ -121,7 +121,9 @@ describe("VenueChoice", () => {
     expect(screen.queryByText("Game One")).not.toBeInTheDocument();
     expect(screen.getByText("Game Two")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Already owned \(1\)/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Already owned \(1\)/i }),
+    );
     expect(screen.getByText("Game One")).toBeInTheDocument();
     expect(screen.queryByText("Game Two")).not.toBeInTheDocument();
   });

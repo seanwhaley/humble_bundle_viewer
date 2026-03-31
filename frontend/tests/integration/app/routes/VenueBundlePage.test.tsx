@@ -23,7 +23,10 @@ function renderRoute(initialEntry = "/venue/bundles/games?focus=all-new") {
           path="/venue/bundles/games"
           element={<VenueBundlePage bundleType="games" />}
         />
-        <Route path="/venue/overview" element={<div>Sales Overview destination</div>} />
+        <Route
+          path="/venue/overview"
+          element={<div>Sales Overview destination</div>}
+        />
       </Routes>
     </MemoryRouter>,
   );
@@ -105,7 +108,9 @@ describe("VenueBundlePage", () => {
 
     renderRoute();
 
-    expect(screen.getByText(/Current quick view: All-new/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Current quick view: All-new/i),
+    ).toBeInTheDocument();
     expect(screen.getByText("Alpha Games Bundle")).toBeInTheDocument();
     expect(screen.queryByText("Beta Games Bundle")).not.toBeInTheDocument();
 

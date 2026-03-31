@@ -181,8 +181,9 @@ export default function VenueChoice() {
 
           <p className="mt-3 text-sm text-slate-400">
             {
-              CHOICE_QUICK_FOCUS_OPTIONS.find((option) => option.id === quickFocus)
-                ?.description
+              CHOICE_QUICK_FOCUS_OPTIONS.find(
+                (option) => option.id === quickFocus,
+              )?.description
             }
           </p>
 
@@ -201,33 +202,34 @@ export default function VenueChoice() {
                 {filteredGames.length === 0 ?
                   <tr className="border-t border-slate-800 align-top">
                     <td className="px-4 py-4 text-slate-300" colSpan={3}>
-                      No games match this quick view. Switch back to All games to
-                      review the full current Choice lineup.
+                      No games match this quick view. Switch back to All games
+                      to review the full current Choice lineup.
                     </td>
                   </tr>
                 : filteredGames.map((game) => (
-                  <tr
-                    key={game.title}
-                    className="border-t border-slate-800 align-top">
-                    <td className="px-4 py-4 text-white">{game.title}</td>
-                    <td className="px-4 py-4 text-slate-200">
-                      <span
-                        className={
-                          "inline-flex rounded-full border px-2.5 py-1 text-xs font-medium " +
-                          (game.owned ?
-                            "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                          : "border-indigo-500/40 bg-indigo-500/10 text-indigo-200")
-                        }>
-                        {game.owned ? "Already owned" : "New this month"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-slate-300">
-                      {game.matched_library_titles.length ?
-                        game.matched_library_titles.join("; ")
-                      : "—"}
-                    </td>
-                  </tr>
-                ))}
+                    <tr
+                      key={game.title}
+                      className="border-t border-slate-800 align-top">
+                      <td className="px-4 py-4 text-white">{game.title}</td>
+                      <td className="px-4 py-4 text-slate-200">
+                        <span
+                          className={
+                            "inline-flex rounded-full border px-2.5 py-1 text-xs font-medium " +
+                            (game.owned ?
+                              "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                            : "border-indigo-500/40 bg-indigo-500/10 text-indigo-200")
+                          }>
+                          {game.owned ? "Already owned" : "New this month"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-slate-300">
+                        {game.matched_library_titles.length ?
+                          game.matched_library_titles.join("; ")
+                        : "—"}
+                      </td>
+                    </tr>
+                  ))
+                }
               </tbody>
             </table>
           </div>

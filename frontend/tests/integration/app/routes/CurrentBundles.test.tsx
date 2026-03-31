@@ -20,6 +20,8 @@ describe("CurrentBundles", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("Sales Overview destination")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Sales Overview destination"),
+    ).toBeInTheDocument();
   });
 });

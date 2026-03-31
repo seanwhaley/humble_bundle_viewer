@@ -70,6 +70,8 @@ describe("App", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("CurrentSalesOverview route")).toBeInTheDocument();
+    expect(
+      await screen.findByText("CurrentSalesOverview route"),
+    ).toBeInTheDocument();
   });
 });

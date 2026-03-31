@@ -133,8 +133,8 @@ const truncateText = (value: string, maxLength = 220) =>
   : `${value.slice(0, maxLength - 1).trimEnd()}…`;
 
 const resolveBundleQuickFocus = (value: string | null): BundleQuickFocus => {
-  return BUNDLE_QUICK_FOCUS_OPTIONS.some((option) => option.id === value)
-    ? (value as BundleQuickFocus)
+  return BUNDLE_QUICK_FOCUS_OPTIONS.some((option) => option.id === value) ?
+      (value as BundleQuickFocus)
     : "all";
 };
 
@@ -461,7 +461,8 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
   );
   const activeFocus = resolveBundleQuickFocus(searchParams.get("focus"));
   const visibleBundles = useMemo(
-    () => bundles.filter((bundle) => matchesBundleQuickFocus(bundle, activeFocus)),
+    () =>
+      bundles.filter((bundle) => matchesBundleQuickFocus(bundle, activeFocus)),
     [activeFocus, bundles],
   );
   const quickFocusCounts = useMemo(
@@ -489,8 +490,9 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
       )[0];
 
     return {
-      onlyNew: visibleBundles.filter((bundle) => bundle.top_tier_status === "only_new")
-        .length,
+      onlyNew: visibleBundles.filter(
+        (bundle) => bundle.top_tier_status === "only_new",
+      ).length,
       topTierNewTitles: visibleBundles.reduce(
         (total, bundle) =>
           total + (bundle.tiers[bundle.tiers.length - 1]?.new_items ?? 0),
@@ -700,7 +702,8 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
           ))}
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          Current quick view: {activeFocusMeta.label}. {activeFocusMeta.description}
+          Current quick view: {activeFocusMeta.label}.{" "}
+          {activeFocusMeta.description}
         </p>
       </section>
 
@@ -733,16 +736,20 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-xl font-semibold text-white">
-                No {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundles match this quick view
+                No {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundles
+                match this quick view
               </h3>
               <p className="mt-2 max-w-2xl text-sm text-slate-400">
-                {activeFocusMeta.label} is useful for fast triage, but nothing in
-                the saved {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundle
-                report matches it right now.
+                {activeFocusMeta.label} is useful for fast triage, but nothing
+                in the saved {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()}{" "}
+                bundle report matches it right now.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" onClick={() => setActiveFocus("all")}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setActiveFocus("all")}>
                 Show all bundles
               </Button>
               <Button asChild size="sm" variant="ghost">
