@@ -2,10 +2,12 @@
  * Current sales route for reviewing one current bundle category against the local library.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Loader2, Star, X } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
 import {
+  type CurrentBundleSummary,
   type CurrentBundleItem,
   type CurrentBundleTierOverlap,
   type CurrentBundleType,
@@ -33,6 +35,13 @@ type BundleDisplayItem = CurrentBundleItem & {
   marked: boolean;
 };
 
+type BundleQuickFocus =
+  | "all"
+  | "all-new"
+  | "partial-overlap"
+  | "expiring-soon"
+  | "deep-discount";
+
 const CATEGORY_LABELS: Record<CurrentBundleType, string> = {
   games: "Games",
   books: "Books",
@@ -44,6 +53,38 @@ const CATEGORY_PAGE_LABELS: Record<CurrentBundleType, string> = {
   books: "Book",
   software: "Software",
 };
+
+const BUNDLE_QUICK_FOCUS_OPTIONS: Array<{
+  id: BundleQuickFocus;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "all",
+    label: "All bundles",
+    description: "Everything in the saved report for this category.",
+  },
+  {
+    id: "all-new",
+    label: "All-new",
+    description: "Top tier has no owned overlap.",
+  },
+  {
+    id: "partial-overlap",
+    label: "Partial overlap",
+    description: "Top tier mixes owned and new titles.",
+  },
+  {
+    id: "expiring-soon",
+    label: "Expiring ≤ 7 days",
+    description: "Saved countdown is one week or less.",
+  },
+  {
+    id: "deep-discount",
+    label: "90%+ savings",
+    description: "Tracked top-tier savings are at least 90%.",
+  },
+];
 
 const formatTierPrice = (value: number) =>
   "$" +
@@ -59,6 +100,9 @@ const formatPercent = (value: number) =>
 
 const formatMultiple = (value: number) =>
   value % 1 === 0 ? `${value.toFixed(0)}×` : `${value.toFixed(1)}×`;
+
+const getBundleTopTier = (bundle: CurrentBundleSummary) =>
+  bundle.tiers[bundle.tiers.length - 1] ?? null;
 
 const formatOfferCountdown = (value: string | null, detail?: string | null) => {
   if (value) {
@@ -87,6 +131,36 @@ const truncateText = (value: string, maxLength = 220) =>
   value.length <= maxLength ?
     value
   : `${value.slice(0, maxLength - 1).trimEnd()}…`;
+
+const resolveBundleQuickFocus = (value: string | null): BundleQuickFocus => {
+  return BUNDLE_QUICK_FOCUS_OPTIONS.some((option) => option.id === value)
+    ? (value as BundleQuickFocus)
+    : "all";
+};
+
+const matchesBundleQuickFocus = (
+  bundle: CurrentBundleSummary,
+  focus: BundleQuickFocus,
+) => {
+  if (focus === "all") {
+    return true;
+  }
+
+  if (focus === "all-new") {
+    return bundle.top_tier_status === "only_new";
+  }
+
+  if (focus === "partial-overlap") {
+    return bundle.top_tier_status === "partial_overlap";
+  }
+
+  if (focus === "expiring-soon") {
+    return bundle.offer_ends_in_days !== null && bundle.offer_ends_in_days <= 7;
+  }
+
+  const topTier = getBundleTopTier(bundle);
+  return (topTier?.savings_percent ?? -1) >= 90;
+};
 
 const resolveBundleItems = (
   titles: string[],
@@ -359,6 +433,7 @@ function TierContentsPanel({
 }
 
 export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     data: status,
     isLoading: isStatusLoading,
@@ -384,12 +459,28 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
       ),
     [bundleType, report],
   );
-  const maxTierCount = useMemo(
-    () => Math.max(...bundles.map((bundle) => bundle.tiers.length), 0),
+  const activeFocus = resolveBundleQuickFocus(searchParams.get("focus"));
+  const visibleBundles = useMemo(
+    () => bundles.filter((bundle) => matchesBundleQuickFocus(bundle, activeFocus)),
+    [activeFocus, bundles],
+  );
+  const quickFocusCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        BUNDLE_QUICK_FOCUS_OPTIONS.map((option) => [
+          option.id,
+          bundles.filter((bundle) => matchesBundleQuickFocus(bundle, option.id))
+            .length,
+        ]),
+      ) as Record<BundleQuickFocus, number>,
     [bundles],
   );
+  const maxTierCount = useMemo(
+    () => Math.max(...visibleBundles.map((bundle) => bundle.tiers.length), 0),
+    [visibleBundles],
+  );
   const summary = useMemo(() => {
-    const earliestExpiringBundle = bundles
+    const earliestExpiringBundle = visibleBundles
       .filter((bundle) => bundle.offer_ends_in_days !== null)
       .sort(
         (left, right) =>
@@ -398,28 +489,51 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
       )[0];
 
     return {
-      onlyNew: bundles.filter((bundle) => bundle.top_tier_status === "only_new")
+      onlyNew: visibleBundles.filter((bundle) => bundle.top_tier_status === "only_new")
         .length,
-      topTierNewTitles: bundles.reduce(
+      topTierNewTitles: visibleBundles.reduce(
         (total, bundle) =>
           total + (bundle.tiers[bundle.tiers.length - 1]?.new_items ?? 0),
         0,
       ),
       avgTopTierNewShare:
-        bundles.length > 0 ?
-          bundles.reduce(
+        visibleBundles.length > 0 ?
+          visibleBundles.reduce(
             (total, bundle) =>
               total +
               (bundle.tiers[bundle.tiers.length - 1]?.missing_percent ?? 0),
             0,
-          ) / bundles.length
+          ) / visibleBundles.length
         : 0,
       earliestOfferCountdown: formatOfferCountdown(
         earliestExpiringBundle?.offer_ends_text ?? null,
         earliestExpiringBundle?.offer_ends_detail ?? null,
       ),
     };
-  }, [bundles]);
+  }, [visibleBundles]);
+
+  const activeFocusMeta =
+    BUNDLE_QUICK_FOCUS_OPTIONS.find((option) => option.id === activeFocus) ??
+    BUNDLE_QUICK_FOCUS_OPTIONS[0];
+
+  const setActiveFocus = (focus: BundleQuickFocus) => {
+    const nextParams = new URLSearchParams(searchParams);
+    if (focus === "all") {
+      nextParams.delete("focus");
+    } else {
+      nextParams.set("focus", focus);
+    }
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  useEffect(() => {
+    if (
+      selectedTier &&
+      !visibleBundles.some((bundle) => bundle.url === selectedTier.bundleUrl)
+    ) {
+      setSelectedTier(null);
+    }
+  }, [selectedTier, visibleBundles]);
 
   useEffect(() => {
     const sectionElement = splitSectionRef.current;
@@ -536,11 +650,32 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
   return (
     <div className="w-full flex flex-col space-y-6">
       <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 shadow-sm shadow-black/20">
+        <div className="mb-4 flex flex-wrap gap-2">
+          {BUNDLE_QUICK_FOCUS_OPTIONS.map((option) => (
+            <Button
+              key={option.id}
+              type="button"
+              size="sm"
+              variant={activeFocus === option.id ? "secondary" : "outline"}
+              className={
+                activeFocus === option.id ?
+                  "border-indigo-500/40 bg-indigo-500/10 text-indigo-100"
+                : "border-slate-700 bg-slate-900 text-slate-200"
+              }
+              onClick={() => setActiveFocus(option.id)}>
+              {option.label} ({quickFocusCounts[option.id]})
+            </Button>
+          ))}
+        </div>
+        <p className="mb-4 max-w-3xl text-sm text-slate-400">
+          Start with a quick view, then inspect populated tier cells to see the
+          exact owned-versus-new breakdown for each bundle.
+        </p>
         <div className="flex flex-wrap gap-2">
           {[
             {
-              label: `Live ${CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundles`,
-              value: formatNumber(bundles.length),
+              label: `Visible ${CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundles`,
+              value: `${formatNumber(visibleBundles.length)} of ${formatNumber(bundles.length)}`,
             },
             { label: "All-new bundles", value: formatNumber(summary.onlyNew) },
             {
@@ -564,6 +699,9 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
             </div>
           ))}
         </div>
+        <p className="mt-3 text-xs text-slate-500">
+          Current quick view: {activeFocusMeta.label}. {activeFocusMeta.description}
+        </p>
       </section>
 
       {!status?.report_exists && !report ?
@@ -590,6 +728,29 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
             want a fresh capture.
           </p>
         </section>
+      : visibleBundles.length === 0 ?
+        <section className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 shadow-sm shadow-black/20">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-semibold text-white">
+                No {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundles match this quick view
+              </h3>
+              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                {activeFocusMeta.label} is useful for fast triage, but nothing in
+                the saved {CATEGORY_PAGE_LABELS[bundleType].toLowerCase()} bundle
+                report matches it right now.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => setActiveFocus("all")}>
+                Show all bundles
+              </Button>
+              <Button asChild size="sm" variant="ghost">
+                <Link to="/venue/overview">Open Sales Overview</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
       : <section
           ref={splitSectionRef}
           className={
@@ -608,8 +769,8 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
               </p>
             </div>
             <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-medium text-slate-300">
-              {formatNumber(bundles.length)} bundle
-              {bundles.length === 1 ? "" : "s"}
+              {formatNumber(visibleBundles.length)} visible bundle
+              {visibleBundles.length === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -641,7 +802,7 @@ export default function VenueBundlePage({ bundleType }: VenueBundlePageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {bundles.map((bundle) => (
+                  {visibleBundles.map((bundle) => (
                     <tr
                       key={bundle.url}
                       ref={(node) => {

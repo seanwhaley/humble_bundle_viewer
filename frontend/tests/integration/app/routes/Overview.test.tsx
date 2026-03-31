@@ -1,5 +1,5 @@
 import { MemoryRouter } from "react-router-dom";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../src/components/charts/BarChart", () => ({
@@ -128,6 +128,11 @@ describe("Overview", () => {
         name: /Track live bundles and this month’s Choice against what you already own/i,
       }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Show deeper analytics/i })).toBeInTheDocument();
+    expect(screen.queryByText("Browse by category")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Show deeper analytics/i }));
+
     expect(screen.getByText("Browse by category")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ebook" })).toHaveAttribute(
       "href",

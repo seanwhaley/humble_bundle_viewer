@@ -4,5 +4,5 @@
 import { Navigate } from "react-router-dom";
 
 export default function CurrentBundles() {
-  return <Navigate to="/venue/bundles/games" replace />;
+  return <Navigate to="/venue/overview" replace />;
 }

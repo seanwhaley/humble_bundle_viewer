@@ -1,6 +1,7 @@
 /**
  * Current sales route for reviewing the current Humble Choice month against the local library.
  */
+import { useMemo, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 import { Button } from "../../components/ui/button";
@@ -10,7 +11,32 @@ import { formatNumber } from "../../utils/format";
 const formatPercent = (value: number) =>
   value % 1 === 0 ? `${value.toFixed(0)}%` : `${value.toFixed(1)}%`;
 
+type ChoiceQuickFocus = "all" | "new" | "owned";
+
+const CHOICE_QUICK_FOCUS_OPTIONS: Array<{
+  id: ChoiceQuickFocus;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "all",
+    label: "All games",
+    description: "Review the full current month lineup.",
+  },
+  {
+    id: "new",
+    label: "New to you",
+    description: "Show only games you do not already own.",
+  },
+  {
+    id: "owned",
+    label: "Already owned",
+    description: "Show games that already overlap with your library.",
+  },
+];
+
 export default function VenueChoice() {
+  const [quickFocus, setQuickFocus] = useState<ChoiceQuickFocus>("all");
   const {
     data: status,
     isLoading: isStatusLoading,
@@ -21,6 +47,28 @@ export default function VenueChoice() {
     isLoading: isReportLoading,
     error: reportError,
   } = useCurrentChoiceReport(status?.report_exists === true);
+
+  const games = report?.games || [];
+  const filteredGames = useMemo(() => {
+    if (quickFocus === "new") {
+      return games.filter((game) => !game.owned);
+    }
+
+    if (quickFocus === "owned") {
+      return games.filter((game) => game.owned);
+    }
+
+    return games;
+  }, [games, quickFocus]);
+
+  const quickFocusCounts = useMemo(
+    () => ({
+      all: games.length,
+      new: games.filter((game) => !game.owned).length,
+      owned: games.filter((game) => game.owned).length,
+    }),
+    [games],
+  );
 
   if (isStatusLoading || (status?.report_exists && isReportLoading)) {
     return (
@@ -118,6 +166,26 @@ export default function VenueChoice() {
             </div>
           </div>
 
+          <div className="mt-5 flex flex-wrap gap-2">
+            {CHOICE_QUICK_FOCUS_OPTIONS.map((option) => (
+              <Button
+                key={option.id}
+                type="button"
+                size="sm"
+                variant={quickFocus === option.id ? "secondary" : "outline"}
+                onClick={() => setQuickFocus(option.id)}>
+                {option.label} ({quickFocusCounts[option.id]})
+              </Button>
+            ))}
+          </div>
+
+          <p className="mt-3 text-sm text-slate-400">
+            {
+              CHOICE_QUICK_FOCUS_OPTIONS.find((option) => option.id === quickFocus)
+                ?.description
+            }
+          </p>
+
           <div className="mt-6 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/70">
             <table className="min-w-full table-fixed border-collapse text-left text-sm">
               <thead className="bg-slate-900/80 text-slate-300">
@@ -130,7 +198,14 @@ export default function VenueChoice() {
                 </tr>
               </thead>
               <tbody>
-                {(report?.games || []).map((game) => (
+                {filteredGames.length === 0 ?
+                  <tr className="border-t border-slate-800 align-top">
+                    <td className="px-4 py-4 text-slate-300" colSpan={3}>
+                      No games match this quick view. Switch back to All games to
+                      review the full current Choice lineup.
+                    </td>
+                  </tr>
+                : filteredGames.map((game) => (
                   <tr
                     key={game.title}
                     className="border-t border-slate-800 align-top">

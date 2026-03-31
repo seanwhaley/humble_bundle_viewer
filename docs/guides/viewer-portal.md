@@ -2,6 +2,34 @@
 
 This guide summarizes the current viewer portal behavior for setup, maintenance, styling, and browser storage.
 
+## Viewer Home route (`/`)
+
+Viewer Home keeps the first screen focused on the buyer view before the heavier inventory analysis opens up.
+
+### Viewer Home behavior
+
+- The top of the page prioritizes current sales status, core scope metrics, recent purchases, and the purchase-theme cloud before deeper breakdowns
+- A dedicated **Deep dive** toggle keeps category, platform, publisher, key-type, and time-trend analysis out of the first scan until you ask for it
+- Interactive summary tiles and chart sections now call out when they narrow the current dashboard scope
+- The route still avoids duplicating current-sales destination links that already exist in the sidebar navigation
+
+## Current sales routes
+
+The current-sales family stays split into `Sales Overview`, `Current Choice`, and dedicated bundle-type routes.
+
+### Sales Overview behavior (`/venue/overview`)
+
+- The compact content filter remains the primary scope control instead of expanding into a larger dashboard-level filter wall
+- A **Decision shortcuts** section summarizes all-new bundles, partial overlap, expiring-soon bundles, and deep discounts before the deeper charts
+- Shortcut buttons deep-link directly to `Game bundles`, `Book bundles`, or `Software bundles` with the matching quick view pre-applied
+- The chart-reading guide is collapsed behind **How to read the charts** so the first screen stays decision-oriented
+
+### Current sales subtype behavior
+
+- `Game bundles`, `Book bundles`, and `Software bundles` now support quick views for **All bundles**, **All-new**, **Partial overlap**, **Expiring ≤ 7 days**, and **90%+ savings**
+- `Current Choice` now supports quick views for **All games**, **New to you**, and **Already owned**
+- The legacy `/current-bundles` alias now redirects to `Sales Overview` instead of dropping directly into one bundle subtype
+
 ## Setup route (`/setup`)
 
 The Setup route supports two workflows:

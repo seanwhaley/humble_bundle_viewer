@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../src/data/api", () => ({
@@ -116,5 +116,13 @@ describe("VenueChoice", () => {
     expect(screen.getByText("New this month")).toBeInTheDocument();
     expect(screen.getByText("Game One Deluxe")).toBeInTheDocument();
     expect(screen.getByText("Open Choice page")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /New to you \(1\)/i }));
+    expect(screen.queryByText("Game One")).not.toBeInTheDocument();
+    expect(screen.getByText("Game Two")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /Already owned \(1\)/i }));
+    expect(screen.getByText("Game One")).toBeInTheDocument();
+    expect(screen.queryByText("Game Two")).not.toBeInTheDocument();
   });
 });

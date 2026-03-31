@@ -23,6 +23,10 @@ vi.mock("../../src/app/routes/VenueChoice", () => ({
   default: () => <div>VenueChoice route</div>,
 }));
 
+vi.mock("../../src/app/routes/CurrentSalesOverview", () => ({
+  default: () => <div>CurrentSalesOverview route</div>,
+}));
+
 vi.mock("../../src/app/routes/VenueBundlePage", () => ({
   default: ({ bundleType }: { bundleType: string }) => (
     <div>Bundle page: {bundleType}</div>
@@ -57,7 +61,7 @@ describe("App", () => {
     expect(await screen.findByText("VenueChoice route")).toBeInTheDocument();
   });
 
-  it("redirects the legacy current bundles route to games bundles", async () => {
+  it("redirects the legacy current bundles route to Sales Overview", async () => {
     render(
       <MemoryRouter
         initialEntries={["/current-bundles"]}
@@ -66,6 +70,6 @@ describe("App", () => {
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("Bundle page: games")).toBeInTheDocument();
+    expect(await screen.findByText("CurrentSalesOverview route")).toBeInTheDocument();
   });
 });
