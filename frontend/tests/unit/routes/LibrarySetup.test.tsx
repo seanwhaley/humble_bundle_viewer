@@ -7,7 +7,7 @@ import LibrarySetup from "../../../src/app/routes/LibrarySetup";
 const getStorageEntries = (storage: Storage) =>
   Array.from({ length: storage.length }, (_, index) => {
     const key = storage.key(index);
-    return key ? [key, storage.getItem(key)] : null;
+    return key !== null ? [key, storage.getItem(key)] : null;
   }).filter((entry): entry is [string, string | null] => entry !== null);
 
 const mocks = vi.hoisted(() => ({
