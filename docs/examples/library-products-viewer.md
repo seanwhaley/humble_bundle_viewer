@@ -16,8 +16,9 @@ This standalone HTML helper is best for quick local inspection, schema-aware val
 - Use the dashboard charts to filter results interactively.
 - Click download links (with a confirmation prompt) to open files in a new tab.
 - View products with keys in the **Keys** section (key values require reveal).
-- Use the **e-books** and **audiobooks** pages to select titles and trigger
-  browser-managed downloads to the machine running the browser.
+- Use the main viewer app’s `Ebooks` and `Audiobooks` pages to select
+  titles and trigger browser-managed downloads to the machine running the
+  browser.
 - Use the row selection controls to select all or none of the visible titles,
   then start multi-file browser downloads (your browser may ask for permission
   before downloading several files).

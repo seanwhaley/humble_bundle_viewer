@@ -9,7 +9,7 @@ Use batch operations when you want to regenerate artifacts, analyze saved captur
 - Export download links for a specific platform.
 - Rebuild `library_products.json` from saved API batches.
 - Export the viewer schema for validation and debugging.
-- Refresh saved current-bundles or current-choice reports before reviewing them in the viewer.
+- Refresh saved current sales bundle or current Choice reports before reviewing them in the viewer.
 
 ## Best tools for batch work
 

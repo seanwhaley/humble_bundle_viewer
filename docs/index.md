@@ -35,9 +35,9 @@ Use this contact for project direction, stewardship questions, or maintainer-lev
 
 - Playwright-based capture of Humble Bundle library API responses
 - normalization into `data/artifacts/library_products.json`
-- a local viewer for purchases, downloads, software, videos, Steam keys, non-Steam keys, eBooks, audiobooks, and setup flows
+- a local viewer for `Viewer Home`, `Sales Overview`, `Current Choice`, purchases, downloads, software, videos, Steam keys, non-Steam keys, eBooks, audiobooks, setup, command workflows, and schema inspection
 - browser-managed downloads from viewer routes
-- advanced managed local sync for eBooks and audiobooks via the CLI or viewer
+- advanced managed local sync for software, videos, eBooks, and audiobooks via the CLI or viewer
 - maintenance workflows for schema export, artifact rebuilds, subproduct page caching, and metadata extraction through the CLI or Command Center
 
 The project does **not** currently aim to provide:

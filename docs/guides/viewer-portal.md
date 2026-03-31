@@ -84,6 +84,17 @@ The media routes now follow the same scan-first pattern as `Software`, with the 
 - Bulk format pickers scope themselves to the currently selected rows so the route-level selectors stay relevant to the active selection
 - `Ebooks` keeps official product links and cached viewer-page links visible in the table while the heavier route-level controls stay collapsed until needed
 
+## Schema route (`/structure`)
+
+The Schema route explains the normalized library shape that powers both the viewer and the standalone validation tools.
+
+### Schema behavior
+
+- The page opens with the same active-library context strip used across the viewer so you can confirm which `library_products.json` file is in scope
+- A two-mode toggle switches between **Blueprint** for relationship-level structure and **Inspector** for live JSON samples from the current library
+- A compact **How to use this page** panel explains when to stay in-browser versus when to export a schema file from Command Center
+- Focus buttons let you isolate **All branches**, **Products**, **Subproducts**, or **Metadata** when the full structure is too noisy for a first scan
+
 ## Styling and UI conventions
 
 The viewer now uses semantic tokens and shared primitives for the maintenance and setup workflows.
