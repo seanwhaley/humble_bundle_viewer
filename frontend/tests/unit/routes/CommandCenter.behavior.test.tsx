@@ -307,6 +307,39 @@ describe("CommandCenter", () => {
     expect(window.localStorage.getItem("humble.commands.generateClassName")).toBeNull();
   });
 
+  it("persists advanced option open state for the current browser session", async () => {
+    const storageKey = "humble.session.advancedOptions.generateOrderModels";
+    const { unmount } = renderRoute();
+
+    const summary = screen.getByText("Advanced input and output paths");
+    const details = summary.closest("details");
+    if (!details) {
+      throw new Error("Expected the advanced options details element.");
+    }
+
+    expect(details).not.toHaveAttribute("open");
+
+    fireEvent.click(summary);
+
+    await waitFor(() => {
+      expect(details).toHaveAttribute("open");
+    });
+
+    expect(window.sessionStorage.getItem(storageKey)).toBe(JSON.stringify(true));
+
+    unmount();
+    renderRoute();
+
+    const restoredDetails = screen
+      .getByText("Advanced input and output paths")
+      .closest("details");
+    if (!restoredDetails) {
+      throw new Error("Expected the restored advanced options details element.");
+    }
+
+    expect(restoredDetails).toHaveAttribute("open");
+  });
+
   it("falls back to default command inputs when browser storage is unavailable", () => {
     const localStorageGetter = vi
       .spyOn(window, "localStorage", "get")

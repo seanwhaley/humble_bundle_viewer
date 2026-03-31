@@ -41,6 +41,9 @@ const renderRoute = () =>
 
 describe("LibrarySetup", () => {
   const fetchMock = vi.fn();
+  const setupPlatformsKey = "humble.setup.download.platforms";
+  const setupFileTypesKey = "humble.setup.download.fileTypes";
+  const setupSizePolicyKey = "humble.setup.download.sizePolicy";
 
   beforeEach(() => {
     vi.stubGlobal("fetch", fetchMock);
@@ -134,8 +137,14 @@ describe("LibrarySetup", () => {
     expect(window.localStorage.getItem("humble.libraryPath")).toBe(
       "C:\\Captured\\library_products.json",
     );
-    expect(window.localStorage.getItem("humble.setup.platforms")).toBe(
+    expect(window.localStorage.getItem(setupPlatformsKey)).toBe(
       JSON.stringify("ebook, audio, "),
+    );
+    expect(window.localStorage.getItem(setupFileTypesKey)).toBe(
+      JSON.stringify("pdf, epub,, "),
+    );
+    expect(window.localStorage.getItem(setupSizePolicyKey)).toBe(
+      JSON.stringify("largest"),
     );
     expect(JSON.stringify(getStorageEntries(window.localStorage))).not.toContain(
       "session-cookie",
@@ -171,6 +180,42 @@ describe("LibrarySetup", () => {
     } finally {
       storageGetter.mockRestore();
     }
+  });
+
+  it("migrates legacy setup download keys to the PRD namespace", async () => {
+    window.localStorage.setItem(
+      "humble.setup.platforms",
+      JSON.stringify("ebook, comics"),
+    );
+    window.localStorage.setItem(
+      "humble.setup.fileTypes",
+      JSON.stringify("pdf, cbz"),
+    );
+    window.localStorage.setItem(
+      "humble.setup.sizePolicy",
+      JSON.stringify("smallest"),
+    );
+
+    renderRoute();
+
+    fireEvent.click(screen.getByLabelText(/Download files after capture/i));
+
+    expect(await screen.findByDisplayValue("ebook, comics")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("pdf, cbz")).toBeInTheDocument();
+    expect(screen.getByLabelText("Size policy")).toHaveValue("smallest");
+
+    expect(window.localStorage.getItem(setupPlatformsKey)).toBe(
+      JSON.stringify("ebook, comics"),
+    );
+    expect(window.localStorage.getItem(setupFileTypesKey)).toBe(
+      JSON.stringify("pdf, cbz"),
+    );
+    expect(window.localStorage.getItem(setupSizePolicyKey)).toBe(
+      JSON.stringify("smallest"),
+    );
+    expect(window.localStorage.getItem("humble.setup.platforms")).toBeNull();
+    expect(window.localStorage.getItem("humble.setup.fileTypes")).toBeNull();
+    expect(window.localStorage.getItem("humble.setup.sizePolicy")).toBeNull();
   });
 
   it("validates required fields and supports selecting an existing library file", async () => {

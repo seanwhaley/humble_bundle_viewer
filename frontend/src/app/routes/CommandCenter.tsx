@@ -297,35 +297,50 @@ const CommandCard = ({
 );
 
 const AdvancedOptions = ({
+  storageKey,
   summary,
   hint,
   onReset,
   children,
 }: {
+  storageKey: string;
   summary: string;
   hint: string;
   onReset?: () => void;
   children: ReactNode;
-}) => (
-  <details className="rounded-lg border border-border bg-card/80">
-    <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground marker:content-none">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <span>{summary}</span>
-        <span className="text-xs text-muted-foreground">{hint}</span>
-      </div>
-    </summary>
-    <div className="border-t border-border p-3">
-      {onReset && (
-        <div className="mb-3 flex justify-end">
-          <Button type="button" size="sm" variant="ghost" onClick={onReset}>
-            Reset to defaults
-          </Button>
+}) => {
+  const [open, setOpen] = usePersistentState(storageKey, false, {
+    storage: "session",
+  });
+
+  return (
+    <details
+      className="rounded-lg border border-border bg-card/80"
+      open={open}>
+      <summary
+        className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground marker:content-none"
+        onClick={(event) => {
+          event.preventDefault();
+          setOpen((current) => !current);
+        }}>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <span>{summary}</span>
+          <span className="text-xs text-muted-foreground">{hint}</span>
         </div>
-      )}
-      {children}
-    </div>
-  </details>
-);
+      </summary>
+      <div className="border-t border-border p-3">
+        {onReset && (
+          <div className="mb-3 flex justify-end">
+            <Button type="button" size="sm" variant="ghost" onClick={onReset}>
+              Reset to defaults
+            </Button>
+          </div>
+        )}
+        {children}
+      </div>
+    </details>
+  );
+};
 
 const withOutputPath = (label: string, outputPath?: string | null) =>
   outputPath ? [`${label}: ${outputPath}`] : [];
@@ -936,6 +951,7 @@ export default function CommandCenter() {
               Rebuild library artifacts
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.rebuildLibraryArtifacts"
               summary="Advanced paths and model settings"
               hint="Change paths or class names only when you are rebuilding from non-default artifacts."
               onReset={resetLibraryArtifactOptions}>
@@ -1004,6 +1020,7 @@ export default function CommandCenter() {
               Build viewer schema
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.buildViewerSchema"
               summary="Advanced output path"
               hint="Change the destination only when you need to export the schema somewhere else."
               onReset={resetSchemaOptions}>
@@ -1050,6 +1067,7 @@ export default function CommandCenter() {
               Rebuild order models
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.rebuildOrderModels"
               summary="Advanced paths and class names"
               hint="Adjust these only when the saved API batches or model destination differ from the defaults."
               onReset={resetRebuildOrderOptions}>
@@ -1117,6 +1135,7 @@ export default function CommandCenter() {
               Generate order models
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.generateOrderModels"
               summary="Advanced input and output paths"
               hint="Use these when you want to build a model from a different API batch location or output file."
               onReset={resetGenerateOrderOptions}>
@@ -1188,6 +1207,7 @@ export default function CommandCenter() {
               Cache subproduct pages
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.cacheSubproductPages"
               summary="Advanced cache scope"
               hint="Use filters only when you need a smaller or custom scrape target."
               onReset={resetCacheOptions}>
@@ -1273,6 +1293,7 @@ export default function CommandCenter() {
               Extract metadata
             </Button>
             <AdvancedOptions
+              storageKey="humble.session.advancedOptions.extractSubproductMetadata"
               summary="Advanced metadata outputs"
               hint="Override these only when you want custom cache or report destinations."
               onReset={resetMetadataOptions}>

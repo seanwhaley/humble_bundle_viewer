@@ -12,7 +12,7 @@ The Setup route supports two workflows:
 ### Setup behavior
 
 - Setup mode is persisted in `localStorage`
-- Download preference inputs (`platforms`, `fileTypes`, `sizePolicy`) are persisted in `localStorage`
+- Download preference inputs (`platforms`, `fileTypes`, `sizePolicy`) are persisted in `localStorage` under the `humble.setup.download.*` namespace
 - The session cookie is used only for the active capture request and is not persisted
 - After a successful capture or file selection, a post-success panel appears with direct links to:
   - Command Center
@@ -27,6 +27,7 @@ The Command Center exposes viewer-safe maintenance workflows.
 ### Current behavior
 
 - Advanced path and option inputs are persisted in `localStorage` under the `humble.commands.*` namespace
+- Each Advanced Options disclosure remembers whether it is open for the current tab session using `humble.session.advancedOptions.*`
 - Each advanced-options group provides a **Reset to defaults** action
 - Recent command result state is persisted for the current tab session using `sessionStorage`
 - The redundant Setup shortcut card has been removed from the Guided Workflows section; use the sidebar or the compact inline Setup link instead

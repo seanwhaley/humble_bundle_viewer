@@ -16,7 +16,7 @@ Browser storage must **not** be used for:
 ## Storage boundaries
 
 | State type | Storage location | Why |
-|-----------|------------------|-----|
+| ----------- | ------------------ | ----- |
 | Setup mode and download preferences | `localStorage` | User preference that should survive page reloads |
 | Command Center path overrides | `localStorage` | Local UI customization for repeat maintenance tasks |
 | Recent command result banners/details | `sessionStorage` | Useful within a tab session, but should not linger long-term |
@@ -28,11 +28,11 @@ Browser storage must **not** be used for:
 ### Setup keys (`localStorage`)
 
 | Key | Purpose |
-|-----|---------|
+| ----- | --------- |
 | `humble.setup.mode` | Last selected setup mode (`capture` or `existing`) |
-| `humble.setup.platforms` | Preferred download platform filter |
-| `humble.setup.fileTypes` | Preferred download file type filter |
-| `humble.setup.sizePolicy` | Preferred download size policy |
+| `humble.setup.download.platforms` | Preferred download platform filter |
+| `humble.setup.download.fileTypes` | Preferred download file type filter |
+| `humble.setup.download.sizePolicy` | Preferred download size policy |
 | `humble.libraryPath` | Last successful library path used by the viewer |
 
 ### Command Center keys (`localStorage`)
@@ -55,6 +55,8 @@ The `humble.session.commands.*` namespace stores recent command-result state for
 - last message
 - detail lines
 - follow-up actions
+
+The `humble.session.advancedOptions.*` namespace stores whether each Command Center Advanced Options disclosure is open for the current browser tab.
 
 ## Implementation rules
 

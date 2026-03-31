@@ -16,6 +16,16 @@ import { cn } from "../../lib/utils";
 
 // Persists the last successful capture path for auto-load on refresh.
 const STORAGE_KEY = "humble.libraryPath";
+const SETUP_MODE_STORAGE_KEY = "humble.setup.mode";
+const SETUP_DOWNLOAD_PLATFORMS_STORAGE_KEY =
+  "humble.setup.download.platforms";
+const SETUP_DOWNLOAD_FILE_TYPES_STORAGE_KEY =
+  "humble.setup.download.fileTypes";
+const SETUP_DOWNLOAD_SIZE_POLICY_STORAGE_KEY =
+  "humble.setup.download.sizePolicy";
+const LEGACY_SETUP_DOWNLOAD_PLATFORMS_STORAGE_KEYS = ["humble.setup.platforms"];
+const LEGACY_SETUP_DOWNLOAD_FILE_TYPES_STORAGE_KEYS = ["humble.setup.fileTypes"];
+const LEGACY_SETUP_DOWNLOAD_SIZE_POLICY_STORAGE_KEYS = ["humble.setup.sizePolicy"];
 
 const parseList = (value: string) =>
   value
@@ -42,7 +52,7 @@ export default function LibrarySetup() {
     },
   );
   const [mode, setMode] = usePersistentState<"capture" | "existing">(
-    "humble.setup.mode",
+    SETUP_MODE_STORAGE_KEY,
     "capture",
   );
   const [authCookie, setAuthCookie] = useState("");
@@ -50,16 +60,19 @@ export default function LibrarySetup() {
   const [existingPath, setExistingPath] = useState(() => storedLibraryPath);
   const [downloadFiles, setDownloadFiles] = useState(false);
   const [platformsInput, setPlatformsInput] = usePersistentState(
-    "humble.setup.platforms",
+    SETUP_DOWNLOAD_PLATFORMS_STORAGE_KEY,
     "ebook, audio",
+    { legacyKeys: LEGACY_SETUP_DOWNLOAD_PLATFORMS_STORAGE_KEYS },
   );
   const [fileTypesInput, setFileTypesInput] = usePersistentState(
-    "humble.setup.fileTypes",
+    SETUP_DOWNLOAD_FILE_TYPES_STORAGE_KEY,
     "",
+    { legacyKeys: LEGACY_SETUP_DOWNLOAD_FILE_TYPES_STORAGE_KEYS },
   );
   const [sizePolicy, setSizePolicy] = usePersistentState(
-    "humble.setup.sizePolicy",
+    SETUP_DOWNLOAD_SIZE_POLICY_STORAGE_KEY,
     "all",
+    { legacyKeys: LEGACY_SETUP_DOWNLOAD_SIZE_POLICY_STORAGE_KEYS },
   );
   const [status, setStatus] = useState<
     "idle" | "running" | "success" | "error"
