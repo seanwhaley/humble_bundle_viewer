@@ -4,6 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import CommandCenter from "../../../src/app/routes/CommandCenter";
 
+const memoryRouterFuture = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+} as const;
+
 const mocks = vi.hoisted(() => ({
   useLibraryStatus: vi.fn(),
   useCurrentBundlesStatus: vi.fn(),
@@ -44,7 +49,7 @@ vi.mock("../../../src/data/maintenance", async () => {
 
 const renderRoute = () =>
   render(
-    <MemoryRouter>
+    <MemoryRouter future={memoryRouterFuture}>
       <CommandCenter />
     </MemoryRouter>,
   );
@@ -120,6 +125,18 @@ describe("CommandCenter", () => {
     expect(screen.getByRole("link", { name: "Open Setup" })).toHaveAttribute(
       "href",
       "/setup",
+    );
+    expect(screen.getByRole("link", { name: "Jump to Guided workflows" })).toHaveAttribute(
+      "href",
+      "#guided-workflows",
+    );
+    expect(screen.getByRole("link", { name: "Jump to Rebuilds and exports" })).toHaveAttribute(
+      "href",
+      "#rebuilds-and-exports",
+    );
+    expect(screen.getByRole("link", { name: "Jump to Metadata enrichment" })).toHaveAttribute(
+      "href",
+      "#metadata-enrichment",
     );
     expect(screen.getByText("Fresh")).toBeInTheDocument();
     expect(screen.getByText("Missing")).toBeInTheDocument();

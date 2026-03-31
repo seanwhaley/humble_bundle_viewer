@@ -11,6 +11,7 @@ The Setup route supports two workflows:
 
 ### Setup behavior
 
+- Returning users who already have `humble.libraryPath` stored see a compact **Last used library** note instead of the full orientation card grid
 - Setup mode is persisted in `localStorage`
 - Download preference inputs (`platforms`, `fileTypes`, `sizePolicy`) are persisted in `localStorage` under the `humble.setup.download.*` namespace
 - The session cookie is used only for the active capture request and is not persisted
@@ -24,14 +25,36 @@ The Setup route supports two workflows:
 
 The Command Center exposes viewer-safe maintenance workflows.
 
-### Current behavior
+### Command Center behavior
 
 - Advanced path and option inputs are persisted in `localStorage` under the `humble.commands.*` namespace
 - Each Advanced Options disclosure remembers whether it is open for the current tab session using `humble.session.advancedOptions.*`
 - Each advanced-options group provides a **Reset to defaults** action
 - Recent command result state is persisted for the current tab session using `sessionStorage`
+- A compact **Start here** summary links directly to **Guided workflows**, **Rebuilds and exports**, and **Metadata enrichment** so the first screen stays scan-friendly
 - The redundant Setup shortcut card has been removed from the Guided Workflows section; use the sidebar or the compact inline Setup link instead
 - The distinction between **Rebuild order models** and **Generate order models** is called out directly in the card copy
+
+## Software route (`/software`)
+
+The Software route keeps the table as the primary focus and moves heavier controls behind compact toggles.
+
+### Software behavior
+
+- Filters, bulk downloads, and managed sync open on demand instead of all rendering at the top of the page at once
+- Bulk variant downloads scope the variant picker to the currently selected rows so large software libraries do not flood the selector with unrelated file types
+- The route still uses the browser's normal download flow for direct downloads and the managed sync panel for folder-based local sync
+
+## Media library routes (`/ebooks`, `/audiobooks`, `/videos`)
+
+The media routes now follow the same scan-first pattern as `Software`, with the table and metadata staying primary while heavier route-level controls open on demand.
+
+### Media route behavior
+
+- Each route starts with a compact summary card that explains the route’s intended first action before the data table begins
+- Filters, bulk browser downloads, and managed sync stay behind explicit toggles instead of rendering as one flat control wall
+- Bulk format pickers scope themselves to the currently selected rows so the route-level selectors stay relevant to the active selection
+- `Ebooks` keeps official product links and cached viewer-page links visible in the table while the heavier route-level controls stay collapsed until needed
 
 ## Styling and UI conventions
 

@@ -347,12 +347,12 @@ export default function Structure() {
         </div>
       </div>
 
-      <div className="flex-1 rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden relative">
+      <div className="flex-1 min-h-[32rem] rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden relative">
         {view === "tree" ?
           <ReactECharts
             echarts={echarts}
             option={option}
-            style={{ height: "100%", width: "100%" }}
+            style={{ height: "32rem", width: "100%" }}
             theme="dark"
             opts={{ renderer: "svg" }}
           />

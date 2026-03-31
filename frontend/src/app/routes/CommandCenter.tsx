@@ -248,17 +248,19 @@ const useCommandStatePersistence = (key: string) =>
   });
 
 const CommandSection = ({
+  id,
   title,
   description,
   note,
   children,
 }: {
+  id?: string;
   title: string;
   description: string;
   note?: ReactNode;
   children: ReactNode;
 }) => (
-  <section className="space-y-4">
+  <section id={id} className="space-y-4 scroll-mt-24">
     <div>
       <h3 className="text-xl font-semibold text-foreground">{title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
@@ -768,52 +770,67 @@ export default function CommandCenter() {
         </p>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="bg-card/60">
-          <CardHeader className="pb-2">
-            <div>
-              <Badge variant="success">Guided first</Badge>
+      <Card className="bg-card/60">
+        <CardHeader className="pb-4">
+          <div>
+            <Badge variant="info">Start here</Badge>
+          </div>
+          <h3 className="text-lg font-semibold text-card-foreground">
+            Pick the workflow type before you open the heavier controls
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            Keep the first screen focused on intent: refresh viewer-safe reports
+            first, move to rebuilds only when you need to regenerate files, and
+            use enrichment when you are intentionally pulling in external page
+            detail.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Guided workflows
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                Refresh current sales reports with the safest default actions.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Start with the safe defaults
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Capture flows and report refreshes stay one click away. Expand the
-              advanced sections only when you need path overrides or scoped runs.
-            </p>
-          </CardHeader>
-        </Card>
-        <Card className="bg-card/60">
-          <CardHeader className="pb-2">
-            <div>
-              <Badge variant="neutral">Rebuilds and exports</Badge>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Rebuilds and exports
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                Regenerate saved artifacts, schema files, or order models when
+                the viewer inputs changed.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Refresh saved artifacts deliberately
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Library rebuilds and schema exports stay grouped together so it is
-              clearer when you are regenerating files versus just inspecting data.
-            </p>
-          </CardHeader>
-        </Card>
-        <Card className="bg-card/60">
-          <CardHeader className="pb-2">
-            <div>
-              <Badge variant="info">Enrichment pipeline</Badge>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Metadata enrichment
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                Cache external pages first, then extract richer metadata only
+                when you want deeper media detail.
+              </p>
             </div>
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Cache, then extract metadata
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              External subproduct enrichment is still available here, but it now
-              reads as a two-step workflow instead of another pile of textboxes.
-            </p>
-          </CardHeader>
-        </Card>
-      </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline">
+              <a href="#guided-workflows">Jump to Guided workflows</a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a href="#rebuilds-and-exports">Jump to Rebuilds and exports</a>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <a href="#metadata-enrichment">Jump to Metadata enrichment</a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <CommandSection
+        id="guided-workflows"
         title="Guided workflows"
         description="Fast entry points for report refreshes with safe defaults and minimal input."
         note={
@@ -913,6 +930,7 @@ export default function CommandCenter() {
       </CommandSection>
 
       <CommandSection
+        id="rebuilds-and-exports"
         title="Rebuilds and exports"
         description="File-generating commands stay grouped here so schema, artifact, and model rebuilds are easier to scan before you run them.">
         <CommandCard
@@ -1170,6 +1188,7 @@ export default function CommandCenter() {
       </CommandSection>
 
       <CommandSection
+        id="metadata-enrichment"
         title="Metadata enrichment"
         description="Use these two commands together when you want richer authors, publishers, summaries, and descriptions throughout the viewer.">
         <CommandCard

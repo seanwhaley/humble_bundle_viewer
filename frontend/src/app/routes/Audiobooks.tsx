@@ -1,8 +1,16 @@
 /**
  * Audiobook library route grouped by audio download formats.
  */
-import { useMemo, useState } from "react";
-import { Loader2, Download, Headphones } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Loader2,
+  Download,
+  Headphones,
+  ChevronDown,
+  ChevronRight,
+  SlidersHorizontal,
+  ShieldCheck,
+} from "lucide-react";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
 import { useLibraryData, useViewerConfig } from "../../data/api";
@@ -16,6 +24,8 @@ import {
 import { formatBytes, formatDate } from "../../utils/format";
 import { DataTable } from "../../components/DataTable";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -60,6 +70,9 @@ export default function Audiobooks() {
   const { filters, setFilters } = useFilters();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [selectedFormat, setSelectedFormat] = useState("");
+  const [showPageFilters, setShowPageFilters] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [showManagedSync, setShowManagedSync] = useState(false);
   const [showExpiredDialog, setShowExpiredDialog] = useState(false);
   const [bulkPlannerBusy, setBulkPlannerBusy] = useState<
     "smallest" | "largest" | null
@@ -151,7 +164,37 @@ export default function Audiobooks() {
     () => hasExpiringSoonLinks(selectedDownloads, expiringSoonMs),
     [selectedDownloads, expiringSoonMs],
   );
+  const activePageFilterCount = useMemo(
+    () => [filters.category, filters.startDate || filters.endDate].filter(Boolean).length,
+    [filters.category, filters.endDate, filters.startDate],
+  );
+  const showFiltersPanel = showPageFilters || activePageFilterCount > 0;
+  const showBulkActionsPanel =
+    showBulkActions || selectedCount > 0 || bulkPlannerError !== null;
   const bulkPlannerActive = bulkPlannerBusy !== null;
+
+  const scopedBulkFormats = useMemo(() => {
+    const sourceRows = selectedCount > 0 ? selectedRows : audiobooks;
+    const counts = new Map<string, number>();
+    sourceRows.forEach((book) => {
+      book.downloads.forEach((download) => {
+        const label = getDownloadLabel(download, "contentLabel");
+        counts.set(label, (counts.get(label) || 0) + 1);
+      });
+    });
+
+    return Array.from(counts.keys()).sort((a, b) => {
+      const diff = (counts.get(b) || 0) - (counts.get(a) || 0);
+      if (diff !== 0) return diff;
+      return a.localeCompare(b);
+    });
+  }, [audiobooks, selectedCount, selectedRows]);
+
+  useEffect(() => {
+    if (selectedFormat && !scopedBulkFormats.includes(selectedFormat)) {
+      setSelectedFormat("");
+    }
+  }, [scopedBulkFormats, selectedFormat]);
 
   const triggerPlannedBulkDownload = async (
     sizePolicy: "smallest" | "largest",
@@ -338,24 +381,121 @@ export default function Audiobooks() {
 
   return (
     <div className="w-full flex flex-col space-y-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Headphones className="h-8 w-8 text-primary" />
-          Audiobook Library
-        </h2>
-        <p className="text-muted-foreground">
-          Listen to your collection of {audiobooks.length} audiobooks, with
-          direct links to each title's external info page when Humble provides
-          one.
-        </p>
-      </div>
+      <Card className="bg-card/60">
+        <CardHeader className="space-y-4 pb-4">
+          <div>
+            <Badge variant="info">Listen-first layout</Badge>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Headphones className="h-6 w-6 text-primary" />
+              <h2 className="text-lg font-semibold text-card-foreground">
+                Audiobook Library
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Browse titles, authors, and bundle context first. Filters, bulk
+              browser downloads, and managed sync stay available, but only take
+              over the page when you open them intentionally.
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Library scope
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {audiobooks.length} audiobooks in the current view.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Active selection
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {selectedCount} title{selectedCount === 1 ? "" : "s"} selected for route-level actions.
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Format coverage
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {scopedBulkFormats.length} formats in the current bulk-download scope.
+              </p>
+            </div>
+          </div>
 
-      <FilterBar
-        categories={options.categories}
-        platforms={options.platforms}
-        keyTypes={options.keyTypes}
-        fields={AUDIOBOOK_FILTER_FIELDS}
-      />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={showFiltersPanel ? "default" : "outline"}
+              className="h-8 gap-2 text-xs"
+              aria-expanded={showFiltersPanel}
+              onClick={() => setShowPageFilters((current) => !current)}>
+              {showFiltersPanel ?
+                <ChevronDown className="h-4 w-4" />
+              : <ChevronRight className="h-4 w-4" />}
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters{activePageFilterCount > 0 ? ` (${activePageFilterCount})` : ""}
+            </Button>
+            <Button
+              size="sm"
+              variant={showBulkActionsPanel ? "default" : "outline"}
+              className="h-8 gap-2 text-xs"
+              aria-expanded={showBulkActionsPanel}
+              onClick={() => setShowBulkActions((current) => !current)}>
+              {showBulkActionsPanel ?
+                <ChevronDown className="h-4 w-4" />
+              : <ChevronRight className="h-4 w-4" />}
+              <Download className="h-4 w-4" />
+              Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+            </Button>
+            <Button
+              size="sm"
+              variant={showManagedSync ? "default" : "outline"}
+              className="h-8 gap-2 text-xs"
+              aria-expanded={showManagedSync}
+              onClick={() => setShowManagedSync((current) => !current)}>
+              {showManagedSync ?
+                <ChevronDown className="h-4 w-4" />
+              : <ChevronRight className="h-4 w-4" />}
+              <ShieldCheck className="h-4 w-4" />
+              Advanced local sync
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Downloads still use your browser’s normal save flow. Browsers may
+            prompt before allowing multiple files to open at once.
+            {hasExpiringSelection && " Some selected links expire soon."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {showFiltersPanel && (
+        <Card className="bg-card/60">
+          <CardHeader className="pb-3">
+            <h3 className="text-base font-semibold text-card-foreground">
+              Narrow the listening queue before you download
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Filter by category or acquisition date first so the table and bulk
+              actions stay focused on the titles you actually want.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <FilterBar
+              categories={options.categories}
+              platforms={options.platforms}
+              keyTypes={options.keyTypes}
+              fields={AUDIOBOOK_FILTER_FIELDS}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {!audiobooks.length && (
         <DownloadRouteEmptyState routeLabel="Audiobooks" />
@@ -363,17 +503,27 @@ export default function Audiobooks() {
 
       {!!audiobooks.length && (
         <>
-          <div className="rounded-md border border-slate-800 bg-slate-900 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-slate-200">
-                  Selected titles: {selectedCount}
-                </p>
-                <p className="text-xs text-slate-400">
-                  Bulk download across selected titles.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
+          {showBulkActionsPanel && (
+            <Card className="bg-card/60">
+              <CardHeader className="pb-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-semibold text-card-foreground">
+                      Bulk browser downloads
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Select rows in the table first, then choose whether you
+                      want every file, one matching format, or a planned
+                      smallest/largest download per title.
+                    </p>
+                  </div>
+                  <Badge variant={selectedCount > 0 ? "success" : "neutral"}>
+                    Selected titles: {selectedCount}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-2">
                 <Button
                   size="sm"
                   variant="default"
@@ -395,13 +545,13 @@ export default function Audiobooks() {
                   Download all
                 </Button>
                 <select
-                  className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
                   value={selectedFormat}
                   onChange={(event) => setSelectedFormat(event.target.value)}
                   disabled={!selectedCount || bulkPlannerActive}
                   aria-label="Download format">
                   <option value="">Select format</option>
-                  {uniqueFormats.map((format) => (
+                  {scopedBulkFormats.map((format) => (
                     <option key={format} value={format}>
                       {format}
                     </option>
@@ -485,39 +635,41 @@ export default function Audiobooks() {
                   )}
                   Largest
                 </Button>
-              </div>
-            </div>
-            <p className="mt-2 text-xs text-slate-400">
-              Downloads open in your browser and save to this device using the
-              browser's normal download location. Browsers may prompt before
-              allowing multiple file downloads.
-              {hasExpiringSelection && " Some selected links expire soon."}
-            </p>
-            {bulkPlannerError && (
-              <p className="mt-2 text-xs text-rose-300">{bulkPlannerError}</p>
-            )}
-          </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedCount > 0 ?
+                    "Format choices are scoped to the currently selected titles so the picker stays relevant to the audiobook set you chose."
+                  : "Select one or more rows in the table to enable bulk downloads and narrow the format list."}
+                </p>
+                {bulkPlannerError && (
+                  <p className="text-xs text-rose-300">{bulkPlannerError}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
-          <AdvancedManagedSyncPanel
-            rows={audiobooks.map((row) => ({
-              id: row.id,
-              subproductName: row.subproductName,
-              sourceBundle: row.sourceBundle,
-              downloads: row.downloads,
-            }))}
-            selectedRows={selectedRows.map((row) => ({
-              id: row.id,
-              subproductName: row.subproductName,
-              sourceBundle: row.sourceBundle,
-              downloads: row.downloads,
-            }))}
-            uniqueFormats={uniqueFormats}
-            expiringSoonMs={expiringSoonMs}
-            onExpiredLinks={() => setShowExpiredDialog(true)}
-            mediaLabel="audiobook"
-            formatStrategy="contentLabel"
-            pickerId="hb-library-viewer-managed-sync-audiobooks"
-          />
+          {showManagedSync && (
+            <AdvancedManagedSyncPanel
+              rows={audiobooks.map((row) => ({
+                id: row.id,
+                subproductName: row.subproductName,
+                sourceBundle: row.sourceBundle,
+                downloads: row.downloads,
+              }))}
+              selectedRows={selectedRows.map((row) => ({
+                id: row.id,
+                subproductName: row.subproductName,
+                sourceBundle: row.sourceBundle,
+                downloads: row.downloads,
+              }))}
+              uniqueFormats={uniqueFormats}
+              expiringSoonMs={expiringSoonMs}
+              onExpiredLinks={() => setShowExpiredDialog(true)}
+              mediaLabel="audiobook"
+              formatStrategy="contentLabel"
+              pickerId="hb-library-viewer-managed-sync-audiobooks"
+            />
+          )}
 
           <DataTable
             columns={columns}

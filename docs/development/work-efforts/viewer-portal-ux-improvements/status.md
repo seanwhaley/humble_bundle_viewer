@@ -4,9 +4,9 @@
 
 - **State**: In progress
 - **Started**: 2026-03-19
-- **Last updated**: 2026-03-21
-- **Owner**: GitHub Copilot planning pass
-- **Implementation state**: First five implementation slices completed for key triage, download-route empty-state guidance, shared key inventory polish, tools-page density cleanup, expiring-key follow-up actions, and config-driven expiring-key focus refinement; broader effort remains in progress
+- **Last updated**: 2026-03-30
+- **Owner**: GitHub Copilot implementation pass
+- **Implementation state**: First seven implementation slices completed for key triage, download-route empty-state guidance, shared key inventory polish, tools-page density cleanup, expiring-key follow-up actions, config-driven expiring-key focus refinement, dense-route cleanup for `Software` plus `Command Center`, and scan-first cleanup for the remaining media routes; broader effort remains in progress
 
 ## Scope
 
@@ -18,9 +18,103 @@ Track the UX improvement effort for the HB Library Viewer website based on a liv
 - [x] Create `prd.md`
 - [x] Create `status.md`
 - [x] Rank implementation tasks into concrete route-level slices
-- [ ] Implement prioritized UX changes
-- [ ] Validate changed routes with browser review and frontend build/tests
+- [x] Implement prioritized UX changes included in the current integrated pull-request recommendation
+- [x] Validate changed routes included in the current integrated pull-request recommendation with browser review and frontend build/tests
 - [ ] Fold completed outcomes into canonical viewer docs and remove this effort folder when no longer needed
+
+## Integrated implementation plan
+
+Use this section as the source of truth for deciding which requirements are already covered,
+which changes must ship together in the current pull request, and which work is intentionally
+held for future pull requests. The goal is to remove any ambiguity about whether a requirement
+was implemented previously, is part of the current integrated recommendation, or is still
+planned work.
+
+### Covered work in the repository state
+
+- the current integrated viewer batch already includes the implemented route slices for
+  keys, downloads empty-state follow-up, Setup/Schema/Command Center density cleanup,
+  `Software`, and the media routes
+- the remaining browser-storage implementation is already present in code, but its two
+  required validation checks are still open and must be completed before that effort can
+  be treated as fully closed
+
+### Current pull request plan
+
+This pull request should remain a single integrated viewer-portal UX batch containing the
+already-made but still-unmerged closeout work across the related efforts:
+
+- styling and route closeout
+  - `frontend/src/app/routes/Overview.tsx`
+  - `frontend/tests/integration/app/routes/Overview.test.tsx`
+  - matching status/doc updates
+- Setup and Command Center closeout
+  - `frontend/src/app/routes/LibrarySetup.tsx`
+  - `frontend/src/app/routes/CommandCenter.tsx`
+  - `frontend/tests/unit/routes/LibrarySetup.test.tsx`
+  - `frontend/tests/unit/routes/CommandCenter.behavior.test.tsx`
+- route-rendering and browser-review fixes discovered after the integrated review
+  - `frontend/src/main.tsx`
+  - `frontend/src/app/routes/Structure.tsx`
+- dense-route cleanup for downloads/media
+  - `frontend/src/app/routes/Software.tsx`
+  - `frontend/src/app/routes/Ebooks.tsx`
+  - `frontend/src/app/routes/Audiobooks.tsx`
+  - `frontend/src/app/routes/Videos.tsx`
+  - `frontend/tests/integration/app/routes/Software.test.tsx`
+  - `frontend/tests/integration/app/routes/Ebooks.test.tsx`
+  - `frontend/tests/integration/app/routes/Audiobooks.test.tsx`
+  - `frontend/tests/integration/app/routes/Videos.test.tsx`
+- integrated docs/status alignment
+  - `docs/guides/viewer-portal.md`
+  - `docs/development/work-efforts/viewer-browser-storage/status.md`
+  - this `status.md`
+- required closeout still expected before the pull request is considered fully complete
+  - finish the two pending validation requirements in `viewer-browser-storage/status.md`
+
+### Future planned pull requests
+
+Do **not** add the following work to the current pull request recommendation. These belong in
+future planned pull requests so the current batch stays reviewable and traceable:
+
+- **Future PR 1 — overview polish**
+  - `Viewer Home`
+    - reduce top-of-page density further
+    - make chart and summary interactions more explicit
+    - preserve accepted navigation and word-cloud decisions while improving prioritization
+  - `Sales Overview`
+    - keep the compact filter treatment
+    - improve the first-screen executive summary and next-action guidance before deeper charts
+  - any follow-on current-sales subtype refinement that depends on the `Sales Overview` pass
+- **Future PR 2 — effort closeout**
+  - remove temporary work-effort folders only after all tracked requirements are implemented,
+    validated, and reflected in canonical docs
+
+## Remaining work by active work-effort folder
+
+### `viewer-browser-storage`
+
+- remaining implementation work: none
+- remaining requirement work:
+  - validate no credentials are persisted to browser storage after capture
+  - validate graceful fallback when browser storage is unavailable
+- current-pull-request expectation: complete and record those two validations before calling
+  the effort fully implemented
+- future-pull-request expectation: none unless the current pull request is intentionally split
+
+### `viewer-portal-ux-improvements`
+
+- remaining implementation work for the current pull request: none beyond documenting and
+  validating the already-completed slices included above
+- future planned implementation work:
+  - Future PR 1: `Viewer Home`, `Sales Overview`, and any small current-sales follow-on
+    refinements that emerge from those two passes
+- future planned documentation/cleanup work:
+  - Future PR 2: remove the temporary work-effort folder only after all requirements are fully
+    closed and canonical docs reflect the final product state
+- final closeout requirement:
+  - once the future slices are done and canonical docs are updated, remove the temporary
+    work-effort folder instead of letting it linger as an active plan artifact
 
 ## Initial implementation slice
 
@@ -195,9 +289,70 @@ Completed the fifth contained implementation slice for config-driven expiring-ke
   - `backend/tests/integration/test_config_loading.py`
   - result: 226 tests passed
 
+Completed the sixth contained implementation slice for the remaining dense-route cleanup pass.
+
+### Implemented in the sixth slice
+
+- `Software`
+  - replaced the always-on top control wall with a compact browse-first summary card
+  - moved route-level filters, bulk downloads, and managed sync behind explicit toggles so the table remains the primary first-screen task
+  - scoped bulk variant choices to the currently selected rows so the variant picker stays relevant for the active selection instead of listing every software file type at once
+- `Command Center`
+  - replaced the three-peer top guidance cards with a single `Start here` summary strip that explains the intent split between guided workflows, rebuilds/exports, and metadata enrichment
+  - added direct jump links to the three command groups so users can move to the right section without scanning the full route first
+- docs and tests
+  - added focused integration coverage for the new `Software` progressive-disclosure behavior
+  - updated `Command Center` route tests to cover the new section-jump affordances
+  - updated `docs/guides/viewer-portal.md` to document both route changes
+
+### Validation completed for the sixth slice
+
+- frontend targeted tests
+  - `npm test -- tests/integration/app/routes/Software.test.tsx tests/integration/app/routes/CommandCenter.test.tsx tests/unit/routes/CommandCenter.behavior.test.tsx`
+  - result: 13 tests passed
+- frontend production build
+  - `npm run build`
+  - result: passed
+- browser smoke checks
+  - confirmed `/software` renders the new browse-first summary card with on-demand toggles for filters, bulk downloads, and managed sync
+  - confirmed `/commands` renders the new `Start here` summary and direct section jump links
+  - result: passed
+
+Completed the seventh contained implementation slice for the remaining media-route cleanup pass.
+
+### Implemented in the seventh slice
+
+- `Ebooks`
+  - upgraded the existing top control bar into a compact summary card so the route reads as reader-first instead of file-first
+  - scoped bulk format choices to the currently selected rows so the route-level picker stays relevant to the active selection
+- `Audiobooks`
+  - replaced the always-on filter, bulk-download, and managed-sync wall with the same explicit disclosure pattern used on `Software`
+  - added a compact summary card that clarifies the browse-first flow before the table begins
+  - scoped bulk format choices to the currently selected rows
+- `Videos`
+  - applied the same browse-first summary and disclosure model so filters, bulk downloads, and managed sync no longer compete equally with the table
+  - scoped bulk format choices to the currently selected rows
+- docs and tests
+  - added focused integration coverage for `Ebooks`, `Audiobooks`, and `Videos`
+  - updated `docs/guides/viewer-portal.md` to document the shared media-route behavior
+
+### Validation completed for the seventh slice
+
+- frontend targeted tests
+  - `npm test -- tests/integration/app/routes/Ebooks.test.tsx tests/integration/app/routes/Audiobooks.test.tsx tests/integration/app/routes/Videos.test.tsx tests/integration/app/routes/Software.test.tsx`
+  - result: 8 tests passed
+- frontend production build
+  - `npm run build`
+  - result: passed
+- browser smoke checks
+  - confirmed `/ebooks` renders the new reader-first summary card and keeps filters, bulk browser downloads, and managed sync behind explicit toggles
+  - confirmed `/audiobooks` renders the new listen-first summary card and keeps filters, bulk browser downloads, and managed sync behind explicit toggles
+  - confirmed `/videos` renders the new watch-first summary card and keeps filters, bulk browser downloads, and managed sync behind explicit toggles
+  - result: passed
+
 ## Next candidate slice — continue dense-route cleanup
 
-With the key-family follow-up now implemented on `Expiring keys`, the next slice should return to density cleanup on the still-busy `Software` route and any remaining heavy tool surfaces.
+With the key-family follow-up, dense-route cleanup for `Software`, `Command Center`, and the media routes now implemented, the next slice should move to the remaining overview-level polish on `Viewer Home` and `Sales Overview`.
 
 ### Recommended shared polish
 
@@ -207,9 +362,11 @@ With the key-family follow-up now implemented on `Expiring keys`, the next slice
 
 ### Route-specific polish to consider
 
-- `Software` and `Command Center`
-  - continue progressive-disclosure cleanup now that the key routes and Tools pages have consistent scan-first controls
-  - separate browse/reporting surfaces from action-heavy controls more clearly
+- `Viewer Home`
+  - keep reducing top-of-page density while preserving the accepted navigation and word-cloud decisions
+  - make the most important interactive affordances more explicit without reintroducing duplicate shortcuts
+- `Sales Overview`
+  - keep the compact filter treatment, but make the first-screen summary and next actions easier to interpret before the deeper charts begin
 
 ## Evidence gathered
 
@@ -301,4 +458,4 @@ Before marking this effort complete:
 
 ## Next step
 
-Shift the next contained pass back to dense-route cleanup in `Software` and `Command Center`, using the same scan-first framing and progressive-disclosure patterns that now span the key routes and Tools pages.
+Shift the next contained pass to `Viewer Home` and `Sales Overview`, using the same scan-first framing and prioritization patterns that now span the key routes, the media routes, `Software`, and the Tools pages.
