@@ -9,6 +9,7 @@ type UsePersistentStateOptions<T> = {
   storage?: StorageKind;
   serialize?: (value: T) => string;
   deserialize?: (value: string) => T;
+  legacyKeys?: string[];
 };
 
 const canUseWindow = () => typeof window !== "undefined";
@@ -35,6 +36,7 @@ export function usePersistentState<T>(
     storage = "local",
     serialize = JSON.stringify,
     deserialize = JSON.parse as (value: string) => T,
+    legacyKeys = [],
   } = options ?? {};
   const skipNextPersistRef = useRef(false);
 
@@ -44,8 +46,27 @@ export function usePersistentState<T>(
     if (!storageObject) return fallback;
 
     try {
-      const raw = storageObject.getItem(key);
-      return raw === null ? fallback : deserialize(raw);
+      const storageKeys = [key, ...legacyKeys];
+      for (const storageKey of storageKeys) {
+        const raw = storageObject.getItem(storageKey);
+        if (raw === null) {
+          continue;
+        }
+
+        const value = deserialize(raw);
+        if (storageKey !== key) {
+          try {
+            storageObject.setItem(key, serialize(value));
+            storageObject.removeItem(storageKey);
+          } catch {
+            // Ignore migration failures and still use the recovered value.
+          }
+        }
+
+        return value;
+      }
+
+      return fallback;
     } catch {
       return fallback;
     }
@@ -77,11 +98,12 @@ export function usePersistentState<T>(
     if (!storageObject) return;
 
     try {
+      legacyKeys.forEach((legacyKey) => storageObject.removeItem(legacyKey));
       storageObject.removeItem(key);
     } catch {
       // Ignore storage failures and keep the in-memory reset.
     }
-  }, [initialValue, key, storage]);
+  }, [initialValue, key, legacyKeys, storage]);
 
   return [state, setState, reset] as const;
 }
