@@ -70,8 +70,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
         ref={ref}
         aria-label={ariaLabel}
         className={cn(badgeVariants({ casing, size, variant }), className)}
-        {...props}
-      >
+        {...props}>
         {children}
       </div>
     );

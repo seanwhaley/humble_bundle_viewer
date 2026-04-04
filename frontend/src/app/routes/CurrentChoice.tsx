@@ -19,10 +19,7 @@ import {
 } from "../../components/ui/table";
 import { useCurrentChoiceReport, useCurrentChoiceStatus } from "../../data/api";
 import { formatNumber } from "../../utils/format";
-import {
-  SECTION_CARD_CLASS,
-  TABLE_FRAME_CLASS,
-} from "../../styles/roles";
+import { SECTION_CARD_CLASS, TABLE_FRAME_CLASS } from "../../styles/roles";
 
 const formatPercent = (value: number) =>
   value % 1 === 0 ? `${value.toFixed(0)}%` : `${value.toFixed(1)}%`;
@@ -172,7 +169,10 @@ export default function CurrentChoice() {
                   )}
                   {report?.page_url && (
                     <Button asChild size="sm" variant="outline">
-                      <a href={report.page_url} target="_blank" rel="noreferrer">
+                      <a
+                        href={report.page_url}
+                        target="_blank"
+                        rel="noreferrer">
                         Open Choice page
                         <ArrowRight className="h-3.5 w-3.5" />
                       </a>
@@ -209,46 +209,54 @@ export default function CurrentChoice() {
             <div className={TABLE_FRAME_CLASS}>
               <table className="min-w-full table-fixed border-collapse text-left text-sm text-card-foreground">
                 <thead className={tableHeaderSurfaceClass}>
-                <tr>
-                  <th className={`w-[38%] px-4 py-3 ${tableHeaderCellClass}`}>Game</th>
-                  <th className={`w-[18%] px-4 py-3 ${tableHeaderCellClass}`}>Status</th>
-                  <th className={`px-4 py-3 ${tableHeaderCellClass}`}>
-                    Matched library titles
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredGames.length === 0 ?
-                  <tr className="align-top border-t border-border">
-                    <td className="px-4 py-4 text-muted-foreground" colSpan={3}>
-                      No games match this quick view. Switch back to All games
-                      to review the full current Choice lineup.
-                    </td>
+                  <tr>
+                    <th className={`w-[38%] px-4 py-3 ${tableHeaderCellClass}`}>
+                      Game
+                    </th>
+                    <th className={`w-[18%] px-4 py-3 ${tableHeaderCellClass}`}>
+                      Status
+                    </th>
+                    <th className={`px-4 py-3 ${tableHeaderCellClass}`}>
+                      Matched library titles
+                    </th>
                   </tr>
-                : filteredGames.map((game) => (
-                    <tr
-                      key={game.title}
-                      className="align-top border-t border-border">
-                      <td className="px-4 py-4 text-card-foreground">{game.title}</td>
-                      <td className="px-4 py-4 text-card-foreground">
-                        <Badge
-                          variant={game.owned ? "success" : "info"}
-                          size="compact"
-                          casing="ui">
-                          {game.owned ? "Already owned" : "New this month"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {game.matched_library_titles.length ?
-                          game.matched_library_titles.join("; ")
-                        : "—"}
+                </thead>
+                <tbody>
+                  {filteredGames.length === 0 ?
+                    <tr className="align-top border-t border-border">
+                      <td
+                        className="px-4 py-4 text-muted-foreground"
+                        colSpan={3}>
+                        No games match this quick view. Switch back to All games
+                        to review the full current Choice lineup.
                       </td>
                     </tr>
-                  ))
-                }
-              </tbody>
-            </table>
-          </div>
+                  : filteredGames.map((game) => (
+                      <tr
+                        key={game.title}
+                        className="align-top border-t border-border">
+                        <td className="px-4 py-4 text-card-foreground">
+                          {game.title}
+                        </td>
+                        <td className="px-4 py-4 text-card-foreground">
+                          <Badge
+                            variant={game.owned ? "success" : "info"}
+                            size="compact"
+                            casing="ui">
+                            {game.owned ? "Already owned" : "New this month"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-4 text-muted-foreground">
+                          {game.matched_library_titles.length ?
+                            game.matched_library_titles.join("; ")
+                          : "—"}
+                        </td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       }

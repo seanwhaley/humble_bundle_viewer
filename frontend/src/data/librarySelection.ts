@@ -110,7 +110,9 @@ export function useRestoreStoredLibraryPath(
     }
 
     if (!storedLibraryPath) {
-      const currentPath = normalizeStoredLibraryPath(libraryStatus.current_path);
+      const currentPath = normalizeStoredLibraryPath(
+        libraryStatus.current_path,
+      );
       if (libraryStatus.exists && currentPath) {
         writeStoredLibraryPath(currentPath);
       }

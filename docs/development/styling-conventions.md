@@ -21,44 +21,44 @@ If a needed visual state cannot be expressed with the current token set, add a n
 
 ### Surface and text tokens
 
-| Token | Usage |
-|------|-------|
-| `background` / `foreground` | Page background and default text |
-| `card` / `card-foreground` | Card and panel surfaces |
-| `popover` / `popover-foreground` | Tooltips and floating surfaces |
-| `muted` / `muted-foreground` | Secondary surfaces and subdued text |
-| `accent` / `accent-foreground` | Hover/selected supporting emphasis |
-| `border` | Default border color |
-| `input` | Input border color |
-| `ring` | Focus ring color |
+| Token                            | Usage                               |
+| -------------------------------- | ----------------------------------- |
+| `background` / `foreground`      | Page background and default text    |
+| `card` / `card-foreground`       | Card and panel surfaces             |
+| `popover` / `popover-foreground` | Tooltips and floating surfaces      |
+| `muted` / `muted-foreground`     | Secondary surfaces and subdued text |
+| `accent` / `accent-foreground`   | Hover/selected supporting emphasis  |
+| `border`                         | Default border color                |
+| `input`                          | Input border color                  |
+| `ring`                           | Focus ring color                    |
 
 ### Interaction tokens
 
-| Token | Usage |
-|------|-------|
-| `primary` / `primary-foreground` | Primary action buttons and primary links |
-| `secondary` / `secondary-foreground` | Secondary actions |
-| `destructive` / `destructive-foreground` | Dangerous actions |
+| Token                                    | Usage                                    |
+| ---------------------------------------- | ---------------------------------------- |
+| `primary` / `primary-foreground`         | Primary action buttons and primary links |
+| `secondary` / `secondary-foreground`     | Secondary actions                        |
+| `destructive` / `destructive-foreground` | Dangerous actions                        |
 
 ### Status tokens
 
-| Token | Usage |
-|------|-------|
+| Token                                          | Usage                               |
+| ---------------------------------------------- | ----------------------------------- |
 | `status-success` / `status-success-foreground` | Successful results and fresh status |
-| `status-warning` / `status-warning-foreground` | Stale or cautionary state |
-| `status-info` / `status-info-foreground` | Loading and informational state |
-| `status-error` / `status-error-foreground` | Error or unavailable state |
-| `status-neutral` / `status-neutral-foreground` | Missing/neutral state |
+| `status-warning` / `status-warning-foreground` | Stale or cautionary state           |
+| `status-info` / `status-info-foreground`       | Loading and informational state     |
+| `status-error` / `status-error-foreground`     | Error or unavailable state          |
+| `status-neutral` / `status-neutral-foreground` | Missing/neutral state               |
 
 ### Sidebar tokens
 
-| Token | Usage |
-|------|-------|
-| `sidebar-background` / `sidebar-foreground` | Sidebar base |
+| Token                                            | Usage                   |
+| ------------------------------------------------ | ----------------------- |
+| `sidebar-background` / `sidebar-foreground`      | Sidebar base            |
 | `sidebar-primary` / `sidebar-primary-foreground` | Sidebar primary actions |
-| `sidebar-accent` / `sidebar-accent-foreground` | Sidebar hover/selection |
-| `sidebar-border` | Sidebar border |
-| `sidebar-ring` | Sidebar focus ring |
+| `sidebar-accent` / `sidebar-accent-foreground`   | Sidebar hover/selection |
+| `sidebar-border`                                 | Sidebar border          |
+| `sidebar-ring`                                   | Sidebar focus ring      |
 
 ## Shared component APIs
 
@@ -178,8 +178,12 @@ Example pattern:
 <Card className="bg-card/60">
   <CardHeader>
     <Badge variant="info">Reports</Badge>
-    <h3 className="text-lg font-semibold text-card-foreground">Current sales bundle analysis</h3>
-    <p className="text-sm text-muted-foreground">Refresh the saved report with safe defaults.</p>
+    <h3 className="text-lg font-semibold text-card-foreground">
+      Current sales bundle analysis
+    </h3>
+    <p className="text-sm text-muted-foreground">
+      Refresh the saved report with safe defaults.
+    </p>
   </CardHeader>
   <CardContent>
     <Button size="sm">Analyze current bundles</Button>

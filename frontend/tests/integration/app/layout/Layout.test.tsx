@@ -58,7 +58,10 @@ function renderLayout(initialEntry: string, outletLabel: string) {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<div>{outletLabel}</div>} />
-          <Route path="library/other-downloads" element={<div>{outletLabel}</div>} />
+          <Route
+            path="library/other-downloads"
+            element={<div>{outletLabel}</div>}
+          />
           <Route path="library/steam-keys" element={<div>{outletLabel}</div>} />
           <Route path="command-center" element={<div>{outletLabel}</div>} />
         </Route>
@@ -138,7 +141,9 @@ describe("Layout", () => {
 
     expect(screen.getByText("Commands outlet")).toBeInTheDocument();
     expect(screen.getByText(/Active library/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Other Keys/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Other Keys/i }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("link", { name: /^Non-Steam$/i }),
     ).not.toBeInTheDocument();
@@ -157,9 +162,8 @@ describe("Layout", () => {
     expect(screen.getByText("Home outlet")).toBeInTheDocument();
     expect(screen.queryByText(/Active library/i)).not.toBeInTheDocument();
     expect(screen.getByText("Expiring key warning")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Review expiring keys/i })).toHaveAttribute(
-      "href",
-      "/library/expiring-keys",
-    );
+    expect(
+      screen.getByRole("link", { name: /Review expiring keys/i }),
+    ).toHaveAttribute("href", "/library/expiring-keys");
   });
 });

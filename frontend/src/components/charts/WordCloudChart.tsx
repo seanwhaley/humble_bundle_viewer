@@ -44,7 +44,10 @@ export default function WordCloudChart({
 
   if (data.length === 0) {
     return (
-      <ChartFrame emptyMessage={emptyMessage} emptyHeightClassName="min-h-[80px]" />
+      <ChartFrame
+        emptyMessage={emptyMessage}
+        emptyHeightClassName="min-h-[80px]"
+      />
     );
   }
 
@@ -87,9 +90,9 @@ export default function WordCloudChart({
           const isSelected =
             normalizedSelected === item.label.trim().toLowerCase();
           const color =
-            isSelected ? theme.accent : (
-              palette[hashLabel(item.label) % palette.length]
-            );
+            isSelected ?
+              theme.accent
+            : palette[hashLabel(item.label) % palette.length];
 
           return {
             name: item.label,

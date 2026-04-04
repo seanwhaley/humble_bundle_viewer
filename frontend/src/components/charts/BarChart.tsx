@@ -83,9 +83,9 @@ export default function BarChart({
             name: item.label,
             selectValue: selectionValue,
             itemStyle:
-              selected && selectionValue === selected
-                ? { color: theme.accent }
-                : undefined,
+              selected && selectionValue === selected ?
+                { color: theme.accent }
+              : undefined,
             emphasis: {
               disabled: !isSelectable,
             },
@@ -103,17 +103,17 @@ export default function BarChart({
         opts={{ renderer: "svg" }}
         className="h-[240px]"
         onEvents={
-          onSelect
-            ? {
-                click: (params: any) => {
-                  const value = params.data?.selectValue;
-                  if (value === null || value === undefined || value === "") {
-                    return;
-                  }
-                  onSelect(String(value));
-                },
-              }
-            : undefined
+          onSelect ?
+            {
+              click: (params: any) => {
+                const value = params.data?.selectValue;
+                if (value === null || value === undefined || value === "") {
+                  return;
+                }
+                onSelect(String(value));
+              },
+            }
+          : undefined
         }
       />
     </ChartFrame>

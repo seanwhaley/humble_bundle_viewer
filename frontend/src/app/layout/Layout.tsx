@@ -151,7 +151,9 @@ const SIDEBAR_GROUPS: Array<{ heading: string; items: SidebarNavItem[] }> = [
   },
   {
     heading: "Purchases",
-    items: [{ to: "/library/purchases", icon: ShoppingCart, label: "Purchases" }],
+    items: [
+      { to: "/library/purchases", icon: ShoppingCart, label: "Purchases" },
+    ],
   },
   {
     heading: "Downloads",
@@ -411,16 +413,10 @@ const SidebarItem = ({
       {!collapsed && (
         <>
           <span className={SIDEBAR_ITEM_LABEL_CLASS}>{label}</span>
-          {badge && (
-            <span className={SIDEBAR_ITEM_BADGE_CLASS}>
-              {badge}
-            </span>
-          )}
+          {badge && <span className={SIDEBAR_ITEM_BADGE_CLASS}>{badge}</span>}
         </>
       )}
-      {collapsed && badge && (
-        <span className={SIDEBAR_ITEM_DOT_CLASS} />
-      )}
+      {collapsed && badge && <span className={SIDEBAR_ITEM_DOT_CLASS} />}
     </NavLink>
   );
 };
@@ -598,7 +594,9 @@ function LayoutShell() {
       <aside
         className={cn(
           APP_SIDEBAR_CLASS,
-          collapsed ? APP_SIDEBAR_WIDTH_COLLAPSED_CLASS : APP_SIDEBAR_WIDTH_EXPANDED_CLASS,
+          collapsed ?
+            APP_SIDEBAR_WIDTH_COLLAPSED_CLASS
+          : APP_SIDEBAR_WIDTH_EXPANDED_CLASS,
           // Mobile handling: off-screen by default, on-screen if open
           APP_SIDEBAR_OFFSCREEN_CLASS,
           mobileMenuOpen && APP_SIDEBAR_ONSCREEN_CLASS,
@@ -606,7 +604,9 @@ function LayoutShell() {
         <div
           className={cn(
             APP_SIDEBAR_HEADER_CLASS,
-            collapsed ? APP_SIDEBAR_HEADER_COLLAPSED_CLASS : APP_SIDEBAR_HEADER_EXPANDED_CLASS,
+            collapsed ?
+              APP_SIDEBAR_HEADER_COLLAPSED_CLASS
+            : APP_SIDEBAR_HEADER_EXPANDED_CLASS,
           )}>
           {!collapsed && (
             <div className={APP_SIDEBAR_BRAND_CLASS}>
@@ -685,14 +685,10 @@ function LayoutShell() {
             </Button>
             <div className={APP_HEADER_TITLE_BLOCK_CLASS}>
               {headerEyebrow && (
-                <p className={APP_HEADER_EYEBROW_CLASS}>
-                  {headerEyebrow}
-                </p>
+                <p className={APP_HEADER_EYEBROW_CLASS}>{headerEyebrow}</p>
               )}
               <div className={APP_HEADER_TITLE_ROW_CLASS}>
-                <h1 className={APP_HEADER_TITLE_CLASS}>
-                  {routeMeta.title}
-                </h1>
+                <h1 className={APP_HEADER_TITLE_CLASS}>{routeMeta.title}</h1>
                 <p className={APP_HEADER_SUBTITLE_CLASS}>
                   {routeMeta.subtitle}
                 </p>
@@ -707,7 +703,9 @@ function LayoutShell() {
             <RouteFallback />
           : shouldGate ?
             <div className={ROUTE_MESSAGE_INFO_CLASS}>
-              <h2 className={ROUTE_MESSAGE_TITLE_CLASS}>Library data not found</h2>
+              <h2 className={ROUTE_MESSAGE_TITLE_CLASS}>
+                Library data not found
+              </h2>
               <p className={ROUTE_MESSAGE_BODY_CLASS}>
                 The viewer could not find a library file at
                 <span className={ROUTE_MESSAGE_EMPHASIS_CLASS}>
@@ -792,9 +790,7 @@ function LayoutShell() {
                       <div
                         key={item.label}
                         className={LIBRARY_CONTEXT_METRIC_CLASS}>
-                        <p className={SECTION_EYEBROW_CLASS}>
-                          {item.label}
-                        </p>
+                        <p className={SECTION_EYEBROW_CLASS}>{item.label}</p>
                         <p
                           className={METRIC_VALUE_CLASS}
                           data-doc-id={`layout-library-total-${item.id}`}>
@@ -847,7 +843,9 @@ function LayoutShell() {
 
                     <div className={PAGE_ACTION_ROW_CLASS}>
                       <Button asChild size="sm" variant="secondary">
-                        <Link to="/library/expiring-keys">Review expiring keys</Link>
+                        <Link to="/library/expiring-keys">
+                          Review expiring keys
+                        </Link>
                       </Button>
                     </div>
                   </div>
