@@ -17,7 +17,9 @@ export default function ThemeSelect() {
         aria-label="Viewer theme"
         className={COMPACT_FORM_SELECT_CLASS}
         value={theme}
-        onChange={(event) => setTheme(event.target.value as (typeof themes)[number]["id"])}>
+        onChange={(event) =>
+          setTheme(event.target.value as (typeof themes)[number]["id"])
+        }>
         {themes.map((option) => (
           <option key={option.id} value={option.id}>
             {option.label}

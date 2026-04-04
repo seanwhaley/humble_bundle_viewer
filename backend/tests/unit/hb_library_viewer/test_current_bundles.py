@@ -19,6 +19,7 @@ from hb_library_viewer.current_bundles import (
     BundleTierOverlap,
     build_bundle_links,
     build_bundle_overlap_report,
+    load_bundle_catalog,
     load_bundle_overlap_report,
     normalize_bundle_types,
     parse_bundle_page_html,
@@ -885,6 +886,137 @@ class TestCurrentBundles:
             == rendered_index_html
         )
 
+    def test_fetch_current_bundle_catalog_reuses_saved_active_bundle_snapshots(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        output_dir = tmp_path / "bundles"
+        cached_html_path = output_dir / "bundle_pages" / "cached-books.html"
+        cached_html_path.parent.mkdir(parents=True, exist_ok=True)
+        cached_html_path.write_text(
+            "<html><body>cached bundle</body></html>", encoding="utf-8"
+        )
+
+        bundle_url = "https://www.humblebundle.com/books/cached-books"
+        cached_snapshot = BundlePageSnapshot(
+            title="Cached Books",
+            bundle_type="Book Bundle",
+            category="books",
+            url=bundle_url,
+            slug="cached-books",
+            fetched_at="2026-03-01T00:00:00+00:00",
+            html_path=str(cached_html_path),
+            filter_labels=["1 Item Bundle"],
+            items=[
+                BundleItem(
+                    title="Alpha",
+                    price_label="Pay at least $1",
+                    price_value=1.0,
+                    price_kind="at least",
+                )
+            ],
+            tiers=[
+                BundleTier(
+                    label="1 Item Bundle",
+                    price_label="Pay at least $1",
+                    price_value=1.0,
+                    item_count=1,
+                    titles=["Alpha"],
+                )
+            ],
+        )
+        catalog_path = output_dir / "bundle_catalog.json"
+        existing_catalog = BundleCatalogSnapshot(
+            fetched_at="2026-03-01T00:00:00+00:00",
+            index_url=current_bundles_module.BUNDLES_INDEX_URL,
+            index_html_path=str(output_dir / "bundles_index.html"),
+            bundle_links_path=str(output_dir / "bundle_links.json"),
+            catalog_json_path=str(catalog_path),
+            bundles=[cached_snapshot],
+        )
+        catalog_path.parent.mkdir(parents=True, exist_ok=True)
+        catalog_path.write_text(
+            existing_catalog.model_dump_json(indent=2), encoding="utf-8"
+        )
+
+        requested_urls: list[str] = []
+        index_html = "<html><body>index</body></html>"
+
+        class StubResponse:
+            def __init__(self, text: str) -> None:
+                self.text = text
+
+            def raise_for_status(self) -> None:
+                return None
+
+        class StubSession:
+            def __init__(self) -> None:
+                self.headers: dict[str, str] = {}
+
+            def get(self, url: str, *, timeout: int) -> StubResponse:
+                requested_urls.append(url)
+                assert timeout == 20
+                if url == current_bundles_module.BUNDLES_INDEX_URL:
+                    return StubResponse(index_html)
+                raise AssertionError(
+                    f"Expected cached bundle details to be reused, but fetched {url}"
+                )
+
+        bundle_link = BundleLink(
+            title="Cached Books",
+            url=bundle_url,
+            offer_ends_text="5 Days Left",
+            offer_ends_in_days=5,
+            offer_ends_detail="5 days left",
+        )
+        progress_events: list[current_bundles_module.BundleWorkflowProgress] = []
+
+        monkeypatch.setattr(current_bundles_module.requests, "Session", StubSession)
+        monkeypatch.setattr(
+            current_bundles_module,
+            "build_bundle_links",
+            lambda html: [bundle_link],
+        )
+        monkeypatch.setattr(
+            current_bundles_module,
+            "parse_bundle_page_html",
+            lambda *args, **kwargs: pytest.fail(
+                "Cached bundle pages should be reused instead of reparsed from live fetches."
+            ),
+        )
+
+        catalog = current_bundles_module.fetch_current_bundle_catalog(
+            output_dir=output_dir,
+            bundle_types=["books"],
+            timeout_seconds=20,
+            progress_callback=progress_events.append,
+        )
+
+        assert requested_urls == [current_bundles_module.BUNDLES_INDEX_URL]
+        assert len(catalog.bundles) == 1
+        assert catalog.bundles[0].url == bundle_url
+        assert catalog.bundles[0].fetched_at == "2026-03-01T00:00:00+00:00"
+        assert catalog.bundles[0].offer_ends_text == "5 Days Left"
+        assert catalog.bundles[0].items[0].title == "Alpha"
+
+        loaded_catalog = load_bundle_catalog(catalog_path)
+        assert len(loaded_catalog.bundles) == 1
+        assert loaded_catalog.bundles[0].offer_ends_in_days == 5
+        assert [event.phase for event in progress_events] == [
+            "fetching_index",
+            "bundle_list_ready",
+            "reusing_bundle",
+            "writing_catalog",
+        ]
+
+        reuse_event = progress_events[2]
+        assert reuse_event.current_bundle == "Cached Books"
+        assert reuse_event.completed_bundles == 1
+        assert reuse_event.total_bundles == 1
+        assert reuse_event.reused_bundles == 1
+        assert reuse_event.fetched_bundles == 0
+
     def test_capture_and_report_current_bundles_returns_workflow_paths(
         self,
         tmp_path: Path,
@@ -896,7 +1028,7 @@ class TestCurrentBundles:
         monkeypatch.setattr(
             current_bundles_module,
             "fetch_current_bundle_catalog",
-            lambda *, output_dir, bundle_types, timeout_seconds: BundleCatalogSnapshot(
+            lambda *, output_dir, bundle_types, timeout_seconds, progress_callback=None: BundleCatalogSnapshot(
                 fetched_at="2026-03-18T00:00:00+00:00",
                 index_url=current_bundles_module.BUNDLES_INDEX_URL,
                 index_html_path=str(output_dir / "bundles_index.html"),

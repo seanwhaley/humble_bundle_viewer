@@ -14,7 +14,9 @@ vi.mock("../../../../src/components/KeyValueCell", () => ({
 }));
 
 vi.mock("../../../../src/components/RedemptionLinksButton", () => ({
-  default: ({ label }: { label: string }) => <button type="button">{label}</button>,
+  default: ({ label }: { label: string }) => (
+    <button type="button">{label}</button>
+  ),
 }));
 
 vi.mock("../../../../src/components/DataTable", () => ({
@@ -128,7 +130,9 @@ describe("ExpiringKeys", () => {
       numDaysUntilExpired: 5,
       keyType: "steam",
       keyValue: "AAAA-BBBB",
-      redemptionLinks: [{ id: "r1", label: "Redeem", url: "https://example.test" }],
+      redemptionLinks: [
+        { id: "r1", label: "Redeem", url: "https://example.test" },
+      ],
       status: ["Ready"],
     },
     {
@@ -176,7 +180,9 @@ describe("ExpiringKeys", () => {
       error: null,
     } as ReturnType<typeof api.useViewerConfig>);
 
-    mockApplyProductFilters.mockReturnValue([{ product_name: "Bundle One" }] as any);
+    mockApplyProductFilters.mockReturnValue([
+      { product_name: "Bundle One" },
+    ] as any);
     mockFlattenKeys.mockReturnValue(keys);
     mockGetFilterOptions.mockReturnValue({
       categories: ["Games"],
@@ -215,11 +221,15 @@ describe("ExpiringKeys", () => {
     renderRoute();
 
     expect(
-      screen.getByText("Prioritize the keys that still have a redemption window"),
+      screen.getByText(
+        "Prioritize the keys that still have a redemption window",
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Active redemption window")).toBeInTheDocument();
     expect(
-      screen.getByText("2 expired or dated key rows in the current filter scope."),
+      screen.getByText(
+        "2 expired or dated key rows in the current filter scope.",
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText("FilterBar")).not.toBeInTheDocument();
 
@@ -235,7 +245,9 @@ describe("ExpiringKeys", () => {
   it("switches triage scope when the user focuses open actions", () => {
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: /Focus open actions/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Focus open actions/i }),
+    );
 
     const lastCall = mockFilterExpiringKeysByScope.mock.lastCall;
 

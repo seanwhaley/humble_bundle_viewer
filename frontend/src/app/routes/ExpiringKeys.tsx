@@ -15,7 +15,10 @@ import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { useLibraryData, useViewerConfig } from "../../data/api";
 import {
   applyProductFilters,
@@ -261,38 +264,34 @@ export default function ExpiringKeys() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Keys in triage
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Keys in triage</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.total} expired or dated key rows in the current filter scope.
+                {summary.total} expired or dated key rows in the current filter
+                scope.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Open actions
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Open actions</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {actionSummary.openActionCount} unexpired key
-                {actionSummary.openActionCount === 1 ? "" : "s"} still need action.
+                {actionSummary.openActionCount === 1 ? "" : "s"} still need
+                action.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Needs reveal
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Needs reveal</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {triageCounts.needs_reveal} unexpired row
-                {triageCounts.needs_reveal === 1 ? "" : "s"} still hide the key value.
+                {triageCounts.needs_reveal === 1 ? "" : "s"} still hide the key
+                value.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Expired reference
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Expired reference</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {actionSummary.expiredReferenceCount} expired row
-                {actionSummary.expiredReferenceCount === 1 ? "" : "s"} remain visible below for reference.
+                {actionSummary.expiredReferenceCount === 1 ? "" : "s"} remain
+                visible below for reference.
               </p>
             </div>
           </div>
@@ -338,7 +337,9 @@ export default function ExpiringKeys() {
               variant={selected ? "secondary" : "outline"}
               onClick={() => setTriageScope(value as ExpiringKeyScope)}>
               {label}
-              <span className="ml-1 text-xs text-muted-foreground">{count}</span>
+              <span className="ml-1 text-xs text-muted-foreground">
+                {count}
+              </span>
             </Button>
           );
         })}
@@ -351,8 +352,8 @@ export default function ExpiringKeys() {
               Filter the triage queue
             </h3>
             <p className="text-sm text-muted-foreground">
-              Narrow by category, key type, or acquisition date when you want the
-              triage table to focus on a smaller set of deadlines.
+              Narrow by category, key type, or acquisition date when you want
+              the triage table to focus on a smaller set of deadlines.
             </p>
           </CardHeader>
           <CardContent>

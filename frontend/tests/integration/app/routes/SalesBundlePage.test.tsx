@@ -23,10 +23,7 @@ function renderRoute(initialEntry = "/sales/games?focus=all-new") {
           path="/sales/games"
           element={<SalesBundlePage bundleType="games" />}
         />
-        <Route
-          path="/sales"
-          element={<div>Sales Overview destination</div>}
-        />
+        <Route path="/sales" element={<div>Sales Overview destination</div>} />
       </Routes>
     </MemoryRouter>,
   );

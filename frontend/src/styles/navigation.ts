@@ -4,7 +4,8 @@
 
 import { cn } from "../lib/utils";
 
-export const APP_SHELL_CLASS = "flex min-h-screen bg-background text-foreground";
+export const APP_SHELL_CLASS =
+  "flex min-h-screen bg-background text-foreground";
 
 export const APP_MOBILE_BACKDROP_CLASS =
   "fixed inset-0 z-40 bg-background/80 md:hidden";

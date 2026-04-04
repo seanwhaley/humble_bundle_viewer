@@ -489,9 +489,10 @@ describe("Home", () => {
     renderRoute();
 
     expect(screen.getByText("No library is selected yet")).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Open setup" }),
-    ).toHaveAttribute("href", "/setup");
+    expect(screen.getByRole("link", { name: "Open setup" })).toHaveAttribute(
+      "href",
+      "/setup",
+    );
     expect(
       screen.getByText(
         /Live bundles and Current Choice still load without a selected library/i,
@@ -505,7 +506,9 @@ describe("Home", () => {
 
     expect(screen.queryByPlaceholderText("Search...")).not.toBeInTheDocument();
     expect(
-      await screen.findByRole("checkbox", { name: /Games Show the games card/i }),
+      await screen.findByRole("checkbox", {
+        name: /Games Show the games card/i,
+      }),
     ).toBeChecked();
   });
 });

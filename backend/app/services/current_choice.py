@@ -3,18 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import cast
 
 from app.models.current_choice import (
     CurrentChoiceReport,
     CurrentChoiceWorkflowArtifacts,
 )
+from app.services.library_loader import resolve_library_path
 from hb_library_viewer.config import (
     DEFAULT_ARTIFACTS_DIR,
     CurrentChoiceConfig,
     RuntimeSettings,
-    ViewerConfig,
-    default_library_products_path,
 )
 from hb_library_viewer.current_choice import (
     capture_and_report_current_choice,
@@ -81,11 +79,7 @@ def resolve_current_choice_library_path() -> Path:
     if current_choice_config.library_path is not None:
         return current_choice_config.library_path
 
-    viewer_config = cast(ViewerConfig, RuntimeSettings().viewer)
-    if viewer_config.library_path is not None:
-        return viewer_config.library_path
-
-    return default_library_products_path(_runtime_artifacts_dir())
+    return resolve_library_path()
 
 
 def load_saved_current_choice_report(

@@ -35,11 +35,11 @@ export default function WordCloudChart({
 }: WordCloudChartProps) {
   const theme = getChartTheme();
   const palette = [
+    theme.foreground,
     theme.warningForeground,
     theme.infoForeground,
     theme.successForeground,
-    theme.mutedForeground,
-    theme.foreground,
+    theme.accent,
   ];
 
   if (data.length === 0) {
@@ -91,7 +91,7 @@ export default function WordCloudChart({
             normalizedSelected === item.label.trim().toLowerCase();
           const color =
             isSelected ?
-              theme.accent
+              theme.foreground
             : palette[hashLabel(item.label) % palette.length];
 
           return {

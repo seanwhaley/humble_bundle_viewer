@@ -14,16 +14,19 @@ derived from those saved files rather than from live browser state.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from collections import OrderedDict, defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from html import escape, unescape
 import json
 from pathlib import Path
 import re
+from typing import Literal
 from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, NavigableString, Tag
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 import requests
 
 from .parsing import LibraryData
@@ -70,6 +73,33 @@ _CATEGORY_DISPLAY_NAMES = {
 }
 _CATEGORY_DISPLAY_ORDER = ("games", "books", "software")
 SUPPORTED_BUNDLE_TYPES = _CATEGORY_DISPLAY_ORDER
+
+BundleWorkflowPhase = Literal[
+    "fetching_index",
+    "index_fallback",
+    "bundle_list_ready",
+    "reusing_bundle",
+    "bundle_render_fallback",
+    "fetched_bundle",
+    "writing_catalog",
+    "building_report",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class BundleWorkflowProgress:
+    """One current-bundles workflow progress event."""
+
+    phase: BundleWorkflowPhase
+    message: str
+    current_bundle: str | None = None
+    completed_bundles: int = 0
+    total_bundles: int | None = None
+    reused_bundles: int = 0
+    fetched_bundles: int = 0
+
+
+ProgressCallback = Callable[[BundleWorkflowProgress], None]
 
 
 class BundleLink(BaseModel):
@@ -712,6 +742,97 @@ def _write_text(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _emit_progress(
+    progress_callback: ProgressCallback | None,
+    *,
+    phase: BundleWorkflowPhase,
+    message: str,
+    current_bundle: str | None = None,
+    completed_bundles: int = 0,
+    total_bundles: int | None = None,
+    reused_bundles: int = 0,
+    fetched_bundles: int = 0,
+) -> None:
+    if progress_callback is None:
+        return
+
+    progress_callback(
+        BundleWorkflowProgress(
+            phase=phase,
+            message=message,
+            current_bundle=current_bundle,
+            completed_bundles=completed_bundles,
+            total_bundles=total_bundles,
+            reused_bundles=reused_bundles,
+            fetched_bundles=fetched_bundles,
+        )
+    )
+
+
+def _resolve_saved_artifact_path(path_value: str, *, relative_to: Path) -> Path:
+    path = Path(path_value).expanduser()
+    if not path.is_absolute():
+        path = relative_to / path
+    return path.resolve()
+
+
+def _snapshot_has_saved_details(snapshot: BundlePageSnapshot) -> bool:
+    return bool(snapshot.filter_labels or snapshot.items or snapshot.tiers)
+
+
+def _snapshot_with_offer_metadata(
+    snapshot: BundlePageSnapshot,
+    link: BundleLink,
+) -> BundlePageSnapshot:
+    return snapshot.model_copy(
+        update={
+            "offer_ends_text": link.offer_ends_text,
+            "offer_ends_in_days": link.offer_ends_in_days,
+            "offer_ends_detail": link.offer_ends_detail,
+        }
+    )
+
+
+def load_bundle_catalog(catalog_json_path: Path) -> BundleCatalogSnapshot:
+    """Load a saved current-bundles catalog snapshot from disk."""
+
+    resolved_catalog_path = catalog_json_path.expanduser().resolve()
+    if not resolved_catalog_path.exists():
+        raise FileNotFoundError(
+            f"Current bundle catalog not found: {resolved_catalog_path}"
+        )
+
+    return BundleCatalogSnapshot.model_validate_json(
+        resolved_catalog_path.read_text(encoding="utf-8")
+    )
+
+
+def _load_reusable_bundle_snapshots(
+    catalog_json_path: Path,
+) -> dict[str, BundlePageSnapshot]:
+    try:
+        catalog = load_bundle_catalog(catalog_json_path)
+    except (FileNotFoundError, ValidationError):
+        return {}
+
+    relative_to = catalog_json_path.expanduser().resolve().parent
+    reusable_snapshots: dict[str, BundlePageSnapshot] = {}
+    for snapshot in catalog.bundles:
+        if not _snapshot_has_saved_details(snapshot):
+            continue
+
+        html_path = _resolve_saved_artifact_path(
+            snapshot.html_path,
+            relative_to=relative_to,
+        )
+        if not html_path.exists():
+            continue
+
+        reusable_snapshots[snapshot.url] = snapshot
+
+    return reusable_snapshots
+
+
 def _fetch_rendered_htmls(
     urls: list[str],
     *,
@@ -744,6 +865,7 @@ def fetch_current_bundle_catalog(
     output_dir: Path,
     bundle_types: list[str] | None = None,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+    progress_callback: ProgressCallback | None = None,
 ) -> BundleCatalogSnapshot:
     """Fetch the current bundles index and every bundle page into saved artifacts."""
 
@@ -753,10 +875,16 @@ def fetch_current_bundle_catalog(
     index_html_path = resolved_output_dir / "bundles_index.html"
     bundle_links_path = resolved_output_dir / "bundle_links.json"
     catalog_json_path = resolved_output_dir / "bundle_catalog.json"
+    reusable_snapshots = _load_reusable_bundle_snapshots(catalog_json_path)
 
     session = requests.Session()
     session.headers.update({"User-Agent": USER_AGENT})
 
+    _emit_progress(
+        progress_callback,
+        phase="fetching_index",
+        message="Fetching the live bundles index.",
+    )
     index_response = session.get(BUNDLES_INDEX_URL, timeout=timeout_seconds)
     index_response.raise_for_status()
     index_fetched_at = _utc_now()
@@ -766,6 +894,11 @@ def fetch_current_bundle_catalog(
     bundle_links = build_bundle_links(index_html)
     rendered_htmls: dict[str, str] = {}
     if not bundle_links:
+        _emit_progress(
+            progress_callback,
+            phase="index_fallback",
+            message="Raw bundles index was sparse; retrying with rendered HTML.",
+        )
         rendered_htmls = _fetch_rendered_htmls(
             [BUNDLES_INDEX_URL],
             timeout_seconds=timeout_seconds,
@@ -786,12 +919,46 @@ def fetch_current_bundle_catalog(
             + ", ".join(selected_bundle_types)
         )
 
+    total_bundles = len(bundle_links)
+    _emit_progress(
+        progress_callback,
+        phase="bundle_list_ready",
+        message=(
+            "Discovered "
+            f"{total_bundles} active bundle{'s' if total_bundles != 1 else ''} "
+            "to analyze."
+        ),
+        total_bundles=total_bundles,
+    )
+
     _write_json(
         bundle_links_path, [link.model_dump(mode="json") for link in bundle_links]
     )
 
     bundle_snapshots: list[BundlePageSnapshot] = []
+    completed_bundles = 0
+    reused_bundles = 0
+    fetched_bundles = 0
     for link in bundle_links:
+        cached_snapshot = reusable_snapshots.get(link.url)
+        if cached_snapshot is not None:
+            reused_bundles += 1
+            completed_bundles += 1
+            bundle_snapshots.append(
+                _snapshot_with_offer_metadata(cached_snapshot, link)
+            )
+            _emit_progress(
+                progress_callback,
+                phase="reusing_bundle",
+                message="Reused the saved active bundle snapshot.",
+                current_bundle=link.title,
+                completed_bundles=completed_bundles,
+                total_bundles=total_bundles,
+                reused_bundles=reused_bundles,
+                fetched_bundles=fetched_bundles,
+            )
+            continue
+
         page_response = session.get(link.url, timeout=timeout_seconds)
         page_response.raise_for_status()
         page_html = page_response.text
@@ -802,15 +969,19 @@ def fetch_current_bundle_catalog(
             fetched_at=_utc_now(),
             html_path=html_path,
         )
-        snapshot = snapshot.model_copy(
-            update={
-                "offer_ends_text": link.offer_ends_text,
-                "offer_ends_in_days": link.offer_ends_in_days,
-                "offer_ends_detail": link.offer_ends_detail,
-            }
-        )
+        snapshot = _snapshot_with_offer_metadata(snapshot, link)
 
         if not snapshot.filter_labels and not snapshot.items:
+            _emit_progress(
+                progress_callback,
+                phase="bundle_render_fallback",
+                message="Raw bundle HTML was sparse; retrying with rendered HTML.",
+                current_bundle=link.title,
+                completed_bundles=completed_bundles,
+                total_bundles=total_bundles,
+                reused_bundles=reused_bundles,
+                fetched_bundles=fetched_bundles,
+            )
             if link.url not in rendered_htmls:
                 rendered_htmls.update(
                     _fetch_rendered_htmls(
@@ -825,16 +996,22 @@ def fetch_current_bundle_catalog(
                 fetched_at=_utc_now(),
                 html_path=html_path,
             )
-            snapshot = snapshot.model_copy(
-                update={
-                    "offer_ends_text": link.offer_ends_text,
-                    "offer_ends_in_days": link.offer_ends_in_days,
-                    "offer_ends_detail": link.offer_ends_detail,
-                }
-            )
+            snapshot = _snapshot_with_offer_metadata(snapshot, link)
 
         _write_text(html_path, page_html)
         bundle_snapshots.append(snapshot)
+        fetched_bundles += 1
+        completed_bundles += 1
+        _emit_progress(
+            progress_callback,
+            phase="fetched_bundle",
+            message="Fetched the live bundle page.",
+            current_bundle=link.title,
+            completed_bundles=completed_bundles,
+            total_bundles=total_bundles,
+            reused_bundles=reused_bundles,
+            fetched_bundles=fetched_bundles,
+        )
 
     catalog = BundleCatalogSnapshot(
         fetched_at=index_fetched_at,
@@ -845,6 +1022,15 @@ def fetch_current_bundle_catalog(
         bundles=bundle_snapshots,
     )
     _write_json(catalog_json_path, catalog)
+    _emit_progress(
+        progress_callback,
+        phase="writing_catalog",
+        message="Saved the refreshed bundle catalog artifacts.",
+        completed_bundles=completed_bundles,
+        total_bundles=total_bundles,
+        reused_bundles=reused_bundles,
+        fetched_bundles=fetched_bundles,
+    )
     return catalog
 
 
@@ -1423,6 +1609,7 @@ def capture_and_report_current_bundles(
     library_path: Path,
     bundle_types: list[str] | None = None,
     timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
+    progress_callback: ProgressCallback | None = None,
 ) -> BundleWorkflowArtifacts:
     """Fetch current bundle pages into saved artifacts and write the overlap report."""
 
@@ -1432,6 +1619,17 @@ def capture_and_report_current_bundles(
         output_dir=output_dir,
         bundle_types=selected_bundle_types,
         timeout_seconds=timeout_seconds,
+        progress_callback=progress_callback,
+    )
+    _emit_progress(
+        progress_callback,
+        phase="building_report",
+        message=(
+            "Building the overlap report from "
+            f"{len(catalog.bundles)} bundle{'s' if len(catalog.bundles) != 1 else ''}."
+        ),
+        completed_bundles=len(catalog.bundles),
+        total_bundles=len(catalog.bundles),
     )
     report = build_bundle_overlap_report(
         catalog,

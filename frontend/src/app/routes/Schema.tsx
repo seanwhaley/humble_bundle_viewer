@@ -8,7 +8,10 @@ import { Link } from "react-router-dom";
 import { useLibraryData } from "../../data/api";
 import { Button } from "../../components/ui/button";
 import { PageIntro } from "../../components/ui/PageIntro";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import StatTile from "../../components/StatTile";
 import { echarts } from "../../components/charts/echarts";
 import { getChartTheme } from "../../components/charts/theme";
@@ -258,7 +261,9 @@ export default function Schema() {
   }
 
   if (error || !data) {
-    return <RouteErrorState message="Failed to load data for schema analysis." />;
+    return (
+      <RouteErrorState message="Failed to load data for schema analysis." />
+    );
   }
 
   return (
@@ -300,15 +305,18 @@ export default function Schema() {
           subtitle="Nested items exposed by the viewer tables"
         />
         <div className={INSET_PANEL_CLASS}>
-          <p className={SECTION_EYEBROW_CLASS}>
-            How to use this page
-          </p>
+          <p className={SECTION_EYEBROW_CLASS}>How to use this page</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Use <span className="font-semibold text-card-foreground">Blueprint</span>{" "}
+            Use{" "}
+            <span className="font-semibold text-card-foreground">
+              Blueprint
+            </span>{" "}
             to scan object relationships, then switch to{" "}
-            <span className="font-semibold text-card-foreground">Inspector</span> for
-            live sample payloads. If you need an exported schema file, build it
-            from Command Center.
+            <span className="font-semibold text-card-foreground">
+              Inspector
+            </span>{" "}
+            for live sample payloads. If you need an exported schema file, build
+            it from Command Center.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
@@ -321,9 +329,7 @@ export default function Schema() {
       <div className={CHART_PANEL_CLASS}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className={SECTION_EYEBROW_CLASS}>
-              Focus the view
-            </p>
+            <p className={SECTION_EYEBROW_CLASS}>Focus the view</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Isolate one branch when you want to inspect product fields, nested
               subproducts, or library-level metadata without the full tree
@@ -353,7 +359,8 @@ export default function Schema() {
         </div>
       </div>
 
-      <div className={`${CHART_PANEL_CLASS} relative flex-1 min-h-[32rem] overflow-hidden text-card-foreground`}>
+      <div
+        className={`${CHART_PANEL_CLASS} relative flex-1 min-h-[32rem] overflow-hidden text-card-foreground`}>
         {view === "tree" ?
           <ReactECharts
             echarts={echarts}

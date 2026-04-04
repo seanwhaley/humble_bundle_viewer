@@ -84,10 +84,13 @@ vi.mock("../../../../src/data/selectors", () => ({
 
 vi.mock("../../../../src/utils/downloads", () => ({
   collectDownloadUrls: vi.fn(() => []),
-  filterDownloadsByLabel: vi.fn((downloads: Array<{ contentLabel?: string }>, label: string) =>
-    downloads.filter((download) => download.contentLabel === label),
+  filterDownloadsByLabel: vi.fn(
+    (downloads: Array<{ contentLabel?: string }>, label: string) =>
+      downloads.filter((download) => download.contentLabel === label),
   ),
-  getDownloadLabel: vi.fn((download: { contentLabel?: string }) => download.contentLabel ?? "Unknown"),
+  getDownloadLabel: vi.fn(
+    (download: { contentLabel?: string }) => download.contentLabel ?? "Unknown",
+  ),
   getLinkStatus: vi.fn(() => "valid"),
   hasExpiredLinks: vi.fn(() => false),
   hasExpiringSoonLinks: vi.fn(() => false),
@@ -188,28 +191,42 @@ describe("EBooksPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Filters$/ }));
     expect(screen.getByText("Ebook FilterBar")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Advanced local sync/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Advanced local sync/i }),
+    );
     expect(screen.getByText("Managed sync panel")).toBeInTheDocument();
   });
 
   it("scopes bulk format choices to the currently selected rows", () => {
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: /Bulk browser downloads/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Bulk browser downloads/i }),
+    );
     expect(
-      screen.getByText(/Select one or more rows in the table to enable bulk downloads/i),
+      screen.getByText(
+        /Select one or more rows in the table to enable bulk downloads/i,
+      ),
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Select first ebook row" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Select first ebook row" }),
+    );
 
     expect(screen.getByText("Selected titles: 1")).toBeInTheDocument();
     expect(
-      screen.getByText(/Format choices are scoped to the currently selected titles/i),
+      screen.getByText(
+        /Format choices are scoped to the currently selected titles/i,
+      ),
     ).toBeInTheDocument();
 
     const formatSelect = screen.getByLabelText("Download format");
-    const optionLabels = within(formatSelect).getAllByRole("option").map((option) => option.textContent);
-    expect(optionLabels).toEqual(expect.arrayContaining(["Select format", "EPUB"]));
+    const optionLabels = within(formatSelect)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(optionLabels).toEqual(
+      expect.arrayContaining(["Select format", "EPUB"]),
+    );
     expect(optionLabels).not.toContain("PDF");
   });
 });

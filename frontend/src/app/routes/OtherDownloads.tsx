@@ -2,10 +2,7 @@
  * Other downloads route focused on direct file download links.
  */
 import { useMemo, useState } from "react";
-import {
-  Download,
-  Copy,
-} from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import FilterBar, { type FilterBarField } from "../../components/FilterBar";
@@ -16,7 +13,10 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { ProductCell } from "../../components/ProductCell";
 import { useLibraryData, useViewerConfig } from "../../data/api";
 import {
@@ -227,30 +227,26 @@ export default function OtherDownloads() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-3">
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Rows in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Rows in scope</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {formatNumber(downloads.length)} other-download row
                 {downloads.length === 1 ? "" : "s"} in the current view.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Platforms in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Platforms in scope</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {formatNumber(platformCounts.length)} platform bucket
-                {platformCounts.length === 1 ? "" : "s"} are represented in the current view.
+                {platformCounts.length === 1 ? "" : "s"} are represented in the
+                current view.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                File types in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>File types in scope</p>
               <p className="mt-2 text-sm text-card-foreground">
                 {formatNumber(fileTypeCounts.length)} file-type bucket
-                {fileTypeCounts.length === 1 ? "" : "s"} remain after the current filters.
+                {fileTypeCounts.length === 1 ? "" : "s"} remain after the
+                current filters.
               </p>
             </div>
           </div>

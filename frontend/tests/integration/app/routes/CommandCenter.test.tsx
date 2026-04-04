@@ -10,9 +10,9 @@ vi.mock("../../../../src/data/api", () => ({
 }));
 
 vi.mock("../../../../src/data/maintenance", async () => {
-  const actual = await vi.importActual<typeof import("../../../../src/data/maintenance")>(
-    "../../../../src/data/maintenance",
-  );
+  const actual = await vi.importActual<
+    typeof import("../../../../src/data/maintenance")
+  >("../../../../src/data/maintenance");
   return {
     ...actual,
     postMaintenanceCommand: vi.fn(),
@@ -31,7 +31,9 @@ const memoryRouterFuture = {
 const mockLibraryStatusHook = vi.mocked(api.useLibraryStatus);
 const mockCurrentBundlesStatusHook = vi.mocked(api.useCurrentBundlesStatus);
 const mockCurrentChoiceStatusHook = vi.mocked(api.useCurrentChoiceStatus);
-const mockPostMaintenanceCommand = vi.mocked(maintenance.postMaintenanceCommand);
+const mockPostMaintenanceCommand = vi.mocked(
+  maintenance.postMaintenanceCommand,
+);
 
 function renderRoute() {
   const client = new QueryClient({
@@ -118,10 +120,14 @@ describe("CommandCenter", () => {
 
     expect(screen.getAllByText("Loading")).toHaveLength(2);
     expect(
-      screen.getByText(/Checking the latest saved current-sales bundle analysis/i),
+      screen.getByText(
+        /Checking the latest saved current-sales bundle analysis/i,
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Checking the latest saved current Humble Choice analysis/i),
+      screen.getByText(
+        /Checking the latest saved current Humble Choice analysis/i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -147,7 +153,9 @@ describe("CommandCenter", () => {
       screen.getByText(/Unable to load saved bundle report status right now/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Unable to load the latest saved current Humble Choice analysis/i),
+      screen.getByText(
+        /Unable to load the latest saved current Humble Choice analysis/i,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText("Failed to load current bundle status."),
@@ -198,11 +206,15 @@ describe("CommandCenter", () => {
 
     expect(screen.getByText("Missing")).toBeInTheDocument();
     expect(
-      screen.getByText(/No saved report yet\. Run the refresh to create one\./i),
+      screen.getByText(
+        /No saved report yet\. Run the refresh to create one\./i,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(
-      screen.getByText(/A saved report exists, but its generated timestamp is unavailable\./i),
+      screen.getByText(
+        /A saved report exists, but its generated timestamp is unavailable\./i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -227,16 +239,18 @@ describe("CommandCenter", () => {
 
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: /Analyze current bundles/i }));
+    fireEvent.click(
+      screen.getByRole("button", { name: /Analyze current bundles/i }),
+    );
 
-    expect(await screen.findByText("Current bundle report refreshed.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Sales Overview" })).toHaveAttribute(
-      "href",
-      "/sales",
-    );
-    expect(screen.getByRole("link", { name: "Open Game Bundles" })).toHaveAttribute(
-      "href",
-      "/sales/games",
-    );
+    expect(
+      await screen.findByText("Current bundle report refreshed."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open Sales Overview" }),
+    ).toHaveAttribute("href", "/sales");
+    expect(
+      screen.getByRole("link", { name: "Open Game Bundles" }),
+    ).toHaveAttribute("href", "/sales/games");
   });
 });

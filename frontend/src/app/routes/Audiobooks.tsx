@@ -27,7 +27,10 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -191,7 +194,9 @@ export default function Audiobooks() {
     [selectedDownloads, expiringSoonMs],
   );
   const activePageFilterCount = useMemo(
-    () => [filters.category, filters.startDate || filters.endDate].filter(Boolean).length,
+    () =>
+      [filters.category, filters.startDate || filters.endDate].filter(Boolean)
+        .length,
     [filters.category, filters.endDate, filters.startDate],
   );
   const showFiltersPanel = showPageFilters || activePageFilterCount > 0;
@@ -421,27 +426,26 @@ export default function Audiobooks() {
         <CardContent className="space-y-4">
           <div className={GRID_THREE_COLUMN_CLASS}>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Titles in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Titles in scope</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(audiobooks.length)} audiobook title{audiobooks.length === 1 ? "" : "s"} match the current filters.
+                {formatNumber(audiobooks.length)} audiobook title
+                {audiobooks.length === 1 ? "" : "s"} match the current filters.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Selected now
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Selected now</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(selectedCount)} title{selectedCount === 1 ? "" : "s"} are selected for route-level actions.
+                {formatNumber(selectedCount)} title
+                {selectedCount === 1 ? "" : "s"} are selected for route-level
+                actions.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Formats in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Formats in scope</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(scopedBulkFormats.length)} format{scopedBulkFormats.length === 1 ? "" : "s"} are available in the current bulk-download scope.
+                {formatNumber(scopedBulkFormats.length)} format
+                {scopedBulkFormats.length === 1 ? "" : "s"} are available in the
+                current bulk-download scope.
               </p>
             </div>
           </div>
@@ -457,7 +461,8 @@ export default function Audiobooks() {
                 <ChevronDown className="h-4 w-4" />
               : <ChevronRight className="h-4 w-4" />}
               <Download className="h-4 w-4" />
-              Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+              Bulk browser downloads
+              {selectedCount > 0 ? ` (${selectedCount})` : ""}
             </Button>
             <Button
               size="sm"
@@ -532,122 +537,123 @@ export default function Audiobooks() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className={PAGE_ACTION_ROW_CLASS}>
-                <Button
-                  size="sm"
-                  variant="default"
-                  className={COMPACT_ACTION_BUTTON_CLASS}
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    if (hasExpiredSelection) {
-                      setShowExpiredDialog(true);
-                      return;
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
                     }
-                    triggerDownloadUrls(
-                      collectDownloadUrls(
-                        selectedRows.flatMap((row) => row.downloads),
-                      ),
-                    );
-                  }}>
-                  Download all
-                </Button>
-                <select
-                  className={COMPACT_FORM_SELECT_CLASS}
-                  value={selectedFormat}
-                  onChange={(event) => setSelectedFormat(event.target.value)}
-                  disabled={!selectedCount || bulkPlannerActive}
-                  aria-label="Download format">
-                  <option value="">Select format</option>
-                  {scopedBulkFormats.map((format) => (
-                    <option key={format} value={format}>
-                      {format}
-                    </option>
-                  ))}
-                </select>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={COMPACT_ACTION_BUTTON_CLASS}
-                  disabled={
-                    !selectedCount ||
-                    !selectedFormat ||
-                    hasExpiredSelection ||
-                    bulkPlannerActive
-                  }
-                  onClick={() => {
-                    const items = selectedRows
-                      .map((row) => {
-                        const downloads = filterDownloadsByLabel(
-                          row.downloads,
-                          selectedFormat,
-                          "contentLabel",
-                        );
-                        return downloads.length ?
-                            {
-                              title_id: row.id,
-                              title: row.subproductName,
-                              downloads,
-                            }
-                          : null;
-                      })
-                      .filter(Boolean) as {
-                      title_id: string;
-                      title: string;
-                      downloads: DownloadRecord[];
-                    }[];
-                    if (
-                      hasExpiredLinks(
-                        items.flatMap((item) => item.downloads),
-                        expiringSoonMs,
-                      )
-                    ) {
-                      setShowExpiredDialog(true);
-                      return;
+                    onClick={() => {
+                      if (hasExpiredSelection) {
+                        setShowExpiredDialog(true);
+                        return;
+                      }
+                      triggerDownloadUrls(
+                        collectDownloadUrls(
+                          selectedRows.flatMap((row) => row.downloads),
+                        ),
+                      );
+                    }}>
+                    Download all
+                  </Button>
+                  <select
+                    className={COMPACT_FORM_SELECT_CLASS}
+                    value={selectedFormat}
+                    onChange={(event) => setSelectedFormat(event.target.value)}
+                    disabled={!selectedCount || bulkPlannerActive}
+                    aria-label="Download format">
+                    <option value="">Select format</option>
+                    {scopedBulkFormats.map((format) => (
+                      <option key={format} value={format}>
+                        {format}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
+                    disabled={
+                      !selectedCount ||
+                      !selectedFormat ||
+                      hasExpiredSelection ||
+                      bulkPlannerActive
                     }
-                    triggerDownloadUrls(
-                      collectDownloadUrls(
-                        items.flatMap((item) => item.downloads),
-                      ),
-                    );
-                  }}>
-                  Download format
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={COMPACT_ACTION_BUTTON_CLASS}
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    void triggerPlannedBulkDownload("smallest");
-                  }}>
-                  {bulkPlannerBusy === "smallest" && (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  )}
-                  Smallest
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={COMPACT_ACTION_BUTTON_CLASS}
-                  disabled={
-                    !selectedCount || hasExpiredSelection || bulkPlannerActive
-                  }
-                  onClick={() => {
-                    void triggerPlannedBulkDownload("largest");
-                  }}>
-                  {bulkPlannerBusy === "largest" && (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  )}
-                  Largest
-                </Button>
+                    onClick={() => {
+                      const items = selectedRows
+                        .map((row) => {
+                          const downloads = filterDownloadsByLabel(
+                            row.downloads,
+                            selectedFormat,
+                            "contentLabel",
+                          );
+                          return downloads.length ?
+                              {
+                                title_id: row.id,
+                                title: row.subproductName,
+                                downloads,
+                              }
+                            : null;
+                        })
+                        .filter(Boolean) as {
+                        title_id: string;
+                        title: string;
+                        downloads: DownloadRecord[];
+                      }[];
+                      if (
+                        hasExpiredLinks(
+                          items.flatMap((item) => item.downloads),
+                          expiringSoonMs,
+                        )
+                      ) {
+                        setShowExpiredDialog(true);
+                        return;
+                      }
+                      triggerDownloadUrls(
+                        collectDownloadUrls(
+                          items.flatMap((item) => item.downloads),
+                        ),
+                      );
+                    }}>
+                    Download format
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
+                    }
+                    onClick={() => {
+                      void triggerPlannedBulkDownload("smallest");
+                    }}>
+                    {bulkPlannerBusy === "smallest" && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    Smallest
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
+                    disabled={
+                      !selectedCount || hasExpiredSelection || bulkPlannerActive
+                    }
+                    onClick={() => {
+                      void triggerPlannedBulkDownload("largest");
+                    }}>
+                    {bulkPlannerBusy === "largest" && (
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                    )}
+                    Largest
+                  </Button>
                 </div>
                 <p className={PANEL_HELP_TEXT_CLASS}>
                   {selectedCount > 0 ?
                     "Format choices are scoped to the currently selected titles so the picker stays relevant to the audiobook set you chose."
-                  : "Select one or more rows in the table to enable bulk downloads and narrow the format list."}
+                  : "Select one or more rows in the table to enable bulk downloads and narrow the format list."
+                  }
                 </p>
                 {bulkPlannerError && (
                   <p className={PANEL_ERROR_TEXT_CLASS}>{bulkPlannerError}</p>

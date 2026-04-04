@@ -2059,6 +2059,33 @@ class TestCliHelpers:
 
         def capture_stub(**kwargs):
             recorded.update(kwargs)
+            kwargs["progress_callback"](
+                cli.BundleWorkflowProgress(
+                    phase="bundle_list_ready",
+                    message="Discovered 6 active bundles to analyze.",
+                    completed_bundles=0,
+                    total_bundles=6,
+                )
+            )
+            kwargs["progress_callback"](
+                cli.BundleWorkflowProgress(
+                    phase="reusing_bundle",
+                    message="Reused the saved active bundle snapshot.",
+                    current_bundle="Humble Books Bundle: Cached Reads",
+                    completed_bundles=1,
+                    total_bundles=6,
+                    reused_bundles=1,
+                    fetched_bundles=0,
+                )
+            )
+            kwargs["progress_callback"](
+                cli.BundleWorkflowProgress(
+                    phase="building_report",
+                    message="Building the overlap report from 6 bundles.",
+                    completed_bundles=6,
+                    total_bundles=6,
+                )
+            )
             return SimpleNamespace(
                 output_dir=str(tmp_path / "current_bundles"),
                 index_html_path=str(
@@ -2090,8 +2117,23 @@ class TestCliHelpers:
         assert recorded["library_path"] == library_file
         assert recorded["bundle_types"] == ["books", "software"]
         assert recorded["timeout_seconds"] == 45
+        assert callable(recorded["progress_callback"])
+        assert any("Current bundle analysis started:" in line for line in printed)
+        assert any(
+            "[bundles] | bundles 0/6 | Discovered 6 active bundles to analyze." in line
+            for line in printed
+        )
+        assert any(
+            "[reuse] | bundles 1/6 | counts reuse=1 fetch=0" in line for line in printed
+        )
+        assert any(
+            "[report] | bundles 6/6 | Building the overlap report from 6 bundles."
+            in line
+            for line in printed
+        )
         assert any("Current bundle analysis complete:" in line for line in printed)
         assert any("Bundles analyzed: 6" in line for line in printed)
+        assert any("Elapsed:" in line for line in printed)
 
     def test_analyze_current_bundles_command_missing_library_exits(
         self, monkeypatch: MonkeyPatch, tmp_path: Path

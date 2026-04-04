@@ -14,7 +14,10 @@ import {
   EMPTY_STATE_STACK_CLASS,
   EMPTY_STATE_TITLE_CLASS,
 } from "../styles/roles";
-import { FLEX_ACTION_ROW_CLASS, SECTION_MUTED_TEXT_CLASS } from "../styles/page";
+import {
+  FLEX_ACTION_ROW_CLASS,
+  SECTION_MUTED_TEXT_CLASS,
+} from "../styles/page";
 
 interface DownloadRouteEmptyStateProps {
   routeLabel: string;
@@ -41,7 +44,10 @@ export default function DownloadRouteEmptyState({
           </h3>
           <p className={EMPTY_STATE_BODY_CLASS}>
             No valid subproducts are part of the current library selection for
-            the <span className="font-medium text-card-foreground">{routeLabel}</span>{" "}
+            the{" "}
+            <span className="font-medium text-card-foreground">
+              {routeLabel}
+            </span>{" "}
             page.
           </p>
           <p className={SECTION_MUTED_TEXT_CLASS}>

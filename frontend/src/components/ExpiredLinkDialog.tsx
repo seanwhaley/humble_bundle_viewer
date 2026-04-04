@@ -41,8 +41,7 @@ export default function ExpiredLinkDialog({
             onClick={() => {
               onClose();
               navigate("/library/other-downloads");
-            }}
-          >
+            }}>
             Go to downloads
           </Button>
         </div>

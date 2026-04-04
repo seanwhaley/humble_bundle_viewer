@@ -4,7 +4,10 @@
 import { ExternalLink, type LucideIcon } from "lucide-react";
 
 import { cn } from "../lib/utils";
-import { COMPACT_EXTERNAL_LINK_CLASS, SECTION_HELP_TEXT_CLASS } from "../styles/roles";
+import {
+  COMPACT_EXTERNAL_LINK_CLASS,
+  SECTION_HELP_TEXT_CLASS,
+} from "../styles/roles";
 import { Tooltip } from "./ui/tooltip";
 import { buttonVariants } from "./ui/button";
 
@@ -44,15 +47,12 @@ export default function SubproductInfoLink({
         className={cn(
           buttonVariants({ variant: "ghost", size: "sm" }),
           COMPACT_EXTERNAL_LINK_CLASS,
-          className
-        )}
-      >
+          className,
+        )}>
         <Icon className="h-3.5 w-3.5" />
-        {showLabel && buttonLabel ? (
+        {showLabel && buttonLabel ?
           <span className="text-xs">{buttonLabel}</span>
-        ) : (
-          <span className="sr-only">{label}</span>
-        )}
+        : <span className="sr-only">{label}</span>}
       </a>
     </Tooltip>
   );

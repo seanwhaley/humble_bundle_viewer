@@ -131,7 +131,9 @@ describe("Setup", () => {
     fireEvent.change(screen.getByLabelText("Session Cookie"), {
       target: { value: " session-cookie " },
     });
-    fireEvent.click(screen.getAllByRole("button", { name: /Select folder/i })[0]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Select folder/i })[0],
+    );
     fireEvent.click(screen.getByLabelText(/Download files after capture/i));
     fireEvent.change(screen.getByPlaceholderText("ebook, audio"), {
       target: { value: "ebook, audio, " },
@@ -176,9 +178,7 @@ describe("Setup", () => {
     expect(
       screen.getByRole("link", { name: "Open Command Center" }),
     ).toHaveAttribute("href", "/command-center");
-    expect(
-      screen.getByText(/Redirecting to Home in 5s/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Redirecting to Home in 5s/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Stay here" }));
 
@@ -248,7 +248,9 @@ describe("Setup", () => {
 
     renderRoute();
 
-    fireEvent.click(screen.getAllByRole("button", { name: /Select folder/i })[0]);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /Select folder/i })[0],
+    );
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -265,7 +267,10 @@ describe("Setup", () => {
   });
 
   it("keeps the save-folder action available when setup reopens in existing-file mode", async () => {
-    window.localStorage.setItem("humble.setup.mode", JSON.stringify("existing"));
+    window.localStorage.setItem(
+      "humble.setup.mode",
+      JSON.stringify("existing"),
+    );
 
     fetchMock.mockResolvedValueOnce({
       ok: true,

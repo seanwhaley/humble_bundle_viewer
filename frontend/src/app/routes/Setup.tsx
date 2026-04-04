@@ -95,7 +95,11 @@ export default function Setup() {
 
   useEffect(() => {
     if (!libraryStatus) return;
-    if (!storedLibraryPath && libraryStatus.exists && libraryStatus.current_path) {
+    if (
+      !storedLibraryPath &&
+      libraryStatus.exists &&
+      libraryStatus.current_path
+    ) {
       setStoredLibraryPath(libraryStatus.current_path);
       return;
     }
@@ -558,7 +562,9 @@ export default function Setup() {
                   </label>
                   <select
                     id="sizePolicy"
-                    className={COMPACT_FORM_SELECT_CLASS + " h-10 w-full px-3 text-sm"}
+                    className={
+                      COMPACT_FORM_SELECT_CLASS + " h-10 w-full px-3 text-sm"
+                    }
                     value={sizePolicy}
                     onChange={(event) => setSizePolicy(event.target.value)}>
                     <option value="all">Download all files</option>

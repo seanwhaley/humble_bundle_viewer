@@ -54,7 +54,6 @@ class TestCurrentChoiceService:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         choice_library = tmp_path / "choice-library.json"
-        viewer_library = tmp_path / "viewer-library.json"
         monkeypatch.setattr(
             current_choice_service,
             "RuntimeSettings",
@@ -63,7 +62,6 @@ class TestCurrentChoiceService:
                     base_dir=tmp_path / "choice",
                     library_path=choice_library,
                 ),
-                viewer=current_choice_service.ViewerConfig(library_path=viewer_library),
                 artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
             ),
         )
@@ -103,12 +101,12 @@ class TestCurrentChoiceService:
             output_dir / "choice_overlap_report.md"
         )
 
-    def test_resolve_current_choice_library_path_falls_back_to_viewer_library(
+    def test_resolve_current_choice_library_path_falls_back_to_active_library(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        viewer_library = tmp_path / "viewer-library.json"
+        active_library = tmp_path / "active-library.json"
         monkeypatch.setattr(
             current_choice_service,
             "RuntimeSettings",
@@ -116,22 +114,25 @@ class TestCurrentChoiceService:
                 current_choice=current_choice_service.CurrentChoiceConfig(
                     base_dir=tmp_path / "choice",
                 ),
-                viewer=current_choice_service.ViewerConfig(library_path=viewer_library),
-                artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
             ),
+        )
+        monkeypatch.setattr(
+            current_choice_service,
+            "resolve_library_path",
+            lambda: active_library,
         )
 
         assert (
             current_choice_service.resolve_current_choice_library_path()
-            == viewer_library
+            == active_library
         )
 
-    def test_resolve_current_choice_library_path_falls_back_to_default_artifact_library(
+    def test_resolve_current_choice_library_path_ignores_runtime_artifact_default_when_active_library_exists(
         self,
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        artifacts_dir = tmp_path / "artifacts"
+        active_library = tmp_path / "selected-library.json"
         monkeypatch.setattr(
             current_choice_service,
             "RuntimeSettings",
@@ -139,18 +140,17 @@ class TestCurrentChoiceService:
                 current_choice=current_choice_service.CurrentChoiceConfig(
                     base_dir=tmp_path / "choice",
                 ),
-                viewer=current_choice_service.ViewerConfig(),
-                artifacts=SimpleNamespace(base_dir=artifacts_dir),
             ),
         )
         monkeypatch.setattr(
             current_choice_service,
-            "default_library_products_path",
-            lambda path: path / "library_products.json",
+            "resolve_library_path",
+            lambda: active_library,
         )
 
-        assert current_choice_service.resolve_current_choice_library_path() == (
-            artifacts_dir / "library_products.json"
+        assert (
+            current_choice_service.resolve_current_choice_library_path()
+            == active_library
         )
 
     def test_load_saved_current_choice_report_uses_resolved_path_when_omitted(
@@ -198,7 +198,6 @@ class TestCurrentChoiceService:
                     "library_path": str(library_path),
                     "timeout_seconds": 45,
                 },
-                viewer=current_choice_service.ViewerConfig(),
                 artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
             ),
         )
@@ -240,7 +239,6 @@ class TestCurrentChoiceService:
                     base_dir=tmp_path / "choice",
                     timeout_seconds=30,
                 ),
-                viewer=current_choice_service.ViewerConfig(),
                 artifacts=SimpleNamespace(base_dir=tmp_path / "artifacts"),
             ),
         )

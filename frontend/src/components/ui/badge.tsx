@@ -52,6 +52,15 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   casing?: BadgeCasing;
 }
 
+const toSafeBadgeProps = (
+  props: Omit<BadgeProps, "children" | "variant" | "size" | "casing">,
+) =>
+  Object.fromEntries(
+    Object.entries(props).filter(
+      ([key]) => !key.startsWith("on") && key !== "role" && key !== "tabIndex",
+    ),
+  ) as React.HTMLAttributes<HTMLDivElement>;
+
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   (
     {
@@ -65,12 +74,14 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
     },
     ref,
   ) => {
+    const safeProps = toSafeBadgeProps(props);
+
     return (
       <div
         ref={ref}
         aria-label={ariaLabel}
         className={cn(badgeVariants({ casing, size, variant }), className)}
-        {...props}>
+        {...safeProps}>
         {children}
       </div>
     );

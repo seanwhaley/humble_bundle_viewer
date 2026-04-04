@@ -45,7 +45,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, interactive, radius, shadow, surface, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(cardVariants({ interactive, radius, shadow, surface }), className)}
+      className={cn(
+        cardVariants({ interactive, radius, shadow, surface }),
+        className,
+      )}
       {...props}
     />
   ),

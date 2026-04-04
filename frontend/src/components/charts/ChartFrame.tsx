@@ -30,17 +30,13 @@ export default function ChartFrame({
   return (
     <div className={cn(CHART_PANEL_CLASS, className)}>
       {title && (
-        <div className={cn(CHART_TITLE_CLASS, titleClassName)}>
-          {title}
-        </div>
+        <div className={cn(CHART_TITLE_CLASS, titleClassName)}>{title}</div>
       )}
-      {emptyMessage ? (
+      {emptyMessage ?
         <div className={cn(CHART_EMPTY_STATE_CLASS, emptyHeightClassName)}>
           {emptyMessage}
         </div>
-      ) : (
-        children
-      )}
+      : children}
     </div>
   );
 }

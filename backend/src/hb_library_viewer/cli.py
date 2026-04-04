@@ -79,7 +79,11 @@ from .config import (
     load_subproduct_page_cache_config,
     load_viewer_config,
 )
-from .current_bundles import capture_and_report_current_bundles, normalize_bundle_types
+from .current_bundles import (
+    BundleWorkflowProgress,
+    capture_and_report_current_bundles,
+    normalize_bundle_types,
+)
 from .current_choice import capture_and_report_current_choice
 from .download import FileDownloader
 from .download_selection import (
@@ -128,6 +132,50 @@ def _format_sync_outcome_label(previous: SyncProgress, current: SyncProgress) ->
     if current.downloaded_files > previous.downloaded_files:
         return "downloaded"
     return "reviewed"
+
+
+def _format_current_bundle_progress_line(
+    progress: BundleWorkflowProgress,
+    *,
+    elapsed_seconds: float,
+) -> str:
+    phase_labels = {
+        "fetching_index": "index",
+        "index_fallback": "index-rendered",
+        "bundle_list_ready": "bundles",
+        "reusing_bundle": "reuse",
+        "bundle_render_fallback": "bundle-rendered",
+        "fetched_bundle": "fetched",
+        "writing_catalog": "catalog",
+        "building_report": "report",
+    }
+    parts = [f"[{phase_labels.get(progress.phase, progress.phase)}]"]
+
+    if progress.total_bundles:
+        parts.append(f"bundles {progress.completed_bundles}/{progress.total_bundles}")
+
+    if progress.reused_bundles or progress.fetched_bundles:
+        parts.append(
+            f"counts reuse={progress.reused_bundles} fetch={progress.fetched_bundles}"
+        )
+
+    if progress.current_bundle:
+        parts.append(f"bundle={_truncate_status_text(progress.current_bundle, 48)}")
+
+    parts.append(progress.message)
+    parts.append(f"elapsed={format_hms(elapsed_seconds)}")
+
+    eta_seconds = None
+    if progress.total_bundles and progress.completed_bundles > 0:
+        eta_seconds = estimate_eta_seconds(
+            elapsed_seconds=elapsed_seconds,
+            completed_items=progress.completed_bundles,
+            total_items=progress.total_bundles,
+        )
+    if eta_seconds is not None:
+        parts.append(f"eta={format_hms(eta_seconds)}")
+
+    return " | ".join(parts)
 
 
 def _load_managed_sync_download_config():
@@ -1926,6 +1974,20 @@ def analyze_current_bundles_command(
         if bundle_types is not None
         else current_bundles_config.bundle_types
     )
+    analysis_started_at = time.monotonic()
+
+    console.print("Current bundle analysis started:")
+    console.print(f"  Bundle types: {', '.join(selected_bundle_types)}")
+    console.print(f"  Library: {resolved_library_file}")
+    console.print(f"  Output dir: {resolved_output_dir}")
+
+    def handle_progress(progress: BundleWorkflowProgress) -> None:
+        console.print(
+            _format_current_bundle_progress_line(
+                progress,
+                elapsed_seconds=time.monotonic() - analysis_started_at,
+            )
+        )
 
     try:
         artifacts = capture_and_report_current_bundles(
@@ -1933,6 +1995,7 @@ def analyze_current_bundles_command(
             library_path=resolved_library_file,
             bundle_types=selected_bundle_types,
             timeout_seconds=timeout_seconds or current_bundles_config.timeout_seconds,
+            progress_callback=handle_progress,
         )
     except FileNotFoundError as exc:
         typer.echo(str(exc))
@@ -1952,6 +2015,7 @@ def analyze_current_bundles_command(
     console.print(f"  Report JSON: {artifacts.report_json_path}")
     console.print(f"  Report Markdown: {artifacts.report_markdown_path}")
     console.print(f"  Bundles analyzed: {artifacts.bundle_count}")
+    console.print(f"  Elapsed: {format_hms(time.monotonic() - analysis_started_at)}")
 
 
 @app.command("analyze-current-choice")

@@ -51,7 +51,10 @@ export default function App() {
           <Route path="/setup" element={<Setup />} />
           <Route path="/command-center" element={<CommandCenter />} />
           <Route path="/library/purchases" element={<Purchases />} />
-          <Route path="/library/category/:category" element={<LibraryCategory />} />
+          <Route
+            path="/library/category/:category"
+            element={<LibraryCategory />}
+          />
           <Route path="/library/steam-keys" element={<SteamKeys />} />
           <Route path="/library/other-keys" element={<OtherKeys />} />
           <Route path="/library/expiring-keys" element={<ExpiringKeys />} />

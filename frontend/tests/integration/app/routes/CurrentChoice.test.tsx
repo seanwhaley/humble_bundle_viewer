@@ -28,7 +28,6 @@ describe("CurrentChoice", () => {
     const { container } = render(<CurrentChoice />);
 
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
-    expect(screen.getByText("Loading current Choice…")).toBeInTheDocument();
   });
 
   it("shows an error when the status query fails", () => {

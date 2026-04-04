@@ -48,13 +48,17 @@ export default function RedemptionLinksButton({
           rel="noreferrer"
           aria-label={link.label}
           className={cn(
-            buttonVariants({ variant: compact ? "ghost" : "outline", size: "sm" }),
+            buttonVariants({
+              variant: compact ? "ghost" : "outline",
+              size: "sm",
+            }),
             compact ? COMPACT_EXTERNAL_LINK_CLASS : "gap-2",
-            className
-          )}
-        >
+            className,
+          )}>
           <ExternalLink className="h-3.5 w-3.5" />
-          {compact ? <span className="sr-only">{link.label}</span> : <span>{label}</span>}
+          {compact ?
+            <span className="sr-only">{link.label}</span>
+          : <span>{label}</span>}
         </a>
       </Tooltip>
     );
@@ -64,23 +68,25 @@ export default function RedemptionLinksButton({
     <details className={cn("relative inline-block text-left", className)}>
       <summary
         className={cn(
-          buttonVariants({ variant: compact ? "ghost" : "outline", size: "sm" }),
+          buttonVariants({
+            variant: compact ? "ghost" : "outline",
+            size: "sm",
+          }),
           DISCLOSURE_TRIGGER_CLASS,
-          compact ? "h-8 text-muted-foreground hover:text-foreground" : "gap-2"
-        )}
-      >
+          compact ? "h-8 text-muted-foreground hover:text-foreground" : "gap-2",
+        )}>
         <Tooltip content={`${label} (${links.length})`}>
           <span className="inline-flex items-center gap-1">
             <ExternalLink className="h-3.5 w-3.5" />
-            {compact ? <span className="sr-only">{label}</span> : <span>{label}</span>}
+            {compact ?
+              <span className="sr-only">{label}</span>
+            : <span>{label}</span>}
             <ChevronDown className="h-3.5 w-3.5" />
           </span>
         </Tooltip>
       </summary>
       <div className={POPUP_PANEL_CLASS}>
-        <div className={POPUP_TITLE_CLASS}>
-          Redemption links
-        </div>
+        <div className={POPUP_TITLE_CLASS}>Redemption links</div>
         <div className={POPUP_LIST_CLASS}>
           {links.map((link) => (
             <a
@@ -88,8 +94,7 @@ export default function RedemptionLinksButton({
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              className={POPUP_LINK_ITEM_CLASS}
-            >
+              className={POPUP_LINK_ITEM_CLASS}>
               <span className="min-w-0">
                 <span className="block truncate font-medium">{link.label}</span>
                 {(link.region || link.kind === "instructions") && (

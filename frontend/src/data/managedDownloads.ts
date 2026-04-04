@@ -82,7 +82,7 @@ type ManagedFileTargetResolution =
 
 const getOrCreateDirectory = async (
   root: FileSystemDirectoryHandle,
-  segments: string[]
+  segments: string[],
 ) => {
   let current = root;
   for (const segment of segments) {
@@ -93,7 +93,7 @@ const getOrCreateDirectory = async (
 
 const getFileHandleIfExists = async (
   directory: FileSystemDirectoryHandle,
-  fileName: string
+  fileName: string,
 ) => {
   try {
     return await directory.getFileHandle(fileName);
@@ -130,7 +130,7 @@ const getResultIdentityKey = (entry: ManagedSyncResultEntry) =>
 
 const buildAcceptedSizes = (
   entry: ManagedDownloadPlanEntry,
-  historyEntries: ManagedSyncResultEntry[]
+  historyEntries: ManagedSyncResultEntry[],
 ) => {
   const acceptedSizes = new Set<number>();
   if (entry.sizeBytes > 0) {
@@ -162,7 +162,7 @@ const matchesAcceptedSize = (file: File, acceptedSizes: Set<number>) => {
 const getNextAvailableRenamedFileName = async (
   directory: FileSystemDirectoryHandle,
   fileName: string,
-  acceptedSizes: Set<number>
+  acceptedSizes: Set<number>,
 ): Promise<ManagedFileTargetResolution> => {
   let counter = 1;
   while (true) {
@@ -195,7 +195,7 @@ const getNextAvailableRenamedFileName = async (
 const resolveManagedFileTarget = async (
   directory: FileSystemDirectoryHandle,
   fileName: string,
-  acceptedSizes: Set<number>
+  acceptedSizes: Set<number>,
 ): Promise<ManagedFileTargetResolution> => {
   const exactHandle = await getFileHandleIfExists(directory, fileName);
   if (!exactHandle) {
@@ -212,9 +212,9 @@ const resolveManagedFileTarget = async (
       kind: "skip",
       fileName,
       message:
-        acceptedSizes.size > 1
-          ? "Existing file matches a previously synced payload size."
-          : "Existing file matches expected size.",
+        acceptedSizes.size > 1 ?
+          "Existing file matches a previously synced payload size."
+        : "Existing file matches expected size.",
       actualSizeBytes: existingFile.size,
     };
   }
@@ -225,7 +225,7 @@ const resolveManagedFileTarget = async (
 const streamDownloadToFile = async (
   entry: ManagedDownloadPlanEntry,
   fileHandle: FileSystemFileHandle,
-  suggestedFileName: string
+  suggestedFileName: string,
 ) => {
   const response = await fetch("/api/downloads/stream", {
     method: "POST",
@@ -278,18 +278,18 @@ const streamDownloadToFile = async (
 
 const buildSummary = (
   plannedFiles: number,
-  entries: ManagedSyncResultEntry[]
+  entries: ManagedSyncResultEntry[],
 ): ManagedSyncSummary => ({
   plannedFiles,
   downloadedFiles: entries.filter(
-    (entry) => entry.status === "downloaded" || entry.status === "downloaded_renamed"
+    (entry) =>
+      entry.status === "downloaded" || entry.status === "downloaded_renamed",
   ).length,
   skippedExistingFiles: entries.filter(
-    (entry) => entry.status === "skipped_existing"
+    (entry) => entry.status === "skipped_existing",
   ).length,
-  renamedFiles: entries.filter(
-    (entry) => entry.status === "downloaded_renamed"
-  ).length,
+  renamedFiles: entries.filter((entry) => entry.status === "downloaded_renamed")
+    .length,
   failedFiles: entries.filter((entry) => entry.status === "failed").length,
   manifestPath: `${MANIFEST_DIRNAME}/${MANIFEST_FILENAME}`,
   entries,
@@ -297,7 +297,7 @@ const buildSummary = (
 
 const trimManifestHistory = (
   entries: ManagedSyncResultEntry[],
-  maxHistoryEntries: number
+  maxHistoryEntries: number,
 ) => {
   if (entries.length <= maxHistoryEntries) {
     return entries;
@@ -306,7 +306,7 @@ const trimManifestHistory = (
 };
 
 const loadManifest = async (
-  root: FileSystemDirectoryHandle
+  root: FileSystemDirectoryHandle,
 ): Promise<ManagedSyncManifest | null> => {
   try {
     const manifestDir = await root.getDirectoryHandle(MANIFEST_DIRNAME);
@@ -322,9 +322,9 @@ const loadManifest = async (
       version:
         typeof parsed.version === "number" ? parsed.version : MANIFEST_VERSION,
       updatedAt:
-        typeof parsed.updatedAt === "string"
-          ? parsed.updatedAt
-          : new Date().toISOString(),
+        typeof parsed.updatedAt === "string" ?
+          parsed.updatedAt
+        : new Date().toISOString(),
       historyEntries: parsed.historyEntries as ManagedSyncResultEntry[],
       lastRun: parsed.lastRun as ManagedSyncSummary,
     };
@@ -337,7 +337,7 @@ const writeManifest = async (
   root: FileSystemDirectoryHandle,
   historyEntries: ManagedSyncResultEntry[],
   summary: ManagedSyncSummary,
-  manifestHistoryEntries: number
+  manifestHistoryEntries: number,
 ) => {
   const manifest: ManagedSyncManifest = {
     version: MANIFEST_VERSION,
@@ -352,7 +352,9 @@ const writeManifest = async (
   const manifestFile = await manifestDir.getFileHandle(MANIFEST_FILENAME, {
     create: true,
   });
-  const writable = await manifestFile.createWritable({ keepExistingData: false });
+  const writable = await manifestFile.createWritable({
+    keepExistingData: false,
+  });
   try {
     await writable.write(JSON.stringify(manifest, null, 2));
     await writable.close();
@@ -363,11 +365,12 @@ const writeManifest = async (
 };
 
 export const supportsManagedDownloads = () =>
-  typeof window !== "undefined" && typeof window.showDirectoryPicker === "function";
+  typeof window !== "undefined" &&
+  typeof window.showDirectoryPicker === "function";
 
 export const buildManagedDownloadPlan = async (
   items: ManagedDownloadItem[],
-  options?: DownloadPlanOptions
+  options?: DownloadPlanOptions,
 ): Promise<ManagedDownloadPlanEntry[]> => {
   return buildDownloadPlan(items, options);
 };
@@ -376,7 +379,7 @@ export const syncManagedDownloads = async (
   root: FileSystemDirectoryHandle,
   entries: ManagedDownloadPlanEntry[],
   options?: ManagedSyncOptions,
-  onProgress?: (progress: ManagedSyncProgress) => void
+  onProgress?: (progress: ManagedSyncProgress) => void,
 ): Promise<ManagedSyncSummary> => {
   await ensurePermission(root);
 
@@ -384,20 +387,22 @@ export const syncManagedDownloads = async (
     1,
     Math.floor(
       options?.maxParallelDownloads ??
-        DEFAULT_MANAGED_SYNC_MAX_PARALLEL_DOWNLOADS
-    )
+        DEFAULT_MANAGED_SYNC_MAX_PARALLEL_DOWNLOADS,
+    ),
   );
   const manifestHistoryEntries = Math.max(
     1,
     Math.floor(
       options?.manifestHistoryEntries ??
-        DEFAULT_MANAGED_SYNC_MANIFEST_HISTORY_ENTRIES
-    )
+        DEFAULT_MANAGED_SYNC_MANIFEST_HISTORY_ENTRIES,
+    ),
   );
 
   const existingManifest = await loadManifest(root);
   const historyEntries = [...(existingManifest?.historyEntries || [])];
-  const results: Array<ManagedSyncResultEntry | undefined> = new Array(entries.length);
+  const results: Array<ManagedSyncResultEntry | undefined> = new Array(
+    entries.length,
+  );
   const totalFiles = entries.length;
   const totalTitles = new Set(entries.map((entry) => entry.titleId)).size;
   const titleEntryCounts = new Map<string, number>();
@@ -409,7 +414,7 @@ export const syncManagedDownloads = async (
   entries.forEach((entry) => {
     titleEntryCounts.set(
       entry.titleId,
-      (titleEntryCounts.get(entry.titleId) || 0) + 1
+      (titleEntryCounts.get(entry.titleId) || 0) + 1,
     );
   });
 
@@ -454,20 +459,23 @@ export const syncManagedDownloads = async (
     const snapshotSummary = buildSummary(totalFiles, snapshotEntries);
     const snapshotHistory = trimManifestHistory(
       [...historyEntries, ...snapshotEntries],
-      manifestHistoryEntries
+      manifestHistoryEntries,
     );
     manifestWriteQueue = manifestWriteQueue.then(() =>
       writeManifest(
         root,
         snapshotHistory,
         snapshotSummary,
-        manifestHistoryEntries
-      )
+        manifestHistoryEntries,
+      ),
     );
     return manifestWriteQueue;
   };
 
-  const persistResult = async (index: number, result: ManagedSyncResultEntry) => {
+  const persistResult = async (
+    index: number,
+    result: ManagedSyncResultEntry,
+  ) => {
     results[index] = result;
     await queueManifestWrite(getCompletedResults());
   };
@@ -484,7 +492,10 @@ export const syncManagedDownloads = async (
   emitProgress();
   await queueManifestWrite([]);
 
-  const processEntry = async (entry: ManagedDownloadPlanEntry, index: number) => {
+  const processEntry = async (
+    entry: ManagedDownloadPlanEntry,
+    index: number,
+  ) => {
     const timestamp = new Date().toISOString();
     const segments = entry.relativePath.split("/").filter(Boolean);
     const requestedFileName = segments.pop() || entry.filename;
@@ -502,7 +513,7 @@ export const syncManagedDownloads = async (
       const target = await resolveManagedFileTarget(
         directory,
         requestedFileName,
-        acceptedSizes
+        acceptedSizes,
       );
       const finalFileName = target.fileName;
       const finalRelativePath = [...segments, finalFileName].join("/");
@@ -531,7 +542,7 @@ export const syncManagedDownloads = async (
       const bytesWritten = await streamDownloadToFile(
         entry,
         targetHandle,
-        finalFileName
+        finalFileName,
       );
       const actualSizeBytes =
         bytesWritten > 0 ? bytesWritten : (await targetHandle.getFile()).size;
@@ -562,9 +573,9 @@ export const syncManagedDownloads = async (
         localPath: entry.relativePath,
         status: "failed",
         message:
-          error instanceof Error
-            ? error.message
-            : "Managed sync failed for this file.",
+          error instanceof Error ?
+            error.message
+          : "Managed sync failed for this file.",
         syncedAt: timestamp,
       });
       emitProgress();
@@ -575,10 +586,7 @@ export const syncManagedDownloads = async (
     }
   };
 
-  const workerCount = Math.min(
-    Math.max(totalFiles, 1),
-    maxParallelDownloads
-  );
+  const workerCount = Math.min(Math.max(totalFiles, 1), maxParallelDownloads);
 
   const workers = Array.from({ length: workerCount }, async () => {
     while (true) {
@@ -600,9 +608,12 @@ export const syncManagedDownloads = async (
   const finalSummary = buildSummary(totalFiles, finalResults);
   await writeManifest(
     root,
-    trimManifestHistory([...historyEntries, ...finalResults], manifestHistoryEntries),
+    trimManifestHistory(
+      [...historyEntries, ...finalResults],
+      manifestHistoryEntries,
+    ),
     finalSummary,
-    manifestHistoryEntries
+    manifestHistoryEntries,
   );
   return finalSummary;
 };

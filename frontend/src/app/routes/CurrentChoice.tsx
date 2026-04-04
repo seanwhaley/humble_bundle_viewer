@@ -2,17 +2,13 @@
  * Current sales route for reviewing the current Humble Choice month against the local library.
  */
 import { useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 
 import StatTile from "../../components/StatTile";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import PaneHeader from "../../components/ui/PaneHeader";
-import {
-  RouteErrorState,
-  RouteLoadingState,
-} from "../../components/ui/RouteState";
 import {
   tableHeaderCellClass,
   tableHeaderSurfaceClass,
@@ -84,16 +80,26 @@ export default function CurrentChoice() {
   );
 
   if (isStatusLoading || (status?.report_exists && isReportLoading)) {
-    return <RouteLoadingState label="Loading current Choice…" />;
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   if (statusError) {
-    return <RouteErrorState message="Failed to load current Choice status." />;
+    return (
+      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
+        Failed to load current Choice status.
+      </div>
+    );
   }
 
   if (status?.report_exists && reportError) {
     return (
-      <RouteErrorState message="Failed to load the current Choice overlap report." />
+      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
+        Failed to load the current Choice overlap report.
+      </div>
     );
   }
 

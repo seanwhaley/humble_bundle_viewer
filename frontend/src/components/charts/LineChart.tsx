@@ -38,9 +38,7 @@ export default function LineChart({
   const theme = getChartTheme();
 
   if (data.length === 0) {
-    return (
-      <ChartFrame title={title} emptyMessage={emptyMessage} />
-    );
+    return <ChartFrame title={title} emptyMessage={emptyMessage} />;
   }
 
   const option = {

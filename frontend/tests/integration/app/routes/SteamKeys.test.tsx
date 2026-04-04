@@ -209,7 +209,9 @@ describe("SteamKeys", () => {
     renderRoute();
 
     expect(
-      screen.getByText("Work through the Steam redemption queue from one focused view"),
+      screen.getByText(
+        "Work through the Steam redemption queue from one focused view",
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText("1 Steam key row match the current library filters."),

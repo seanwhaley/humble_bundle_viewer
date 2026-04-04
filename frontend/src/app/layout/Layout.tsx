@@ -562,12 +562,10 @@ function LayoutShell() {
     !isCurrentSalesRoute &&
     !routeMeta.hideLibraryContext,
   );
-  const showUrgentKeyBanner = Boolean(
-    libraryStatus?.exists &&
-    libraryData &&
+  const showUrgentKeyBanner =
+    showLibraryContext &&
     urgentKeysSummary.openActionCount > 0 &&
-    (location.pathname === "/" || location.pathname === "/library/steam-keys"),
-  );
+    (location.pathname === "/" || location.pathname === "/library/steam-keys");
 
   // Close mobile menu on navigate
   useEffect(() => {

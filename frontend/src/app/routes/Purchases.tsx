@@ -3,13 +3,7 @@
  */
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Loader2,
-  Eye,
-  Download,
-  Key,
-  ArrowLeft,
-} from "lucide-react";
+import { Loader2, Eye, Download, Key, ArrowLeft } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import FilterBar from "../../components/FilterBar";
@@ -40,7 +34,10 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import { Tooltip } from "../../components/ui/tooltip";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import {
   formatBytes,
   formatCurrency,
@@ -186,7 +183,9 @@ const buildActiveScopeChips = (
     filters.platform ?
       `Platform: ${normalizePlatformLabel(filters.platform)}`
     : null,
-    filters.keyType ? `Key type: ${normalizeKeyTypeLabel(filters.keyType)}` : null,
+    filters.keyType ?
+      `Key type: ${normalizeKeyTypeLabel(filters.keyType)}`
+    : null,
     filters.keyPresence === "has_keys" ? "Keys: Has keys"
     : filters.keyPresence === "no_keys" ? "Keys: No keys"
     : null,
@@ -358,13 +357,13 @@ export default function Purchases() {
   );
   const headerActions = useMemo(
     () =>
-      selectedProduct ?
-        null
-      : <PageFiltersButton
+      selectedProduct ? null : (
+        <PageFiltersButton
           expanded={showFiltersPanel}
           activeCount={activeFilterCount}
           onClick={() => setShowFilters((current) => !current)}
-        />,
+        />
+      ),
     [activeFilterCount, selectedProduct, showFiltersPanel],
   );
   usePageHeaderActions(headerActions);
@@ -402,7 +401,9 @@ export default function Purchases() {
           <div className="text-xs text-muted-foreground">
             {row.original.mediaSummary}
           </div>
-          <div className="text-xs text-muted-foreground">{row.original.totalSize}</div>
+          <div className="text-xs text-muted-foreground">
+            {row.original.totalSize}
+          </div>
         </div>
       ),
     },
@@ -584,14 +585,18 @@ export default function Purchases() {
       header: "Access",
       cell: ({ row }) => (
         <div className="space-y-1 text-sm">
-          <div className="text-card-foreground">{row.original.platformSummary}</div>
+          <div className="text-card-foreground">
+            {row.original.platformSummary}
+          </div>
           <div className="text-muted-foreground">
             {row.original.downloadCount} download
             {row.original.downloadCount === 1 ? "" : "s"} •{" "}
             {row.original.keyCount} key
             {row.original.keyCount === 1 ? "" : "s"}
           </div>
-          <div className="text-xs text-muted-foreground">{row.original.totalSize}</div>
+          <div className="text-xs text-muted-foreground">
+            {row.original.totalSize}
+          </div>
         </div>
       ),
     },
@@ -662,7 +667,8 @@ export default function Purchases() {
 
     return (
       <div className="w-full flex flex-col space-y-6">
-        <div className={`flex flex-col gap-4 ${SECTION_CARD_CLASS} md:flex-row md:items-center md:justify-between`}>
+        <div
+          className={`flex flex-col gap-4 ${SECTION_CARD_CLASS} md:flex-row md:items-center md:justify-between`}>
           <div className="min-w-0 space-y-2">
             <Badge variant="surface" size="compact" casing="ui">
               Purchase detail
@@ -768,9 +774,7 @@ export default function Purchases() {
           </div>
 
           <div className={INSET_PANEL_CLASS}>
-            <p className={SECTION_EYEBROW_CLASS}>
-              View mode
-            </p>
+            <p className={SECTION_EYEBROW_CLASS}>View mode</p>
             <div className={`mt-3 ${SEGMENTED_CONTROL_CLASS}`}>
               <Button
                 type="button"
@@ -792,7 +796,8 @@ export default function Purchases() {
             <p className="mt-3 text-sm text-muted-foreground">
               {mode === "purchases" ?
                 "Stay in Purchases for the clearest hierarchy-first ownership view before opening detail panels."
-              : "Included-item analysis is a secondary deep-inspection mode for comparing contained titles across purchases."}
+              : "Included-item analysis is a secondary deep-inspection mode for comparing contained titles across purchases."
+              }
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <Badge variant="surface" size="compact" casing="ui">
