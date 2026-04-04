@@ -36,7 +36,7 @@ Settings load from these sources in order (highest to lowest):
 - `artifacts.save_html_on_failure`: save library HTML when capture fails (no API responses or missing batches).
 - `artifacts.save_gamekeys`: save extracted game keys to `data/artifacts/gamekeys.json`.
 - `artifacts.auto_rebuild_order_models`: auto-rebuild order payload models when new fields appear.
-- `viewer.link_expiry_warning_hours`: hours before expiry to warn about download links.
+- `viewer.link_expiry_warning_hours`: hours before expiry to warn about download links (default: `6`).
 - `viewer.default_library_dir`: optional default folder used by the viewer setup flow.
 - `viewer.library_path`: optional default `library_products.json` path for the viewer backend. When omitted, the viewer falls back to `artifacts.base_dir/library_products.json`.
 - `current_bundles.base_dir`: base directory for saved current bundle pages, bundle catalogs, and overlap reports.

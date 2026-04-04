@@ -65,8 +65,8 @@ const getResolvedKeys = (product: Product) => {
 const getKeyActionMeta = (keyTypes: Array<string | undefined>) => {
     const hasSteamKeys = keyTypes.some((keyType) => isSteamKeyType(keyType));
     return {
-        key_route: hasSteamKeys ? "/steam-keys" : "/non-steam-keys",
-        key_label: hasSteamKeys ? "Open Steam keys" : "Open Non-Steam keys",
+        key_route: hasSteamKeys ? "/library/steam-keys" : "/library/other-keys",
+        key_label: hasSteamKeys ? "Open Steam keys" : "Open Other Keys",
     };
 };
 
@@ -200,18 +200,18 @@ export default function OrderDetailPanel({ product }: OrderDetailPanelProps) {
         cell: ({ row }) => (
             <div className="min-w-[260px] space-y-1 whitespace-normal">
                 {row.original.author_summary ? (
-                    <div className="text-sm font-medium text-slate-100">
+                    <div className="text-sm font-medium text-card-foreground">
                         {row.original.author_summary}
                     </div>
                 ) : (
-                    <div className="text-sm text-slate-500">No author metadata yet</div>
+                    <div className="text-sm text-muted-foreground">No author metadata yet</div>
                 )}
                 {row.original.publisher && (
-                    <div className="text-xs text-slate-400">{row.original.publisher}</div>
+                    <div className="text-xs text-muted-foreground">{row.original.publisher}</div>
                 )}
                 {row.original.description_snippet && (
                     <Tooltip content={row.original.description_snippet}>
-                        <p className="line-clamp-3 text-xs text-slate-400">
+                        <p className="line-clamp-3 text-xs text-muted-foreground">
                             {row.original.description_snippet}
                         </p>
                     </Tooltip>
@@ -247,7 +247,7 @@ export default function OrderDetailPanel({ product }: OrderDetailPanelProps) {
         cell: ({ row }) => (
             <div className="flex gap-2">
                  <Button variant="outline" size="sm" className="h-7 px-2" asChild>
-                    <Link to={`/downloads?search=${encodeURIComponent(row.original.originalSearch)}`}>
+                    <Link to={`/library/other-downloads?search=${encodeURIComponent(row.original.originalSearch)}`}>
                         <Download className="h-3 w-3 mr-1" />
                     </Link>
                  </Button>
@@ -278,10 +278,10 @@ export default function OrderDetailPanel({ product }: OrderDetailPanelProps) {
                             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                 <div className="space-y-2">
                                     <div className="flex flex-wrap gap-2 text-xs">
-                                        <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-slate-300">
+                                        <span className="rounded-full border border-status-neutral/80 bg-status-neutral/80 px-2.5 py-1 text-status-neutral-foreground">
                                             {categoryLabel}
                                         </span>
-                                        <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-slate-300">
+                                        <span className="rounded-full border border-status-neutral/80 bg-status-neutral/80 px-2.5 py-1 text-status-neutral-foreground">
                                             {accessSummary}
                                         </span>
                                     </div>
@@ -292,7 +292,7 @@ export default function OrderDetailPanel({ product }: OrderDetailPanelProps) {
                                 <div className="flex flex-wrap gap-2">
                                     {allDownloads.length > 0 ? (
                                         <Button variant="outline" size="sm" asChild>
-                                            <Link to={`/downloads?search=${encodeURIComponent(product.product_name || product.machine_name || "")}`}>
+                                            <Link to={`/library/other-downloads?search=${encodeURIComponent(product.product_name || product.machine_name || "")}`}>
                                                 Open downloads
                                             </Link>
                                         </Button>

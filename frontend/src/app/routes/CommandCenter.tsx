@@ -6,10 +6,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 
+import { cn } from "../../lib/utils";
 import { Badge, type BadgeProps } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
+import PaneHeader from "../../components/ui/PaneHeader";
+import { PageIntro } from "../../components/ui/PageIntro";
 import { usePersistentState } from "../../hooks/usePersistentState";
 import {
   type CurrentBundlesStatus,
@@ -29,6 +32,37 @@ import {
   postMaintenanceCommand,
 } from "../../data/maintenance";
 import { formatDateTime } from "../../utils/format";
+import {
+  ACTION_SURFACE_BUTTON_CLASS,
+  DISCLOSURE_PANEL_CLASS,
+  INLINE_CODE_TEXT_CLASS,
+  INLINE_TEXT_LINK_CLASS,
+  INSET_PANEL_COMPACT_CLASS,
+  INSET_PANEL_BODY_TEXT_CLASS,
+  SECTION_EYEBROW_CLASS,
+} from "../../styles/roles";
+import {
+  DETAIL_ACTION_ROW_CLASS,
+  DETAIL_LIST_CLASS,
+  DISCLOSURE_BODY_CLASS,
+  DISCLOSURE_HINT_CLASS,
+  DISCLOSURE_RESET_ROW_CLASS,
+  DISCLOSURE_SUMMARY_CLASS,
+  DISCLOSURE_SUMMARY_ROW_CLASS,
+  FORM_STACK_CLASS,
+  GRID_THREE_COLUMN_CLASS,
+  GRID_THREE_COLUMN_COMPACT_CLASS,
+  PAGE_ACTION_ROW_CLASS,
+  PAGE_STACK_ROOMY_CLASS,
+  SECTION_BODY_STACK_CLASS,
+  SECTION_DESCRIPTION_TEXT_CLASS,
+  SECTION_NOTE_TEXT_CLASS,
+  SECTION_SPLIT_ROW_CLASS,
+  SECTION_STACK_RELAXED_CLASS,
+  SECTION_TITLE_TEXT_CLASS,
+  STATUS_DETAIL_LIST_CLASS,
+} from "../../styles/page";
+import { COMMAND_STATUS_PANEL_CLASS, STATUS_MESSAGE_CLASS } from "../../styles/status";
 
 type CommandStatus = "idle" | "running" | "success" | "error";
 
@@ -75,13 +109,35 @@ const optionalNumber = (value: string) => {
 type StatusVariant = NonNullable<BadgeProps["variant"]>;
 
 const buildMessageClasses = (status: CommandStatus) =>
-  status === "success" ?
-    "border-status-success/40 bg-status-success/10 text-status-success-foreground"
-  : status === "running" ?
-    "border-status-info/40 bg-status-info/10 text-status-info-foreground"
-  : "border-status-error/40 bg-status-error/10 text-status-error-foreground";
+  COMMAND_STATUS_PANEL_CLASS[status === "idle" ? "idle" : status];
 
 const REPORT_STALE_MS = 24 * 60 * 60 * 1000;
+
+const currentChoiceExpectedLabel = (referenceDate = new Date()) =>
+  new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(referenceDate);
+
+const matchesCurrentChoiceMonth = (
+  monthLabel: string | null | undefined,
+  referenceDate = new Date(),
+) => {
+  if (!monthLabel) {
+    return false;
+  }
+
+  const expected = currentChoiceExpectedLabel(referenceDate).toLowerCase();
+  const normalized = monthLabel.toLowerCase();
+  const [expectedMonth, expectedYear] = expected.split(" ");
+  const hasYear = /\b\d{4}\b/.test(normalized);
+
+  if (!normalized.includes(expectedMonth)) {
+    return false;
+  }
+
+  return hasYear ? normalized.includes(expectedYear) : true;
+};
 
 const formatElapsedSince = (dateInput?: string | null) => {
   if (!dateInput) return null;
@@ -108,11 +164,7 @@ const ReportStatusPill = ({
 }: {
   tone: StatusTone;
   label: string;
-}) => (
-  <Badge variant={getStatusVariant(tone)}>
-    {label}
-  </Badge>
-);
+}) => <Badge variant={getStatusVariant(tone)}>{label}</Badge>;
 
 const getReportStatusMeta = (
   generatedAt: string | null | undefined,
@@ -153,6 +205,40 @@ const getReportStatusMeta = (
   };
 };
 
+const getCurrentChoiceStatusMeta = (
+  generatedAt: string | null | undefined,
+  exists: boolean,
+  monthLabel: string | null | undefined,
+): { tone: StatusTone; label: string; detail: string } => {
+  const genericMeta = getReportStatusMeta(generatedAt, exists);
+  if (
+    !exists ||
+    genericMeta.tone === "missing" ||
+    genericMeta.tone === "unavailable"
+  ) {
+    return genericMeta;
+  }
+
+  if (!monthLabel) {
+    return genericMeta;
+  }
+
+  if (matchesCurrentChoiceMonth(monthLabel)) {
+    const elapsedLabel = formatElapsedSince(generatedAt);
+    return {
+      tone: "fresh",
+      label: "Fresh",
+      detail: `${monthLabel} stays current through the rest of this month${generatedAt ? `. Last generated ${formatDateTime(generatedAt)}${elapsedLabel ? ` (${elapsedLabel})` : ""}.` : "."}`,
+    };
+  }
+
+  return {
+    tone: "stale",
+    label: "Stale",
+    detail: `${monthLabel} is no longer the current Choice month. Refresh for ${currentChoiceExpectedLabel()}.`,
+  };
+};
+
 const buildErrorLines = (error?: unknown): string[] =>
   error instanceof Error && error.message ? [error.message] : [];
 
@@ -169,9 +255,9 @@ const CurrentSalesStatusSummary = ({
   detail: string;
   lines: string[];
 }) => (
-  <Card className="rounded-lg bg-card/80 p-3">
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-      <div className="space-y-1">
+  <Card surface="panel" radius="compact" className="p-3">
+    <div className={SECTION_SPLIT_ROW_CLASS}>
+      <div className={SECTION_BODY_STACK_CLASS}>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           {title}
         </p>
@@ -180,7 +266,7 @@ const CurrentSalesStatusSummary = ({
       <ReportStatusPill tone={tone} label={label} />
     </div>
     {lines.length > 0 && (
-      <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+      <ul className={DETAIL_LIST_CLASS}>
         {lines.map((line, index) => (
           <li key={`${title}-${index}`}>{line}</li>
         ))}
@@ -193,26 +279,24 @@ const StatusMessage = ({ state }: { state: CommandState }) => {
   if (!state.message) return null;
   return (
     <div
-      className={`rounded-md border px-3 py-2 text-sm ${buildMessageClasses(
-        state.status,
-      )}`}>
+      className={cn(STATUS_MESSAGE_CLASS, buildMessageClasses(state.status))}>
       <div>{state.message}</div>
       {state.actions.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className={DETAIL_ACTION_ROW_CLASS}>
           {state.actions.map((action) => (
             <Button
               key={`${action.to}-${action.label}`}
               asChild
               size="sm"
               variant="outline"
-              className="bg-background/70">
+              className={ACTION_SURFACE_BUTTON_CLASS}>
               <Link to={action.to}>{action.label}</Link>
             </Button>
           ))}
         </div>
       )}
       {state.detailLines.length > 0 && (
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs opacity-90">
+        <ul className={STATUS_DETAIL_LIST_CLASS}>
           {state.detailLines.map((line, index) => (
             <li key={`${state.status}-${index}`}>{line}</li>
           ))}
@@ -231,8 +315,7 @@ const createIdleState = (): CommandState => ({
 
 export const sanitizePersistedCommandState = (
   state: CommandState,
-): CommandState =>
-  state.status === "running" ? createIdleState() : state;
+): CommandState => (state.status === "running" ? createIdleState() : state);
 
 const serializeCommandState = (value: CommandState) =>
   JSON.stringify(sanitizePersistedCommandState(value));
@@ -262,11 +345,11 @@ const CommandSection = ({
 }) => (
   <section id={id} className="space-y-4 scroll-mt-24">
     <div>
-      <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      {note && <div className="mt-2 text-sm text-muted-foreground">{note}</div>}
+      <h3 className={SECTION_TITLE_TEXT_CLASS}>{title}</h3>
+      <p className={SECTION_DESCRIPTION_TEXT_CLASS}>{description}</p>
+      {note && <div className={SECTION_NOTE_TEXT_CLASS}>{note}</div>}
     </div>
-    <div className="space-y-6">{children}</div>
+    <div className={SECTION_STACK_RELAXED_CLASS}>{children}</div>
   </section>
 );
 
@@ -285,14 +368,15 @@ const CommandCard = ({
   note?: string;
   children: ReactNode;
 }) => (
-  <Card className="bg-card/60">
+  <Card surface="panel">
     <CardHeader className="pb-4">
-      <div>
-        <Badge variant={eyebrowVariant}>{eyebrow}</Badge>
-      </div>
-      <h4 className="text-lg font-semibold text-card-foreground">{title}</h4>
-      {note && <p className="text-sm font-medium text-muted-foreground">{note}</p>}
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <PaneHeader
+        titleAs="h4"
+        title={title}
+        note={note}
+        description={description}
+        eyebrow={<Badge variant={eyebrowVariant}>{eyebrow}</Badge>}
+      />
     </CardHeader>
     <CardContent className="space-y-3">{children}</CardContent>
   </Card>
@@ -316,23 +400,21 @@ const AdvancedOptions = ({
   });
 
   return (
-    <details
-      className="rounded-lg border border-border bg-card/80"
-      open={open}>
+    <details className={DISCLOSURE_PANEL_CLASS} open={open}>
       <summary
-        className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground marker:content-none"
+        className={DISCLOSURE_SUMMARY_CLASS}
         onClick={(event) => {
           event.preventDefault();
           setOpen((current) => !current);
         }}>
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className={DISCLOSURE_SUMMARY_ROW_CLASS}>
           <span>{summary}</span>
-          <span className="text-xs text-muted-foreground">{hint}</span>
+          <span className={DISCLOSURE_HINT_CLASS}>{hint}</span>
         </div>
       </summary>
-      <div className="border-t border-border p-3">
+      <div className={DISCLOSURE_BODY_CLASS}>
         {onReset && (
-          <div className="mb-3 flex justify-end">
+          <div className={DISCLOSURE_RESET_ROW_CLASS}>
             <Button type="button" size="sm" variant="ghost" onClick={onReset}>
               Reset to defaults
             </Button>
@@ -410,10 +492,10 @@ const buildCurrentBundlesDetailLines = (
 ];
 
 const buildCurrentBundlesActions = (): StatusAction[] => [
-  { label: "Open Sales Overview", to: "/venue/overview" },
-  { label: "Open Game Bundles", to: "/venue/bundles/games" },
-  { label: "Open Book Bundles", to: "/venue/bundles/books" },
-  { label: "Open Software Bundles", to: "/venue/bundles/software" },
+  { label: "Open Sales Overview", to: "/sales" },
+  { label: "Open Game Bundles", to: "/sales/games" },
+  { label: "Open Book Bundles", to: "/sales/books" },
+  { label: "Open Software Bundles", to: "/sales/software" },
 ];
 
 const buildCurrentChoiceDetailLines = (
@@ -431,8 +513,8 @@ const buildCurrentChoiceDetailLines = (
 ];
 
 const buildCurrentChoiceActions = (): StatusAction[] => [
-  { label: "Open Sales Overview", to: "/venue/overview" },
-  { label: "Open Current Choice", to: "/venue/choice" },
+  { label: "Open Sales Overview", to: "/sales" },
+  { label: "Open Current Choice", to: "/sales/choice" },
 ];
 
 const renderCurrentBundlesSummary = (
@@ -531,7 +613,11 @@ const renderCurrentChoiceSummary = (
     );
   }
 
-  const meta = getReportStatusMeta(status.generated_at, status.report_exists);
+  const meta = getCurrentChoiceStatusMeta(
+    status.generated_at,
+    status.report_exists,
+    status.month_label,
+  );
   return (
     <CurrentSalesStatusSummary
       title="Saved Choice report status"
@@ -581,53 +667,84 @@ export default function CommandCenter() {
   const [extractMetadata, setExtractMetadata] = useCommandStatePersistence(
     "humble.session.commands.extractSubproductMetadata",
   );
-  const [analyzeCurrentBundles, setAnalyzeCurrentBundles] = useCommandStatePersistence(
-    "humble.session.commands.analyzeCurrentBundles",
-  );
-  const [analyzeCurrentChoice, setAnalyzeCurrentChoice] = useCommandStatePersistence(
-    "humble.session.commands.analyzeCurrentChoice",
-  );
+  const [analyzeCurrentBundles, setAnalyzeCurrentBundles] =
+    useCommandStatePersistence("humble.session.commands.analyzeCurrentBundles");
+  const [analyzeCurrentChoice, setAnalyzeCurrentChoice] =
+    useCommandStatePersistence("humble.session.commands.analyzeCurrentChoice");
 
-  const [rebuildArtifactsDir, setRebuildArtifactsDir, resetRebuildArtifactsDir] =
-    usePersistentState("humble.commands.rebuildArtifactsDir", "data/artifacts");
+  const [
+    rebuildArtifactsDir,
+    setRebuildArtifactsDir,
+    resetRebuildArtifactsDir,
+  ] = usePersistentState(
+    "humble.commands.rebuildArtifactsDir",
+    "data/artifacts",
+  );
   const [rebuildPattern, setRebuildPattern, resetRebuildPattern] =
     usePersistentState("humble.commands.rebuildPattern", "orders_batch_*.json");
-  const [rebuildOrderModelPath, setRebuildOrderModelPath, resetRebuildOrderModelPath] =
-    usePersistentState(
-      "humble.commands.rebuildOrderModelPath",
-      "data/artifacts/order_payload_models.py",
-    );
+  const [
+    rebuildOrderModelPath,
+    setRebuildOrderModelPath,
+    resetRebuildOrderModelPath,
+  ] = usePersistentState(
+    "humble.commands.rebuildOrderModelPath",
+    "data/artifacts/order_payload_models.py",
+  );
   const [rebuildOrderClass, setRebuildOrderClass, resetRebuildOrderClass] =
     usePersistentState("humble.commands.rebuildOrderClass", "OrderPayloadList");
 
   const [generateApiDir, setGenerateApiDir, resetGenerateApiDir] =
-    usePersistentState("humble.commands.generateApiDir", "data/artifacts/api_responses");
-  const [generatePattern, setGeneratePattern, resetGeneratePattern] =
-    usePersistentState("humble.commands.generatePattern", "orders_batch_*.json");
-  const [generateOutputModels, setGenerateOutputModels, resetGenerateOutputModels] =
     usePersistentState(
-      "humble.commands.generateOutputModels",
-      "data/artifacts/order_payload_models.py",
+      "humble.commands.generateApiDir",
+      "data/artifacts/api_responses",
     );
+  const [generatePattern, setGeneratePattern, resetGeneratePattern] =
+    usePersistentState(
+      "humble.commands.generatePattern",
+      "orders_batch_*.json",
+    );
+  const [
+    generateOutputModels,
+    setGenerateOutputModels,
+    resetGenerateOutputModels,
+  ] = usePersistentState(
+    "humble.commands.generateOutputModels",
+    "data/artifacts/order_payload_models.py",
+  );
   const [generateClassName, setGenerateClassName, resetGenerateClassName] =
     usePersistentState("humble.commands.generateClassName", "OrderPayloadList");
 
   const [libraryApiDir, setLibraryApiDir, resetLibraryApiDir] =
-    usePersistentState("humble.commands.libraryApiDir", "data/artifacts/api_responses");
+    usePersistentState(
+      "humble.commands.libraryApiDir",
+      "data/artifacts/api_responses",
+    );
   const [libraryPattern, setLibraryPattern, resetLibraryPattern] =
     usePersistentState("humble.commands.libraryPattern", "orders_batch_*.json");
-  const [libraryOutputProducts, setLibraryOutputProducts, resetLibraryOutputProducts] =
-    usePersistentState(
-      "humble.commands.libraryOutputProducts",
-      "data/artifacts/library_products.json",
-    );
-  const [libraryOrderModelPath, setLibraryOrderModelPath, resetLibraryOrderModelPath] =
-    usePersistentState(
-      "humble.commands.libraryOrderModelPath",
-      "data/artifacts/order_payload_models.py",
-    );
-  const [libraryOrderModelClass, setLibraryOrderModelClass, resetLibraryOrderModelClass] =
-    usePersistentState("humble.commands.libraryOrderModelClass", "OrderPayloadList");
+  const [
+    libraryOutputProducts,
+    setLibraryOutputProducts,
+    resetLibraryOutputProducts,
+  ] = usePersistentState(
+    "humble.commands.libraryOutputProducts",
+    "data/artifacts/library_products.json",
+  );
+  const [
+    libraryOrderModelPath,
+    setLibraryOrderModelPath,
+    resetLibraryOrderModelPath,
+  ] = usePersistentState(
+    "humble.commands.libraryOrderModelPath",
+    "data/artifacts/order_payload_models.py",
+  );
+  const [
+    libraryOrderModelClass,
+    setLibraryOrderModelClass,
+    resetLibraryOrderModelClass,
+  ] = usePersistentState(
+    "humble.commands.libraryOrderModelClass",
+    "OrderPayloadList",
+  );
 
   const [cacheLibraryFile, setCacheLibraryFile, resetCacheLibraryFile] =
     usePersistentState(
@@ -755,67 +872,61 @@ export default function CommandCenter() {
   };
 
   return (
-    <div className="w-full space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">
-          Maintenance workflows
-        </h2>
-        <p className="text-muted-foreground">
-          Run the same workflows available in the CLI. The cards below keep the
-          default action visible first and tuck path overrides into expandable
-          advanced sections. Editing
-          <code className="mx-1 text-xs text-foreground">.env</code> and
-          <code className="ml-1 text-xs text-foreground">config.yaml</code> still
-          requires the CLI or manual updates.
-        </p>
-      </div>
+    <div className={PAGE_STACK_ROOMY_CLASS}>
+      <PageIntro
+        title="Maintenance workflows"
+        description={
+          <>
+            Run the same workflows available in the CLI. The cards below keep
+            the default action visible first and tuck path overrides into
+            expandable advanced sections. Editing
+            <code className={cn(INLINE_CODE_TEXT_CLASS, "mx-1")}>.env</code>
+            and
+            <code className={cn(INLINE_CODE_TEXT_CLASS, "ml-1")}>config.yaml</code>{" "}
+            still requires the CLI or manual updates.
+          </>
+        }
+      />
 
-      <Card className="bg-card/60">
+      <Card surface="panel">
         <CardHeader className="pb-4">
-          <div>
-            <Badge variant="info">Start here</Badge>
-          </div>
-          <h3 className="text-lg font-semibold text-card-foreground">
-            Pick the workflow type before you open the heavier controls
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Keep the first screen focused on intent: refresh viewer-safe reports
-            first, move to rebuilds only when you need to regenerate files, and
-            use enrichment when you are intentionally pulling in external page
-            detail.
-          </p>
+          <PaneHeader
+            title="Pick the workflow type before you open the heavier controls"
+            description="Keep the first screen focused on intent: refresh viewer-safe reports first, move to rebuilds only when you need to regenerate files, and use enrichment when you are intentionally pulling in external page detail."
+            eyebrow={<Badge variant="info">Start here</Badge>}
+          />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <div className={GRID_THREE_COLUMN_CLASS}>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
                 Guided workflows
               </p>
-              <p className="mt-2 text-sm text-card-foreground">
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Refresh current sales reports with the safest default actions.
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
                 Rebuilds and exports
               </p>
-              <p className="mt-2 text-sm text-card-foreground">
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Regenerate saved artifacts, schema files, or order models when
                 the viewer inputs changed.
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
                 Metadata enrichment
               </p>
-              <p className="mt-2 text-sm text-card-foreground">
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Cache external pages first, then extract richer metadata only
                 when you want deeper media detail.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className={PAGE_ACTION_ROW_CLASS}>
             <Button asChild size="sm" variant="outline">
               <a href="#guided-workflows">Jump to Guided workflows</a>
             </Button>
@@ -836,7 +947,7 @@ export default function CommandCenter() {
         note={
           <>
             Need a full capture or file switch first?{" "}
-            <Link className="font-medium text-primary hover:underline" to="/setup">
+            <Link className={INLINE_TEXT_LINK_CLASS} to="/setup">
               Open Setup
             </Link>
             .
@@ -847,14 +958,11 @@ export default function CommandCenter() {
           eyebrowVariant="info"
           title="Current sales bundle analysis"
           description="Capture the current games, books, and software sales pages and rebuild the shared bundle-overlap report used by the Current sales routes.">
-          {renderCurrentBundlesSummary(
-            currentBundlesStatus,
-            {
-              isLoading: currentBundlesStatusLoading,
-              isError: currentBundlesStatusError,
-              error: currentBundlesStatusErrorDetail,
-            },
-          )}
+          {renderCurrentBundlesSummary(currentBundlesStatus, {
+            isLoading: currentBundlesStatusLoading,
+            isError: currentBundlesStatusError,
+            error: currentBundlesStatusErrorDetail,
+          })}
           <Button
             type="button"
             size="sm"
@@ -890,14 +998,11 @@ export default function CommandCenter() {
           eyebrowVariant="info"
           title="Current sales Choice analysis"
           description="Refresh the saved current-month Humble Choice report that powers the Current sales Choice page.">
-          {renderCurrentChoiceSummary(
-            currentChoiceStatus,
-            {
-              isLoading: currentChoiceStatusLoading,
-              isError: currentChoiceStatusError,
-              error: currentChoiceStatusErrorDetail,
-            },
-          )}
+          {renderCurrentChoiceSummary(currentChoiceStatus, {
+            isLoading: currentChoiceStatusLoading,
+            isError: currentChoiceStatusError,
+            error: currentChoiceStatusErrorDetail,
+          })}
           <Button
             type="button"
             size="sm"
@@ -939,7 +1044,7 @@ export default function CommandCenter() {
           title="Rebuild library artifacts"
           description="Regenerate `library_products.json` from stored API batches and refresh the viewer.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<LibraryArtifactCommandDetails>(
@@ -973,7 +1078,7 @@ export default function CommandCenter() {
               summary="Advanced paths and model settings"
               hint="Change paths or class names only when you are rebuilding from non-default artifacts."
               onReset={resetLibraryArtifactOptions}>
-              <div className="space-y-3">
+              <div className={FORM_STACK_CLASS}>
                 <Input
                   value={libraryApiDir}
                   onChange={(event) => setLibraryApiDir(event.target.value)}
@@ -1017,7 +1122,7 @@ export default function CommandCenter() {
           title="Build viewer schema"
           description="Export the schema used by the standalone viewer validation tools.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<ViewerSchemaCommandDetails>(
@@ -1059,7 +1164,7 @@ export default function CommandCenter() {
           note="Requires saved API batches in the artifacts directory and is best when you are regenerating the default shared model file."
           description="Regenerate the order payload models from saved API batches.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<OrderModelCommandDetails>(
@@ -1089,7 +1194,7 @@ export default function CommandCenter() {
               summary="Advanced paths and class names"
               hint="Adjust these only when the saved API batches or model destination differ from the defaults."
               onReset={resetRebuildOrderOptions}>
-              <div className="space-y-3">
+              <div className={FORM_STACK_CLASS}>
                 <Input
                   value={rebuildArtifactsDir}
                   onChange={(event) =>
@@ -1127,7 +1232,7 @@ export default function CommandCenter() {
           note="Requires an explicit API response directory input and is best when you are generating a model for a different source or output path."
           description="Build a fresh order payload model from API batch files.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<OrderModelCommandDetails>(
@@ -1157,7 +1262,7 @@ export default function CommandCenter() {
               summary="Advanced input and output paths"
               hint="Use these when you want to build a model from a different API batch location or output file."
               onReset={resetGenerateOrderOptions}>
-              <div className="space-y-3">
+              <div className={FORM_STACK_CLASS}>
                 <Input
                   value={generateApiDir}
                   onChange={(event) => setGenerateApiDir(event.target.value)}
@@ -1197,7 +1302,7 @@ export default function CommandCenter() {
           title="Cache subproduct pages"
           description="Fetch and cache external publisher or product pages so the viewer can surface richer title metadata.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<SubproductPageCacheCommandDetails>(
@@ -1230,7 +1335,7 @@ export default function CommandCenter() {
               summary="Advanced cache scope"
               hint="Use filters only when you need a smaller or custom scrape target."
               onReset={resetCacheOptions}>
-              <div className="space-y-3">
+              <div className={FORM_STACK_CLASS}>
                 <Input
                   value={cacheLibraryFile}
                   onChange={(event) => setCacheLibraryFile(event.target.value)}
@@ -1251,7 +1356,7 @@ export default function CommandCenter() {
                   onChange={(event) => setCacheUrl(event.target.value)}
                   placeholder="Optional exact URL override"
                 />
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className={GRID_THREE_COLUMN_COMPACT_CLASS}>
                   <Input
                     value={cacheLimit}
                     onChange={(event) => setCacheLimit(event.target.value)}
@@ -1284,7 +1389,7 @@ export default function CommandCenter() {
           title="Extract subproduct metadata"
           description="Parse cached external pages into structured metadata that the Purchases and media routes can display.">
           <form
-            className="space-y-3"
+            className={FORM_STACK_CLASS}
             onSubmit={(event) => {
               event.preventDefault();
               runCommand<SubproductMetadataCommandDetails>(
@@ -1316,7 +1421,7 @@ export default function CommandCenter() {
               summary="Advanced metadata outputs"
               hint="Override these only when you want custom cache or report destinations."
               onReset={resetMetadataOptions}>
-              <div className="space-y-3">
+              <div className={FORM_STACK_CLASS}>
                 <Input
                   value={metadataCacheDir}
                   onChange={(event) => setMetadataCacheDir(event.target.value)}

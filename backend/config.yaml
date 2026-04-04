@@ -150,7 +150,7 @@ artifacts:
 # Viewer UI settings
 viewer:
   # Hours before expiry to warn about download links
-  link_expiry_warning_hours: 24
+  link_expiry_warning_hours: 6
 
   # Treat revealed keys as already redeemed/handled in viewer triage by default.
   # Set false to keep revealed and unrevealed keys together in key follow-up views.

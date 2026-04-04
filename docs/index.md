@@ -17,7 +17,7 @@ Use this contact for project direction, stewardship questions, or maintainer-lev
 ## Common user journeys
 
 - refresh and normalize your library data with the CLI or setup flow
-- browse purchases, software, videos, downloads, Steam keys, non-Steam keys, eBooks, audiobooks, and expiring items in the viewer
+- browse purchases, software, videos, other downloads, Steam keys, Other Keys, eBooks, audiobooks, and expiring items in the viewer
 - use browser downloads or managed local sync for software, reading, and listening collections
 - inspect artifacts, rebuild derived data, cache subproduct pages, and extract metadata during debugging or maintenance
 
@@ -35,9 +35,9 @@ Use this contact for project direction, stewardship questions, or maintainer-lev
 
 - Playwright-based capture of Humble Bundle library API responses
 - normalization into `data/artifacts/library_products.json`
-- a local viewer for purchases, downloads, software, videos, Steam keys, non-Steam keys, eBooks, audiobooks, and setup flows
+- a local viewer for `Home`, `Sales Overview`, `Current Choice`, purchases, other downloads, software, videos, Steam keys, Other Keys, eBooks, audiobooks, setup, Command Center workflows, and schema inspection
 - browser-managed downloads from viewer routes
-- advanced managed local sync for eBooks and audiobooks via the CLI or viewer
+- advanced managed local sync for software, videos, eBooks, and audiobooks via the CLI or viewer
 - maintenance workflows for schema export, artifact rebuilds, subproduct page caching, and metadata extraction through the CLI or Command Center
 
 The project does **not** currently aim to provide:

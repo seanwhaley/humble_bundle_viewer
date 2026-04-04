@@ -3,6 +3,14 @@
  */
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
+import {
+  DIALOG_ACTION_ROW_END_CLASS,
+  DIALOG_BACKDROP_CLASS,
+  DIALOG_DESCRIPTION_CLASS,
+  DIALOG_PANEL_CLASS,
+  DIALOG_SCRIM_CLASS,
+  DIALOG_TITLE_CLASS,
+} from "../styles/roles";
 
 interface ExpiredLinkDialogProps {
   isOpen: boolean;
@@ -17,22 +25,22 @@ export default function ExpiredLinkDialog({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-lg border border-slate-800 bg-slate-950 p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-100">Link expired</h3>
-        <p className="mt-2 text-sm text-slate-300">
+    <div className={DIALOG_SCRIM_CLASS}>
+      <div className={DIALOG_BACKDROP_CLASS} onClick={onClose} />
+      <div className={DIALOG_PANEL_CLASS}>
+        <h3 className={DIALOG_TITLE_CLASS}>Link expired</h3>
+        <p className={DIALOG_DESCRIPTION_CLASS}>
           This download link has expired. Capture a new library data file to
           refresh the signed download URLs.
         </p>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className={DIALOG_ACTION_ROW_END_CLASS}>
           <Button variant="ghost" onClick={onClose}>
             OK
           </Button>
           <Button
             onClick={() => {
               onClose();
-              navigate("/downloads");
+              navigate("/library/other-downloads");
             }}
           >
             Go to downloads

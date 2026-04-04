@@ -1,6 +1,13 @@
 /**
  * Compact summary strip for key inventory routes.
  */
+import {
+  METRIC_STRIP_CARD_CLASS,
+  METRIC_STRIP_GRID_CLASS,
+  METRIC_STRIP_HINT_CLASS,
+  METRIC_STRIP_VALUE_CLASS,
+  SECTION_EYEBROW_CLASS,
+} from "../styles/roles";
 
 interface KeyInventorySummaryItem {
   label: string;
@@ -16,18 +23,18 @@ export default function KeyInventorySummaryStrip({
   items,
 }: KeyInventorySummaryStripProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className={METRIC_STRIP_GRID_CLASS}>
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-lg border border-slate-800 bg-slate-900/70 px-4 py-3 shadow-sm shadow-black/10">
-          <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
+          className={METRIC_STRIP_CARD_CLASS}>
+          <p className={SECTION_EYEBROW_CLASS}>
             {item.label}
           </p>
-          <p className="mt-2 text-2xl font-semibold text-slate-50">
+          <p className={METRIC_STRIP_VALUE_CLASS}>
             {item.value}
           </p>
-          <p className="mt-1 text-sm text-slate-400">{item.hint}</p>
+          <p className={METRIC_STRIP_HINT_CLASS}>{item.hint}</p>
         </div>
       ))}
     </div>

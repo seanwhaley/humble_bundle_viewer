@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Videos from "../../../../src/app/routes/Videos";
+import {
+  PageHeaderProvider,
+  usePageHeaderState,
+} from "../../../../src/app/layout/PageHeaderContext";
 
 const mocks = vi.hoisted(() => ({
   useLibraryData: vi.fn(),
@@ -138,9 +142,17 @@ vi.mock("../../../../src/components/ExpiredLinkDialog", () => ({
 function renderRoute() {
   return render(
     <MemoryRouter future={memoryRouterFuture}>
-      <Videos />
+      <PageHeaderProvider>
+        <HeaderActionsHost />
+        <Videos />
+      </PageHeaderProvider>
     </MemoryRouter>,
   );
+}
+
+function HeaderActionsHost() {
+  const { actions } = usePageHeaderState();
+  return <div>{actions}</div>;
 }
 
 describe("Videos", () => {
@@ -171,7 +183,9 @@ describe("Videos", () => {
 
     expect(screen.queryByText("Video FilterBar")).not.toBeInTheDocument();
     expect(screen.queryByText("Managed sync panel")).not.toBeInTheDocument();
-    expect(screen.getByText("2 videos in the current view.")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 video titles match the current filters."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^Filters$/ }));
     expect(screen.getByText("Video FilterBar")).toBeInTheDocument();

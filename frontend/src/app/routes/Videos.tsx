@@ -5,10 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Loader2,
   Download,
-  Film,
   ChevronDown,
   ChevronRight,
-  SlidersHorizontal,
   ShieldCheck,
 } from "lucide-react";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
@@ -22,11 +20,15 @@ import {
   getFilterOptions,
   isVideoPlatform,
 } from "../../data/selectors";
-import { formatBytes, formatDate } from "../../utils/format";
+import { cn } from "../../lib/utils";
+import { formatBytes, formatDate, formatNumber } from "../../utils/format";
 import { DataTable } from "../../components/DataTable";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import PageFiltersButton from "../../components/ui/PageFiltersButton";
+import PaneHeader from "../../components/ui/PaneHeader";
+import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -45,6 +47,30 @@ import {
 } from "../../utils/downloads";
 import ExpiredLinkDialog from "../../components/ExpiredLinkDialog";
 import DownloadRouteEmptyState from "../../components/DownloadRouteEmptyState";
+import {
+  COMPACT_ACTION_BUTTON_CLASS,
+  COMPACT_ACTION_BUTTON_WITH_GAP_CLASS,
+  COMPACT_FORM_SELECT_CLASS,
+  CONTENT_BODY_TEXT_CLASS,
+  CONTENT_PREVIEW_TEXT_CLASS,
+  DOWNLOAD_ACTION_BAR_CLASS,
+  DOWNLOAD_ACTION_BUTTON_CLASS,
+  DOWNLOAD_PLACEHOLDER_BUTTON_CLASS,
+  INSET_PANEL_COMPACT_CLASS,
+  INSET_PANEL_BODY_TEXT_CLASS,
+  SECTION_EYEBROW_CLASS,
+  SECTION_TITLE_CLASS,
+} from "../../styles/roles";
+import { DOWNLOAD_ACTION_STATUS_CLASS } from "../../styles/status";
+import {
+  GRID_THREE_COLUMN_CLASS,
+  PAGE_ACTION_ROW_CLASS,
+  PAGE_STACK_TIGHT_CLASS,
+  PANEL_ERROR_TEXT_CLASS,
+  PANEL_HEADER_SPLIT_ROW_CLASS,
+  PANEL_HELP_TEXT_CLASS,
+} from "../../styles/page";
+import { usePageHeaderActions } from "../layout/PageHeaderContext";
 
 interface VideoRow {
   id: string;
@@ -178,6 +204,17 @@ export default function Videos() {
   const showBulkActionsPanel =
     showBulkActions || selectedCount > 0 || bulkPlannerError !== null;
   const bulkPlannerActive = bulkPlannerBusy !== null;
+  const headerActions = useMemo(
+    () => (
+      <PageFiltersButton
+        expanded={showFiltersPanel}
+        activeCount={activePageFilterCount}
+        onClick={() => setShowPageFilters((current) => !current)}
+      />
+    ),
+    [activePageFilterCount, showFiltersPanel],
+  );
+  usePageHeaderActions(headerActions);
 
   const scopedBulkFormats = useMemo(() => {
     const sourceRows = selectedCount > 0 ? selectedRows : videos;
@@ -268,10 +305,10 @@ export default function Videos() {
       accessorKey: "authorSummary",
       header: "Author",
       cell: ({ row }) => (
-        <div className="whitespace-normal break-words text-sm text-slate-200">
+        <div className={CONTENT_BODY_TEXT_CLASS}>
           {row.original.authorSummary || "—"}
           {row.original.publisher && (
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-muted-foreground">
               {row.original.publisher}
             </div>
           )}
@@ -296,7 +333,7 @@ export default function Videos() {
           content={
             row.original.descriptionSnippet || "No summary metadata yet"
           }>
-          <p className="line-clamp-3 whitespace-normal break-words text-xs text-slate-300">
+          <p className={CONTENT_PREVIEW_TEXT_CLASS}>
             {row.original.descriptionSnippet || "No summary metadata yet"}
           </p>
         </Tooltip>
@@ -324,12 +361,12 @@ export default function Videos() {
       cell: ({ getValue }) => {
         const downloads = getValue() as DownloadRecord[];
         return (
-          <div className="flex flex-wrap items-start gap-1.5">
+          <div className={DOWNLOAD_ACTION_BAR_CLASS}>
             <Tooltip content="Download all formats for this title">
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-7 text-xs"
+                className={DOWNLOAD_ACTION_BUTTON_CLASS}
                 disabled={!downloads.length}
                 onClick={() => {
                   if (hasExpiredLinks(downloads, expiringSoonMs)) {
@@ -355,17 +392,13 @@ export default function Videos() {
                     variant="ghost"
                     size="sm"
                     disabled
-                    className="h-7 text-xs opacity-20 cursor-default border border-dashed border-slate-700">
+                    className={DOWNLOAD_PLACEHOLDER_BUTTON_CLASS}>
                     {format}
                   </Button>
                 );
               }
 
               const status = getLinkStatus(match.url, expiringSoonMs);
-              const statusClass =
-                status === "expired" ? "border-rose-500/60 text-rose-200"
-                : status === "expiring" ? "border-amber-400/60 text-amber-200"
-                : "";
 
               return (
                 <Tooltip
@@ -374,7 +407,10 @@ export default function Videos() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className={`h-7 text-xs ${statusClass}`}
+                    className={cn(
+                      DOWNLOAD_ACTION_BUTTON_CLASS,
+                      DOWNLOAD_ACTION_STATUS_CLASS[status],
+                    )}
                     onClick={() => {
                       if (status === "expired") {
                         setShowExpiredDialog(true);
@@ -395,87 +431,57 @@ export default function Videos() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <RouteLoadingState label="Loading videos…" />;
   }
 
   if (error) {
-    return (
-      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
-        Failed to load library data.
-      </div>
-    );
+    return <RouteErrorState message="Failed to load library data." />;
   }
 
   return (
-    <div className="w-full flex flex-col space-y-4">
-      <Card className="bg-card/60">
-        <CardHeader className="space-y-4 pb-4">
-          <div>
-            <Badge variant="info">Watch-first layout</Badge>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Film className="h-6 w-6 text-primary" />
-              <h2 className="text-lg font-semibold text-card-foreground">
-                Video Library
-              </h2>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Keep the first screen focused on browsing titles and summaries.
-              Filters, bulk downloads, and managed sync stay close at hand, but
-              only expand when you need those heavier actions.
-            </p>
-          </div>
+    <div className={PAGE_STACK_TIGHT_CLASS}>
+      <Card surface="panel">
+        <CardHeader className="pb-4">
+          <PaneHeader
+            titleAs="h2"
+            title="Review the video library before you download or sync"
+            description="Use the table to compare titles, summaries, formats, and bundle context first. Bulk browser downloads and advanced local sync stay available without crowding the primary browsing view."
+            eyebrow={<Badge variant="info">Video workflow</Badge>}
+          />
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Library scope
+          <div className={GRID_THREE_COLUMN_CLASS}>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Titles in scope
               </p>
-              <p className="mt-2 text-sm text-card-foreground">
-                {videos.length} videos in the current view.
-              </p>
-            </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Active selection
-              </p>
-              <p className="mt-2 text-sm text-card-foreground">
-                {selectedCount} title{selectedCount === 1 ? "" : "s"} selected for route-level actions.
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                {formatNumber(videos.length)} video title{videos.length === 1 ? "" : "s"} match the current filters.
               </p>
             </div>
-            <div className="rounded-lg border border-border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Format coverage
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Selected now
               </p>
-              <p className="mt-2 text-sm text-card-foreground">
-                {scopedBulkFormats.length} formats in the current bulk-download scope.
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                {formatNumber(selectedCount)} title{selectedCount === 1 ? "" : "s"} are selected for route-level actions.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Formats in scope
+              </p>
+              <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                {formatNumber(scopedBulkFormats.length)} format{scopedBulkFormats.length === 1 ? "" : "s"} are available in the current bulk-download scope.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={showFiltersPanel ? "default" : "outline"}
-              className="h-8 gap-2 text-xs"
-              aria-expanded={showFiltersPanel}
-              onClick={() => setShowPageFilters((current) => !current)}>
-              {showFiltersPanel ?
-                <ChevronDown className="h-4 w-4" />
-              : <ChevronRight className="h-4 w-4" />}
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters{activePageFilterCount > 0 ? ` (${activePageFilterCount})` : ""}
-            </Button>
+          <div className={PAGE_ACTION_ROW_CLASS}>
             <Button
               size="sm"
               variant={showBulkActionsPanel ? "default" : "outline"}
-              className="h-8 gap-2 text-xs"
+              className={COMPACT_ACTION_BUTTON_WITH_GAP_CLASS}
               aria-expanded={showBulkActionsPanel}
               onClick={() => setShowBulkActions((current) => !current)}>
               {showBulkActionsPanel ?
@@ -487,7 +493,7 @@ export default function Videos() {
             <Button
               size="sm"
               variant={showManagedSync ? "default" : "outline"}
-              className="h-8 gap-2 text-xs"
+              className={COMPACT_ACTION_BUTTON_WITH_GAP_CLASS}
               aria-expanded={showManagedSync}
               onClick={() => setShowManagedSync((current) => !current)}>
               {showManagedSync ?
@@ -498,18 +504,20 @@ export default function Videos() {
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className={PANEL_HELP_TEXT_CLASS}>
             Downloads still use your browser’s normal save flow. Browsers may
-            prompt before allowing multiple files to open at once.
+            prompt before allowing multiple files to open at once. Bulk browser
+            downloads and advanced local sync both follow the titles currently
+            selected in the table.
             {hasExpiringSelection && " Some selected links expire soon."}
           </p>
         </CardContent>
       </Card>
 
       {showFiltersPanel && (
-        <Card className="bg-card/60">
+        <Card surface="panel">
           <CardHeader className="pb-3">
-            <h3 className="text-base font-semibold text-card-foreground">
+            <h3 className={SECTION_TITLE_CLASS}>
               Narrow the video shelf before you download
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -533,11 +541,11 @@ export default function Videos() {
       {!!videos.length && (
         <>
           {showBulkActionsPanel && (
-            <Card className="bg-card/60">
+            <Card surface="panel">
               <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className={PANEL_HEADER_SPLIT_ROW_CLASS}>
                   <div>
-                    <h3 className="text-base font-semibold text-card-foreground">
+                    <h3 className={SECTION_TITLE_CLASS}>
                       Bulk browser downloads
                     </h3>
                     <p className="text-sm text-muted-foreground">
@@ -552,11 +560,11 @@ export default function Videos() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className={PAGE_ACTION_ROW_CLASS}>
                 <Button
                   size="sm"
                   variant="default"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   disabled={
                     !selectedCount || hasExpiredSelection || bulkPlannerActive
                   }
@@ -574,7 +582,7 @@ export default function Videos() {
                   Download all
                 </Button>
                 <select
-                  className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                  className={COMPACT_FORM_SELECT_CLASS}
                   value={selectedFormat}
                   onChange={(event) => setSelectedFormat(event.target.value)}
                   disabled={!selectedCount || bulkPlannerActive}
@@ -589,7 +597,7 @@ export default function Videos() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   disabled={
                     !selectedCount ||
                     !selectedFormat ||
@@ -613,7 +621,7 @@ export default function Videos() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   disabled={
                     !selectedCount || hasExpiredSelection || bulkPlannerActive
                   }
@@ -630,7 +638,7 @@ export default function Videos() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   disabled={
                     !selectedCount || hasExpiredSelection || bulkPlannerActive
                   }
@@ -645,13 +653,13 @@ export default function Videos() {
                   Largest
                 </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className={PANEL_HELP_TEXT_CLASS}>
                   {selectedCount > 0 ?
                     "Format choices are scoped to the currently selected titles so the picker stays relevant to the video set you chose."
                   : "Select one or more rows in the table to enable bulk downloads and narrow the format list."}
                 </p>
                 {bulkPlannerError && (
-                  <p className="text-xs text-rose-300">{bulkPlannerError}</p>
+                  <p className={PANEL_ERROR_TEXT_CLASS}>{bulkPlannerError}</p>
                 )}
               </CardContent>
             </Card>

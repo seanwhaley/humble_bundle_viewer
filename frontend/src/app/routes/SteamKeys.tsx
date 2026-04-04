@@ -10,8 +10,12 @@ import FilterBar, { type FilterBarField } from "../../components/FilterBar";
 import { DataTable } from "../../components/DataTable";
 import { ProductCell } from "../../components/ProductCell";
 import KeyValueCell from "../../components/KeyValueCell";
-import KeyInventorySummaryStrip from "../../components/KeyInventorySummaryStrip";
 import RedemptionLinksButton from "../../components/RedemptionLinksButton";
+import { Badge } from "../../components/ui/badge";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import PageFiltersButton from "../../components/ui/PageFiltersButton";
+import PaneHeader from "../../components/ui/PaneHeader";
+import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
 import { useLibraryData } from "../../data/api";
 import {
   applyProductFilters,
@@ -26,6 +30,12 @@ import {
 import { useFilters } from "../../state/filters";
 import { FlattenedKey } from "../../data/types";
 import { formatDate } from "../../utils/format";
+import {
+  FILTER_PANEL_CLASS,
+  INSET_PANEL_COMPACT_CLASS,
+  SECTION_EYEBROW_CLASS,
+} from "../../styles/roles";
+import { usePageHeaderActions } from "../layout/PageHeaderContext";
 
 /**
  * Tabular view of Steam keys with reveal status and redeem actions.
@@ -36,6 +46,7 @@ export default function SteamKeys() {
   const { data, isLoading, error } = useLibraryData();
   const { filters, setFilters } = useFilters();
   const [scope, setScope] = useState<KeyInventoryScope>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const filteredProducts = useMemo(() => {
     if (!data) return [];
@@ -71,6 +82,23 @@ export default function SteamKeys() {
     () => filterKeyInventoryByScope(steamKeys, scope),
     [scope, steamKeys],
   );
+  const activeFilterCount = [
+    filters.category,
+    filters.startDate,
+    filters.endDate,
+  ].filter(Boolean).length;
+  const filtersPanelOpen = showFilters || activeFilterCount > 0;
+  const headerActions = useMemo(
+    () => (
+      <PageFiltersButton
+        expanded={filtersPanelOpen}
+        activeCount={activeFilterCount}
+        onClick={() => setShowFilters((current) => !current)}
+      />
+    ),
+    [activeFilterCount, filtersPanelOpen],
+  );
+  usePageHeaderActions(headerActions);
 
   const columns: ColumnDef<FlattenedKey>[] = [
     { accessorKey: "keyName", header: "Item Name" },
@@ -96,7 +124,8 @@ export default function SteamKeys() {
           return <span className="text-muted-foreground">–</span>;
         }
         return (
-          <span className={val <= 30 ? "text-orange-500 font-bold" : ""}>
+          <span
+            className={val <= 30 ? "font-bold text-status-warning-foreground" : ""}>
             {val} days
           </span>
         );
@@ -111,7 +140,9 @@ export default function SteamKeys() {
         return (
           <span
             className={
-              revealed ? "text-green-600 font-medium" : "text-muted-foreground"
+              revealed ?
+                "font-medium text-status-success-foreground"
+              : "text-muted-foreground"
             }>
             {revealed ? "Yes" : "No"}
           </span>
@@ -144,85 +175,88 @@ export default function SteamKeys() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <RouteLoadingState label="Loading Steam keys…" />;
   }
 
   if (error || !data) {
-    return (
-      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
-        Failed to load library data.
-      </div>
-    );
+    return <RouteErrorState message="Failed to load library data." />;
   }
 
   return (
     <div className="w-full flex flex-col space-y-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Steam Keys</h2>
-        <p className="text-muted-foreground">
-          Review Steam redemption inventory, reveal status, and quick redeem
-          actions.
-        </p>
-      </div>
+      <Card surface="panel">
+        <CardHeader className="pb-4">
+          <PaneHeader
+            titleAs="h2"
+            title="Work through the Steam redemption queue from one focused view"
+            description="Check what is still hidden, what can be redeemed directly, and what needs follow-up without bouncing between separate key pages. Use the quick scopes to narrow the queue before opening rows."
+            eyebrow={<Badge variant="info">Steam redemption</Badge>}
+          />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>Keys in scope</p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {summary.total} Steam key row{summary.total === 1 ? "" : "s"} match the current library filters.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>Still hidden</p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {summary.needsReveal} key value{summary.needsReveal === 1 ? "" : "s"} are still hidden by Humble.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>Direct redeem</p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {summary.directRedeem} row{summary.directRedeem === 1 ? "" : "s"} have a direct Steam redemption path.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>Expiring</p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {summary.expiring} row{summary.expiring === 1 ? "" : "s"} are expired or inside the warning window.
+              </p>
+            </div>
+          </div>
 
-      <KeyInventorySummaryStrip
-        items={[
-          {
-            label: "Keys in inventory",
-            value: summary.total,
-            hint: "Steam inventory rows after current library filters",
-          },
-          {
-            label: "Needs reveal",
-            value: summary.needsReveal,
-            hint: "Rows without visible key values",
-          },
-          {
-            label: "Redeemable",
-            value: summary.redeemable,
-            hint: "Rows with a direct redeem destination",
-          },
-          {
-            label: "Expiring",
-            value: summary.expiring,
-            hint: "Expired or within 30 days",
-          },
-        ]}
-      />
+          <div className="flex flex-wrap gap-2">
+            {[
+              ["all", "All", summary.total],
+              ["needs_reveal", "Needs reveal", summary.needsReveal],
+              ["revealed", "Revealed", summary.revealed],
+              ["redeemable", "Redeemable", summary.redeemable],
+              ["expiring", "Expiring", summary.expiring],
+              ["direct_redeem", "Direct redeem", summary.directRedeem],
+            ].map(([value, label, count]) => {
+              const selected = scope === value;
+              return (
+                <Button
+                  key={value}
+                  size="sm"
+                  variant={selected ? "secondary" : "outline"}
+                  onClick={() => setScope(value as KeyInventoryScope)}>
+                  {label}
+                  <span className="ml-1 text-xs text-muted-foreground">{count}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="flex flex-wrap gap-2">
-        {[
-          ["all", "All", summary.total],
-          ["needs_reveal", "Needs reveal", summary.needsReveal],
-          ["revealed", "Revealed", summary.revealed],
-          ["redeemable", "Redeemable", summary.redeemable],
-          ["expiring", "Expiring", summary.expiring],
-          ["direct_redeem", "Direct redeem", summary.directRedeem],
-        ].map(([value, label, count]) => {
-          const selected = scope === value;
-          return (
-            <Button
-              key={value}
-              size="sm"
-              variant={selected ? "secondary" : "outline"}
-              onClick={() => setScope(value as KeyInventoryScope)}>
-              {label}
-              <span className="ml-1 text-xs text-slate-300">{count}</span>
-            </Button>
-          );
-        })}
-      </div>
-
-      <FilterBar
-        categories={options.categories}
-        platforms={options.platforms}
-        keyTypes={options.keyTypes}
-        fields={STEAM_KEY_FILTER_FIELDS}
-      />
+      {filtersPanelOpen && (
+        <FilterBar
+          categories={options.categories}
+          platforms={options.platforms}
+          keyTypes={options.keyTypes}
+          fields={STEAM_KEY_FILTER_FIELDS}
+          hideHeader
+          isExpanded
+          className={FILTER_PANEL_CLASS}
+        />
+      )}
 
       <DataTable
         columns={columns}

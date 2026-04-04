@@ -56,7 +56,7 @@ The command exits non-zero when the committed images are stale.
 
 If more documentation screenshots are needed later, the next best candidates are:
 
-- `Sales Overview` (`/venue/overview`) for the current-sales dashboard
-- `Ebooks` (`/ebooks`) for a representative download-management route
+- `Sales Overview` (`/sales`) for the current-sales dashboard
+- `eBooks` (`/library/ebooks`) for a representative download-management route
 
 Those were left out of the first batch to keep the fixture surface small while covering the most README- and guide-relevant pages first.

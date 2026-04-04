@@ -9,14 +9,14 @@ describe("DownloadRouteEmptyState", () => {
     render(
       <MemoryRouter
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <DownloadRouteEmptyState routeLabel="Ebooks" />
+        <DownloadRouteEmptyState routeLabel="eBooks" />
       </MemoryRouter>,
     );
 
     expect(
       screen.getByText("No valid subproducts for this page"),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Ebooks/)).toBeInTheDocument();
+    expect(screen.getByText(/eBooks/)).toBeInTheDocument();
     expect(
       screen.queryByText("Try one of the dedicated download pages instead:"),
     ).not.toBeInTheDocument();
@@ -29,8 +29,8 @@ describe("DownloadRouteEmptyState", () => {
         <DownloadRouteEmptyState
           routeLabel="Downloads"
           suggestedRoutes={[
-            { label: "Software", to: "/software" },
-            { label: "Audiobooks", to: "/audiobooks" },
+            { label: "Software", to: "/library/software" },
+            { label: "Audiobooks", to: "/library/audiobooks" },
           ]}
         />
       </MemoryRouter>,
@@ -41,11 +41,11 @@ describe("DownloadRouteEmptyState", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Software/i })).toHaveAttribute(
       "href",
-      "/software",
+      "/library/software",
     );
     expect(screen.getByRole("link", { name: /Audiobooks/i })).toHaveAttribute(
       "href",
-      "/audiobooks",
+      "/library/audiobooks",
     );
   });
 });

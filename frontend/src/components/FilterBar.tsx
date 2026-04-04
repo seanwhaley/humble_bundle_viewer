@@ -4,9 +4,24 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, X, Filter } from "lucide-react";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import { Input } from "./ui/input";
 import { useFilters } from "../state/filters";
 import { cn } from "../lib/utils";
+import {
+  FIELD_LABEL_CLASS,
+  FILTER_BAR_CHIP_CLASS,
+  FILTER_BAR_COLLAPSED_SUMMARY_CLASS,
+  FILTER_BAR_CONTENT_ANIMATION_CLASS,
+  FILTER_BAR_FOOTER_CLASS,
+  FILTER_BAR_GRID_CLASS,
+  FILTER_BAR_HEADER_CLASS,
+  FILTER_BAR_MORE_CHIP_CLASS,
+  FILTER_BAR_SHELL_CLASS,
+  FILTER_BAR_TITLE_CLASS,
+  FORM_FIELD_STACK_CLASS,
+  FORM_SELECT_CLASS,
+} from "../styles/roles";
 
 export type FilterBarField =
   | "search"
@@ -88,34 +103,29 @@ export default function FilterBar({
     showDateRangeField && (filters.startDate || filters.endDate),
   ].filter(Boolean).length;
 
-  const selectClass = "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
-
   return (
-    <div className={cn("rounded-xl border bg-card px-6 py-4 text-card-foreground shadow-sm", className)}>
+    <div className={cn(FILTER_BAR_SHELL_CLASS, className)}>
       {!hideHeader && (
-      <div 
-        className="flex cursor-pointer items-center justify-between" 
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <div className={FILTER_BAR_HEADER_CLASS} onClick={() => setIsExpanded(!isExpanded)}>
         <div className="flex items-center gap-2">
-          <h3 className="flex items-center gap-2 text-lg font-semibold leading-none tracking-tight">
+          <h3 className={FILTER_BAR_TITLE_CLASS}>
             <Filter className="h-5 w-5 text-muted-foreground" />
             Filters
           </h3>
           {activeFilterCount > 0 && !isExpanded && (
-            <div className="ml-4 flex gap-2">
+            <div className={FILTER_BAR_COLLAPSED_SUMMARY_CLASS}>
               {filters.search && (
-                <span className="inline-flex items-center rounded-md border border-transparent bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <Badge variant="surface" size="compact" casing="ui" className={FILTER_BAR_CHIP_CLASS}>
                   Search: {filters.search}
-                </span>
+                </Badge>
               )}
               {filters.category && (
-                <span className="inline-flex items-center rounded-md border border-transparent bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                <Badge variant="surface" size="compact" casing="ui" className={FILTER_BAR_CHIP_CLASS}>
                   Category: {filters.category}
-                </span>
+                </Badge>
               )}
               {(activeFilterCount - (filters.search ? 1 : 0) - (filters.category ? 1 : 0)) > 0 && (
-                <span className="inline-flex items-center rounded-md border border-transparent bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                <span className={FILTER_BAR_MORE_CHIP_CLASS}>
                   +{activeFilterCount - (filters.search ? 1 : 0) - (filters.category ? 1 : 0)} more
                 </span>
               )}
@@ -129,11 +139,11 @@ export default function FilterBar({
       )}
       
       {isExpanded && (
-      <div className={cn("animate-in fade-in slide-in-from-top-2 duration-200", !hideHeader && "mt-4")}>
-          <div className="grid gap-4 md:grid-cols-4">
+      <div className={cn(FILTER_BAR_CONTENT_ANIMATION_CLASS, !hideHeader && "mt-4")}>
+          <div className={FILTER_BAR_GRID_CLASS}>
         {showSearchField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Search</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+              <label className={FIELD_LABEL_CLASS}>Search</label>
             <Input
               placeholder="Search..."
               value={filters.search}
@@ -143,10 +153,10 @@ export default function FilterBar({
         )}
 
         {showCategoryField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Category</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+            <label className={FIELD_LABEL_CLASS}>Category</label>
             <select
-              className={selectClass}
+              className={FORM_SELECT_CLASS}
               title="Category"
               value={filters.category ?? ""}
               onChange={(event) =>
@@ -164,10 +174,10 @@ export default function FilterBar({
         )}
 
         {showPlatformField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Platform</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+            <label className={FIELD_LABEL_CLASS}>Platform</label>
             <select
-              className={selectClass}
+              className={FORM_SELECT_CLASS}
               title="Platform"
               value={filters.platform ?? ""}
               onChange={(event) =>
@@ -185,10 +195,10 @@ export default function FilterBar({
         )}
 
         {showKeyTypeField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Key type</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+            <label className={FIELD_LABEL_CLASS}>Key type</label>
             <select
-              className={selectClass}
+              className={FORM_SELECT_CLASS}
               title="Key type"
               value={filters.keyType ?? ""}
               onChange={(event) =>
@@ -206,12 +216,12 @@ export default function FilterBar({
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4 mt-4">
+      <div className={cn(FILTER_BAR_GRID_CLASS, "mt-4")}>
         {showKeyPresenceField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Keys</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+            <label className={FIELD_LABEL_CLASS}>Keys</label>
             <select
-              className={selectClass}
+              className={FORM_SELECT_CLASS}
               title="Key presence"
               value={filters.keyPresence ?? ""}
               onChange={(event) =>
@@ -230,10 +240,10 @@ export default function FilterBar({
         )}
 
         {showDownloadPresenceField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Downloads</label>
+          <div className={FORM_FIELD_STACK_CLASS}>
+            <label className={FIELD_LABEL_CLASS}>Downloads</label>
             <select
-              className={selectClass}
+              className={FORM_SELECT_CLASS}
               title="Download presence"
               value={filters.downloadPresence ?? ""}
               onChange={(event) =>
@@ -253,16 +263,16 @@ export default function FilterBar({
 
         {showDateRangeField && (
           <>
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">Start Date</label>
+            <div className={FORM_FIELD_STACK_CLASS}>
+              <label className={FIELD_LABEL_CLASS}>Start Date</label>
               <Input
                 type="date"
                 value={filters.startDate ?? ""}
                 onChange={(e) => setFilters({ startDate: e.target.value || null })}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">End Date</label>
+            <div className={FORM_FIELD_STACK_CLASS}>
+              <label className={FIELD_LABEL_CLASS}>End Date</label>
               <Input
                 type="date"
                 value={filters.endDate ?? ""}
@@ -272,7 +282,7 @@ export default function FilterBar({
           </>
         )}
 
-        <div className="md:col-span-2 flex items-end justify-end">
+        <div className={FILTER_BAR_FOOTER_CLASS}>
           <Button
             variant="outline"
             onClick={() => {

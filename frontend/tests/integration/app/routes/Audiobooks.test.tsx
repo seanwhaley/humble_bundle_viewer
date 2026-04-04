@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Audiobooks from "../../../../src/app/routes/Audiobooks";
+import {
+  PageHeaderProvider,
+  usePageHeaderState,
+} from "../../../../src/app/layout/PageHeaderContext";
 
 const mocks = vi.hoisted(() => ({
   useLibraryData: vi.fn(),
@@ -137,9 +141,17 @@ vi.mock("../../../../src/components/ExpiredLinkDialog", () => ({
 function renderRoute() {
   return render(
     <MemoryRouter future={memoryRouterFuture}>
-      <Audiobooks />
+      <PageHeaderProvider>
+        <HeaderActionsHost />
+        <Audiobooks />
+      </PageHeaderProvider>
     </MemoryRouter>,
   );
+}
+
+function HeaderActionsHost() {
+  const { actions } = usePageHeaderState();
+  return <div>{actions}</div>;
 }
 
 describe("Audiobooks", () => {
@@ -170,7 +182,9 @@ describe("Audiobooks", () => {
 
     expect(screen.queryByText("Audiobook FilterBar")).not.toBeInTheDocument();
     expect(screen.queryByText("Managed sync panel")).not.toBeInTheDocument();
-    expect(screen.getByText("2 audiobooks in the current view.")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 audiobook titles match the current filters."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /^Filters$/ }));
     expect(screen.getByText("Audiobook FilterBar")).toBeInTheDocument();

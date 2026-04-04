@@ -13,6 +13,7 @@ All other frontend files must use:
 
 - semantic tokens (`bg-card`, `text-muted-foreground`, `border-border`, `bg-status-success`, etc.)
 - shared UI primitives (`Button`, `Input`, `Card`, `Badge`, `Tooltip`)
+- shared role definitions from `frontend/src/styles/roles.ts` when the pattern is larger than a single primitive
 
 If a needed visual state cannot be expressed with the current token set, add a new token instead of hardcoding a palette value inline.
 
@@ -61,6 +62,26 @@ If a needed visual state cannot be expressed with the current token set, add a n
 
 ## Shared component APIs
 
+## Theme runtime and role ownership
+
+The viewer now uses a named root theme contract.
+
+- The active theme is applied at the document root with `data-theme`.
+- `hb-dark` is the first supported theme and should be treated as the reference implementation.
+- Theme values belong in `frontend/src/styles/main.css` and `frontend/src/app/theme/themes.ts`.
+- Cross-page surface roles belong in `frontend/src/styles/roles.ts`.
+- The current public theme selector lives on `frontend/src/app/routes/LibrarySetup.tsx`, not in the shared global route header.
+
+When adding or changing styling, use this ownership order:
+
+1. theme tokens in `main.css`
+2. semantic Tailwind mappings in `tailwind.config.js`
+3. shared primitive variants (`Card`, `Badge`, table helpers, etc.)
+4. shared role classes in `frontend/src/styles/roles.ts`
+5. route-local layout only
+
+If a route needs the same shell, disclosure, stat panel, chart frame, or table wrapper seen elsewhere, add or reuse a shared role instead of inventing a new inline class string.
+
 ### `Button`
 
 Use `Button` for all primary and secondary actions.
@@ -97,7 +118,14 @@ Available primitives:
 - `CardHeader`
 - `CardContent`
 
-`Card` accepts `className` for spacing/layout overrides when needed.
+`Card` accepts shared variants for common surface decisions:
+
+- `surface`: `default`, `panel`, `strong`, `inset`, `overlay`
+- `radius`: `default`, `compact`, `section`
+- `shadow`: `default`, `none`, `inner`
+- `interactive`: `true` / `false`
+
+Use `className` only for spacing/layout overrides when needed.
 
 ### `Badge`
 
@@ -110,6 +138,19 @@ Supported variants:
 - `info`
 - `error`
 - `neutral`
+- `surface`
+- `muted`
+
+Supported sizes:
+
+- `default`
+- `compact`
+- `tiny`
+
+Supported casing:
+
+- `label`
+- `ui`
 
 `Badge` is presentational only. Use `Button` instead of making a badge interactive.
 
@@ -146,8 +187,45 @@ Example pattern:
 </Card>
 ```
 
+## Viewer route-shell pattern
+
+Major viewer routes should read as one product family instead of one-off pages.
+
+Default route order:
+
+1. layout header
+2. compact route intro card
+3. scope, filter, or quick-focus controls
+4. primary table, cards, or chart surface
+5. optional help or interpretation content
+
+Use these routes as the main reference implementations:
+
+- `frontend/src/app/routes/Overview.tsx` — homepage section rhythm and top-fold prioritization
+- `frontend/src/app/routes/LibrarySetup.tsx` — compact workflow framing and status panels
+- `frontend/src/app/routes/CommandCenter.tsx` — maintenance-oriented cards, badges, and disclosures
+
+Route-family guidance:
+
+- media and download routes should keep the data table primary and place heavier controls behind explicit toggles such as **Filters**, bulk-action drawers, or managed-sync panels
+- current-sales routes should use compact intro/context framing, quick-focus rows, and semantic status treatments instead of bespoke dark dashboard strips
+- purchases should keep the hierarchy-first table as the default mode and reserve included-item analysis for the secondary deep-inspection mode
+- schema and maintenance-style views should use the same semantic shells and badges as the rest of the viewer rather than standalone visual systems
+
+## Status vocabulary
+
+Use the shared status tokens consistently across routes:
+
+- `success` — fresh, owned, available, completed
+- `warning` — expiring, partial overlap, stale soon, needs attention
+- `error` — expired, failed, unavailable
+- `info` — active scope, current snapshot, contextual metadata
+- `neutral` — empty, missing, or not applicable
+
 ## Route-level rules
 
-- `CommandCenter.tsx` and `LibrarySetup.tsx` should be treated as reference implementations for semantic cards, badges, and tokenized status panels.
+- `Overview.tsx`, `CommandCenter.tsx`, and `LibrarySetup.tsx` should be treated as reference implementations for semantic cards, badges, tokenized status panels, and route-shell hierarchy.
 - New setup or maintenance UI states must use the shared primitives first, not one-off class strings.
+- New viewer routes should prefer compact intro cards, summary-first layout, quick-focus or filter disclosures, and semantic status treatments before introducing route-local chrome.
 - Status panels may use token classes directly when a full-width message block is more appropriate than a badge.
+- Do not reintroduce `bg-card/60`, `bg-muted/30`, `bg-background/70`, or similar opacity-tuned route shells for common roles; use shared `Card` variants or `frontend/src/styles/roles.ts` instead.

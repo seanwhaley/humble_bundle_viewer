@@ -5,6 +5,31 @@ import { useViewerConfig } from "../data/api";
 import { Download as DownloadRecord } from "../data/types";
 import { Button } from "./ui/button";
 import {
+  COMPACT_ACTION_BUTTON_WITH_GAP_CLASS,
+  COMPACT_FORM_SELECT_CLASS,
+  COMPACT_INFO_PANEL_CLASS,
+  COMPACT_METRIC_LABEL_CLASS,
+  LIBRARY_CONTEXT_METRIC_CLASS,
+  MONO_INLINE_TEXT_CLASS,
+} from "../styles/roles";
+import {
+  GRID_FOUR_METRIC_CLASS,
+  PAGE_ACTION_ROW_CLASS,
+  PANEL_META_ROW_CLASS,
+  PANEL_HEADER_TOP_ALIGN_ROW_CLASS,
+  PANEL_HELP_TEXT_CLASS,
+} from "../styles/page";
+import {
+  STATUS_ERROR_TEXT_XS_CLASS,
+  STATUS_PROGRESS_BAR_CLASS,
+  STATUS_SCOPE_PANEL_CLASS,
+  STATUS_SUCCESS_BODY_TEXT_CLASS,
+  STATUS_SUCCESS_HEADER_CLASS,
+  STATUS_SUCCESS_PANEL_SOFT_CLASS,
+  STATUS_SUCCESS_TEXT_RIGHT_CLASS,
+  STATUS_WARNING_TEXT_XS_CLASS,
+} from "../styles/status";
+import {
   buildManagedDownloadPlan,
   ManagedDownloadItem,
   ManagedDownloadPlanEntry,
@@ -12,7 +37,7 @@ import {
   ManagedSyncSummary,
   supportsManagedDownloads,
   syncManagedDownloads,
-} from "../utils/managedDownloads";
+} from "../data/managedDownloads";
 import {
   DownloadLabelStrategy,
   filterDownloadsByLabel,
@@ -232,19 +257,19 @@ export default function AdvancedManagedSyncPanel({
   };
 
   return (
-    <div className="rounded-md border border-emerald-500/30 bg-emerald-500/5 p-3.5">
-      <div className="flex flex-wrap items-start justify-between gap-2.5">
+    <div className={STATUS_SUCCESS_PANEL_SOFT_CLASS}>
+      <div className={PANEL_HEADER_TOP_ALIGN_ROW_CLASS}>
         <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
+          <h3 className={STATUS_SUCCESS_HEADER_CLASS}>
             <ShieldCheck className="h-4 w-4" />
             Advanced local sync
           </h3>
-          <p className="mt-1 max-w-3xl text-xs text-slate-300">
+          <p className={STATUS_SUCCESS_BODY_TEXT_CLASS}>
             Save managed {mediaLabel} downloads into a folder on this device
             without writing the files to backend storage.
           </p>
         </div>
-        <div className="rounded-md border border-slate-800 bg-slate-950/60 px-2.5 py-1.5 text-right text-[11px] text-slate-300">
+        <div className={STATUS_SCOPE_PANEL_CLASS}>
           <div>
             Scope:{" "}
             {selectedRows.length ?
@@ -256,9 +281,9 @@ export default function AdvancedManagedSyncPanel({
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className={PAGE_ACTION_ROW_CLASS}>
         <select
-          className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+          className={COMPACT_FORM_SELECT_CLASS}
           value={format}
           onChange={(event) => setFormat(event.target.value)}
           aria-label="Managed sync format">
@@ -271,7 +296,7 @@ export default function AdvancedManagedSyncPanel({
         </select>
 
         <select
-          className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+          className={COMPACT_FORM_SELECT_CLASS}
           value={sizePolicy}
           onChange={(event) => setSizePolicy(event.target.value as SizePolicy)}
           aria-label="Managed sync size policy">
@@ -282,7 +307,7 @@ export default function AdvancedManagedSyncPanel({
 
         <Button
           size="sm"
-          className="h-8 text-xs"
+          className={COMPACT_ACTION_BUTTON_WITH_GAP_CLASS}
           disabled={!plannedEntries.length || isSyncing || isPlanning}
           onClick={() => {
             void handleManagedSync();
@@ -294,85 +319,85 @@ export default function AdvancedManagedSyncPanel({
         </Button>
       </div>
 
-      <p className="mt-2 text-xs text-slate-400">
+      <p className={PANEL_HELP_TEXT_CLASS}>
         Managed sync now asks the backend to build the file plan first, so
         shared Python rules decide filenames, file types, and relative paths
         before the browser saves anything locally. It still reuses matching
         files, preserves mismatches with numbered copies, writes progress to{" "}
-        <span className="font-mono">.hb-library-viewer/sync-manifest.json</span>
+        <span className={MONO_INLINE_TEXT_CLASS}>.hb-library-viewer/sync-manifest.json</span>
         , and uses up to {maxParallelDownloads} parallel worker(s) from{" "}
-        <span className="font-mono">config.yaml</span> while the backend spaces
+        <span className={MONO_INLINE_TEXT_CLASS}>config.yaml</span> while the backend spaces
         upstream stream starts to respect the minimum rate limit.
       </p>
       {!managedDownloadSupported && (
-        <p className="mt-2 text-xs text-amber-300">
+        <p className={STATUS_WARNING_TEXT_XS_CLASS}>
           This browser does not support the local folder picker API. Use the CLI
           managed sync command instead.
         </p>
       )}
-      {syncError && <p className="mt-2 text-xs text-rose-300">{syncError}</p>}
+      {syncError && <p className={STATUS_ERROR_TEXT_XS_CLASS}>{syncError}</p>}
 
       {progress && (
-        <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-300">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className={COMPACT_INFO_PANEL_CLASS}>
+          <div className={PANEL_HEADER_TOP_ALIGN_ROW_CLASS}>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <p className={COMPACT_METRIC_LABEL_CLASS}>
                 Sync progress
               </p>
-              <p className="mt-1 text-sm text-slate-100">
+              <p className="mt-1 text-sm text-card-foreground">
                 Reviewed {progress.reviewedTitles} of {progress.totalTitles}{" "}
                 title(s) and {progress.reviewedFiles} of {progress.totalFiles}{" "}
                 file(s)
               </p>
             </div>
-            <div className="text-right text-sm font-medium text-emerald-200">
+            <div className={STATUS_SUCCESS_TEXT_RIGHT_CLASS}>
               {reviewedPercent}% complete
             </div>
           </div>
 
           <progress
-            className="mt-3 h-2 w-full overflow-hidden rounded-full [appearance:none] [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-emerald-400 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-slate-800 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-emerald-400"
+            className={STATUS_PROGRESS_BAR_CLASS}
             aria-label="Managed sync progress"
             max={Math.max(progress.totalFiles, 1)}
             value={progress.reviewedFiles}
           />
 
-          <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">
+          <div className={GRID_FOUR_METRIC_CLASS}>
+            <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>
                 Titles in scope
               </div>
-              <div className="mt-1 text-sm text-slate-100">
+              <div className="mt-1 text-sm text-card-foreground">
                 {progress.totalTitles}
               </div>
             </div>
-            <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">
+            <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>
                 Files planned
               </div>
-              <div className="mt-1 text-sm text-slate-100">
+              <div className="mt-1 text-sm text-card-foreground">
                 {progress.totalFiles}
               </div>
             </div>
-            <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">
+            <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>
                 Downloaded
               </div>
-              <div className="mt-1 text-sm text-emerald-200">
+              <div className="mt-1 text-sm text-status-success-foreground">
                 {progress.downloadedFiles}
               </div>
             </div>
-            <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
-              <div className="text-[11px] uppercase tracking-wide text-slate-500">
+            <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>
                 Skipped existing
               </div>
-              <div className="mt-1 text-sm text-slate-100">
+              <div className="mt-1 text-sm text-card-foreground">
                 {progress.skippedExistingFiles}
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-slate-400">
+          <div className={PANEL_META_ROW_CLASS}>
             <span>
               Active workers: {progress.activeDownloads} /{" "}
               {maxParallelDownloads}
@@ -381,24 +406,24 @@ export default function AdvancedManagedSyncPanel({
             <span>Failed: {progress.failedFiles}</span>
           </div>
 
-          <p className="mt-3 text-xs text-slate-300">
+          <p className={PANEL_HELP_TEXT_CLASS}>
             Current title:{" "}
-            <span className="font-medium text-slate-100">
+            <span className="font-medium text-card-foreground">
               {progress.currentTitle || "Finalizing manifest"}
             </span>
           </p>
           {progress.currentFile && (
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-muted-foreground">
               Current file:{" "}
-              <span className="font-mono">{progress.currentFile}</span>
+              <span className={MONO_INLINE_TEXT_CLASS}>{progress.currentFile}</span>
             </p>
           )}
         </div>
       )}
 
       {summary && (
-        <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/60 p-3 text-xs text-slate-300">
-          <div className="flex flex-wrap gap-4">
+        <div className={COMPACT_INFO_PANEL_CLASS}>
+          <div className={PAGE_ACTION_ROW_CLASS}>
             <span className="flex items-center gap-1">
               <Download className="h-3.5 w-3.5" />
               Downloaded: {summary.downloadedFiles}
@@ -407,8 +432,8 @@ export default function AdvancedManagedSyncPanel({
             <span>Renamed: {summary.renamedFiles}</span>
             <span>Failed: {summary.failedFiles}</span>
           </div>
-          <p className="mt-2 text-slate-400">
-            Manifest: <span className="font-mono">{summary.manifestPath}</span>
+          <p className="mt-2 text-muted-foreground">
+            Manifest: <span className={MONO_INLINE_TEXT_CLASS}>{summary.manifestPath}</span>
           </p>
         </div>
       )}

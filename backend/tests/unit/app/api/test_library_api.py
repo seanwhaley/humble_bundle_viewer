@@ -167,6 +167,63 @@ class TestLibraryApi:
             ),
         }
 
+    def test_pick_save_folder_returns_selected_directory(
+        self,
+        api_client_factory,
+        restrict_library_roots: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        selected_dir = restrict_library_roots / "picked"
+        monkeypatch.setattr(
+            library_api, "pick_directory", lambda _initial: selected_dir
+        )
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/pick-save-folder",
+            json={"initial_path": str(restrict_library_roots)},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"selected_path": str(selected_dir.resolve())}
+
+    def test_pick_save_folder_returns_null_when_canceled(
+        self,
+        api_client_factory,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(library_api, "pick_directory", lambda _initial: None)
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/pick-save-folder",
+            json={"initial_path": None},
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"selected_path": None}
+
+    def test_pick_save_folder_maps_picker_errors_to_500(
+        self,
+        api_client_factory,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        def raise_picker(_initial: str | None) -> Path | None:
+            raise RuntimeError(
+                "Native folder selection is not available in this Python environment."
+            )
+
+        monkeypatch.setattr(library_api, "pick_directory", raise_picker)
+        client = api_client_factory(library_api.router)
+
+        response = client.post(
+            "/api/library/pick-save-folder",
+            json={"initial_path": None},
+        )
+
+        assert response.status_code == 500
+        assert "Native folder selection is not available" in response.json()["detail"]
+
     def test_get_subproduct_page_returns_cached_html(
         self,
         api_client_factory,
@@ -284,27 +341,50 @@ class TestLibraryApi:
             ).resolve()
         )
 
-    def test_run_library_rejects_paths_outside_allowed_roots(
+    def test_run_library_accepts_paths_outside_allowed_roots(
         self,
         api_client_factory,
+        sample_viewer_library_data,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        recorded: dict[str, Path] = {}
+
+        monkeypatch.setattr(
+            library_api,
+            "run_library_capture",
+            lambda **_kwargs: SimpleNamespace(
+                library=sample_viewer_library_data,
+                files_downloaded=0,
+                files_failed=0,
+            ),
+        )
+        monkeypatch.setattr(
+            library_api,
+            "set_library_path",
+            lambda path: recorded.setdefault("path", path),
+        )
         client = api_client_factory(library_api.router)
 
+        output_dir = (tmp_path / "outside-root" / "capture-output").resolve()
         response = client.post(
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": "C:/outside-root/library_products.json",
+                "output_path": str(output_dir),
             },
         )
 
-        assert response.status_code == 400
-        assert "configured viewer or artifact directories" in response.json()["detail"]
+        assert response.status_code == 200
+        assert response.json()["output_path"] == str(
+            (output_dir / "library_products.json").resolve()
+        )
+        assert recorded["path"] == (output_dir / "library_products.json").resolve()
 
     def test_run_library_rejects_non_standard_json_filename(
         self,
         api_client_factory,
-        restrict_library_roots: Path,
+        tmp_path: Path,
     ) -> None:
         client = api_client_factory(library_api.router)
 
@@ -312,7 +392,7 @@ class TestLibraryApi:
             "/api/library/run",
             json={
                 "auth_cookie": "cookie-value-123",
-                "output_path": str(restrict_library_roots / "custom-name.json"),
+                "output_path": str(tmp_path / "custom-name.json"),
             },
         )
 
@@ -529,13 +609,24 @@ class TestLibraryApi:
 
         assert response.status_code == 400
 
-    def test_select_library_rejects_paths_outside_allowed_roots(
+    def test_select_library_accepts_paths_outside_allowed_roots(
         self,
         api_client_factory,
+        sample_viewer_library_payload,
         tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         library_path = tmp_path / "library_products.json"
-        library_path.write_text("{}", encoding="utf-8")
+        library_path.write_text(
+            json.dumps(sample_viewer_library_payload),
+            encoding="utf-8",
+        )
+        recorded: dict[str, Path] = {}
+        monkeypatch.setattr(
+            library_api,
+            "set_library_path",
+            lambda path: recorded.setdefault("path", path),
+        )
         client = api_client_factory(library_api.router)
 
         response = client.post(
@@ -543,5 +634,6 @@ class TestLibraryApi:
             json={"library_path": str(library_path)},
         )
 
-        assert response.status_code == 400
-        assert "configured viewer or artifact directories" in response.json()["detail"]
+        assert response.status_code == 200
+        assert response.json()["output_path"] == str(library_path.resolve())
+        assert recorded["path"] == library_path.resolve()

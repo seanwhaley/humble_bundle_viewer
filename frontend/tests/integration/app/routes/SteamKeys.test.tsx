@@ -5,16 +5,6 @@ vi.mock("../../../../src/components/FilterBar", () => ({
   default: () => <div>FilterBar</div>,
 }));
 
-vi.mock("../../../../src/components/KeyInventorySummaryStrip", () => ({
-  default: ({ items }: { items: Array<{ label: string; value: number }> }) => (
-    <div>
-      {items.map((item) => (
-        <span key={item.label}>{`${item.label}: ${item.value}`}</span>
-      ))}
-    </div>
-  ),
-}));
-
 vi.mock("../../../../src/components/ProductCell", () => ({
   ProductCell: () => <span>Product cell</span>,
 }));
@@ -82,6 +72,10 @@ import * as api from "../../../../src/data/api";
 import * as selectors from "../../../../src/data/selectors";
 import * as filtersState from "../../../../src/state/filters";
 import SteamKeys from "../../../../src/app/routes/SteamKeys";
+import {
+  PageHeaderProvider,
+  usePageHeaderState,
+} from "../../../../src/app/layout/PageHeaderContext";
 
 const mockUseLibraryData = vi.mocked(api.useLibraryData);
 const mockUseFilters = vi.mocked(filtersState.useFilters);
@@ -98,6 +92,20 @@ const mockIsSteamKeyType = vi.mocked(selectors.isSteamKeyType);
 const mockSortKeyInventoryForTriage = vi.mocked(
   selectors.sortKeyInventoryForTriage,
 );
+
+function HeaderActionsHost() {
+  const { actions } = usePageHeaderState();
+  return <div>{actions}</div>;
+}
+
+function renderRoute() {
+  return render(
+    <PageHeaderProvider>
+      <HeaderActionsHost />
+      <SteamKeys />
+    </PageHeaderProvider>,
+  );
+}
 
 describe("SteamKeys", () => {
   beforeEach(() => {
@@ -174,7 +182,7 @@ describe("SteamKeys", () => {
       error: null,
     } as ReturnType<typeof api.useLibraryData>);
 
-    const { container } = render(<SteamKeys />);
+    const { container } = renderRoute();
     expect(container.querySelector(".animate-spin")).toBeInTheDocument();
   });
 
@@ -185,7 +193,7 @@ describe("SteamKeys", () => {
       error: new Error("boom"),
     } as ReturnType<typeof api.useLibraryData>);
 
-    render(<SteamKeys />);
+    renderRoute();
     expect(
       screen.getByText("Failed to load library data."),
     ).toBeInTheDocument();
@@ -198,11 +206,19 @@ describe("SteamKeys", () => {
       error: null,
     } as ReturnType<typeof api.useLibraryData>);
 
-    render(<SteamKeys />);
+    renderRoute();
 
-    expect(screen.getByText("Steam Keys")).toBeInTheDocument();
-    expect(screen.getByText("Keys in inventory: 1")).toBeInTheDocument();
-    expect(screen.getByText("Needs reveal")).toBeInTheDocument();
+    expect(
+      screen.getByText("Work through the Steam redemption queue from one focused view"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("1 Steam key row match the current library filters."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Needs reveal/i }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^Filters$/i }));
+    expect(screen.getByText("FilterBar")).toBeInTheDocument();
     expect(
       screen.getByText("Search Steam keys, bundles, status, or Steam IDs"),
     ).toBeInTheDocument();

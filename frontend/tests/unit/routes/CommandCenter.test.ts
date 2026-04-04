@@ -24,7 +24,7 @@ describe("sanitizePersistedCommandState", () => {
       status: "success" as const,
       message: "Done",
       detailLines: ["Output: file.json"],
-      actions: [{ label: "Open", to: "/orders" }],
+      actions: [{ label: "Open", to: "/library/purchases" }],
     };
 
     expect(sanitizePersistedCommandState(completed)).toEqual(completed);
