@@ -20,15 +20,19 @@ describe("Badge", () => {
     expect(badge.className).toContain("text-status-success-foreground");
   });
 
-  it("does not forward interactive props to the rendered badge", () => {
+  it("forwards standard HTML props to the rendered badge", () => {
     const handleClick = vi.fn();
-    const unsafeProps = {
-      onClick: handleClick,
-    } as unknown as React.ComponentProps<typeof Badge>;
+    render(
+      <Badge onClick={handleClick} role="status" tabIndex={0}>
+        Idle
+      </Badge>,
+    );
 
-    render(<Badge {...unsafeProps}>Idle</Badge>);
+    const badge = screen.getByRole("status");
 
-    fireEvent.click(screen.getByText("Idle"));
-    expect(handleClick).not.toHaveBeenCalled();
+    expect(badge).toHaveAttribute("tabindex", "0");
+
+    fireEvent.click(badge);
+    expect(handleClick).toHaveBeenCalledTimes(1);
   });
 });

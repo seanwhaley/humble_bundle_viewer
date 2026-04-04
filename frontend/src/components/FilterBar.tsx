@@ -106,8 +106,10 @@ export default function FilterBar({
   return (
     <div className={cn(FILTER_BAR_SHELL_CLASS, className)}>
       {!hideHeader && (
-        <div
-          className={FILTER_BAR_HEADER_CLASS}
+        <button
+          type="button"
+          className={cn(FILTER_BAR_HEADER_CLASS, "w-full text-left")}
+          aria-expanded={isExpanded ? "true" : "false"}
           onClick={() => setIsExpanded(!isExpanded)}>
           <div className="flex items-center gap-2">
             <h3 className={FILTER_BAR_TITLE_CLASS}>
@@ -149,12 +151,12 @@ export default function FilterBar({
               </div>
             )}
           </div>
-          <Button variant="ghost" size="sm">
+          <span className="inline-flex items-center justify-center rounded-md p-2 text-foreground">
             {isExpanded ?
               <ChevronUp className="h-4 w-4" />
             : <ChevronDown className="h-4 w-4" />}
-          </Button>
-        </div>
+          </span>
+        </button>
       )}
 
       {isExpanded && (

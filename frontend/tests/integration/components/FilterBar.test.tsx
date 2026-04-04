@@ -34,6 +34,24 @@ function renderFilterBar(ui: ReactElement, prime = false) {
 }
 
 describe("FilterBar", () => {
+  it("uses a real button to toggle the collapsed filter disclosure", () => {
+    renderFilterBar(
+      <FilterBar
+        categories={["books", "games"]}
+        platforms={["windows", "linux"]}
+        keyTypes={["steam", "gog"]}
+      />,
+      true,
+    );
+
+    const toggle = screen.getByRole("button", { name: /filters/i });
+    expect(screen.queryByPlaceholderText("Search...")).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
+  });
+
   it("shows compact summary badges while collapsed", () => {
     renderFilterBar(
       <FilterBar

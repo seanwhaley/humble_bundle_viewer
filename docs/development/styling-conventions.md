@@ -70,7 +70,7 @@ The viewer now uses a named root theme contract.
 - `hb-dark` is the first supported theme and should be treated as the reference implementation.
 - Theme values belong in `frontend/src/styles/main.css` and `frontend/src/app/theme/themes.ts`.
 - Cross-page surface roles belong in `frontend/src/styles/roles.ts`.
-- The current public theme selector lives on `frontend/src/app/routes/LibrarySetup.tsx`, not in the shared global route header.
+- The current public theme selector lives on `frontend/src/app/routes/Setup.tsx`, not in the shared global route header.
 
 When adding or changing styling, use this ownership order:
 
@@ -205,8 +205,8 @@ Default route order:
 
 Use these routes as the main reference implementations:
 
-- `frontend/src/app/routes/Overview.tsx` — homepage section rhythm and top-fold prioritization
-- `frontend/src/app/routes/LibrarySetup.tsx` — compact workflow framing and status panels
+- `frontend/src/app/routes/Home.tsx` — homepage section rhythm and top-fold prioritization
+- `frontend/src/app/routes/Setup.tsx` — compact workflow framing and status panels
 - `frontend/src/app/routes/CommandCenter.tsx` — maintenance-oriented cards, badges, and disclosures
 
 Route-family guidance:
@@ -228,7 +228,7 @@ Use the shared status tokens consistently across routes:
 
 ## Route-level rules
 
-- `Overview.tsx`, `CommandCenter.tsx`, and `LibrarySetup.tsx` should be treated as reference implementations for semantic cards, badges, tokenized status panels, and route-shell hierarchy.
+- `Home.tsx`, `CommandCenter.tsx`, and `Setup.tsx` should be treated as reference implementations for semantic cards, badges, tokenized status panels, and route-shell hierarchy.
 - New setup or maintenance UI states must use the shared primitives first, not one-off class strings.
 - New viewer routes should prefer compact intro cards, summary-first layout, quick-focus or filter disclosures, and semantic status treatments before introducing route-local chrome.
 - Status panels may use token classes directly when a full-width message block is more appropriate than a badge.

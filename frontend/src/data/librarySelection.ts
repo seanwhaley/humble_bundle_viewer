@@ -110,12 +110,9 @@ export function useRestoreStoredLibraryPath(
     }
 
     if (!storedLibraryPath) {
-      setIsRestoring(false);
-      return;
-    }
-
-    const currentPath = normalizeStoredLibraryPath(libraryStatus.current_path);
-    if (!storedLibraryPath) {
+      const currentPath = normalizeStoredLibraryPath(
+        libraryStatus.current_path,
+      );
       if (libraryStatus.exists && currentPath) {
         writeStoredLibraryPath(currentPath);
       }
@@ -123,6 +120,8 @@ export function useRestoreStoredLibraryPath(
       setIsRestoring(false);
       return;
     }
+
+    const currentPath = normalizeStoredLibraryPath(libraryStatus.current_path);
 
     if (libraryStatus.exists && currentPath === storedLibraryPath) {
       completedPathRef.current = storedLibraryPath;
