@@ -11,7 +11,8 @@ export const METRIC_LABEL_CLASS =
 export const DISPLAY_TITLE_CLASS =
   "text-3xl font-bold tracking-tight text-card-foreground";
 
-export const SECTION_TITLE_CLASS = "text-base font-semibold text-card-foreground";
+export const SECTION_TITLE_CLASS =
+  "text-base font-semibold text-card-foreground";
 
 export const SECTION_TITLE_LARGE_CLASS =
   "text-xl font-semibold text-card-foreground";
@@ -60,7 +61,8 @@ export const DOWNLOAD_ACTION_BUTTON_WITH_ICON_CLASS = "h-7 gap-1 text-xs";
 export const DOWNLOAD_PLACEHOLDER_BUTTON_CLASS =
   "h-7 cursor-default border border-dashed border-border text-xs text-muted-foreground opacity-20";
 
-export const INLINE_TEXT_LINK_CLASS = "font-medium text-primary hover:underline";
+export const INLINE_TEXT_LINK_CLASS =
+  "font-medium text-primary hover:underline";
 
 export const METRIC_VALUE_CLASS =
   "shrink-0 text-base font-semibold text-card-foreground";
@@ -122,7 +124,8 @@ export const POPUP_LINK_ITEM_CLASS =
 
 export const CHART_TITLE_CLASS = "mb-2 text-xs uppercase text-muted-foreground";
 
-export const FIELD_LABEL_CLASS = "text-sm font-medium leading-none text-card-foreground";
+export const FIELD_LABEL_CLASS =
+  "text-sm font-medium leading-none text-card-foreground";
 
 export const FORM_SELECT_CLASS =
   "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
@@ -133,7 +136,8 @@ export const COMPACT_FORM_SELECT_CLASS =
 export const FORM_CHECKBOX_CLASS =
   "mt-0.5 h-4 w-4 rounded border-input bg-background text-primary";
 
-export const SECTION_CHROME_CLASS = "flex items-center gap-2 text-muted-foreground";
+export const SECTION_CHROME_CLASS =
+  "flex items-center gap-2 text-muted-foreground";
 
 export const SECTION_CARD_CLASS =
   "rounded-2xl border border-border bg-surface-panel p-6 shadow-sm";
@@ -196,28 +200,33 @@ export const EMPTY_STATE_ICON_CLASS =
 
 export const EMPTY_STATE_STACK_CLASS = "space-y-2";
 
-export const EMPTY_STATE_TITLE_CLASS = "text-base font-semibold text-card-foreground";
+export const EMPTY_STATE_TITLE_CLASS =
+  "text-base font-semibold text-card-foreground";
 
 export const EMPTY_STATE_BODY_CLASS = "text-sm text-card-foreground/90";
 
 export const EMPTY_STATE_ACTIONS_WRAP_CLASS = "space-y-3 pt-1";
 
-export const DIALOG_SCRIM_CLASS = "fixed inset-0 z-50 flex items-center justify-center";
+export const DIALOG_SCRIM_CLASS =
+  "fixed inset-0 z-50 flex items-center justify-center";
 
 export const DIALOG_BACKDROP_CLASS = "absolute inset-0 bg-background/80";
 
 export const DIALOG_PANEL_CLASS =
   "relative z-10 w-full max-w-lg rounded-lg border border-border bg-popover p-6 shadow-xl";
 
-export const DIALOG_TITLE_CLASS = "text-lg font-semibold text-popover-foreground";
+export const DIALOG_TITLE_CLASS =
+  "text-lg font-semibold text-popover-foreground";
 
 export const DIALOG_DESCRIPTION_CLASS = "mt-2 text-sm text-muted-foreground";
 
 export const DIALOG_ACTION_ROW_END_CLASS = "mt-4 flex justify-end gap-2";
 
-export const METRIC_STRIP_GRID_CLASS = "grid gap-3 sm:grid-cols-2 xl:grid-cols-4";
+export const METRIC_STRIP_GRID_CLASS =
+  "grid gap-3 sm:grid-cols-2 xl:grid-cols-4";
 
-export const METRIC_STRIP_VALUE_CLASS = "mt-2 text-2xl font-semibold text-card-foreground";
+export const METRIC_STRIP_VALUE_CLASS =
+  "mt-2 text-2xl font-semibold text-card-foreground";
 
 export const METRIC_STRIP_HINT_CLASS = "mt-1 text-sm text-muted-foreground";
 
@@ -255,7 +264,8 @@ export const ACTION_SURFACE_OUTLINE_BUTTON_CLASS =
 export const TRUNCATED_TITLE_TEXT_CLASS =
   "truncate text-sm font-medium text-card-foreground";
 
-export const TABLE_SHELL_CLASS = "rounded-md border border-border bg-surface-panel";
+export const TABLE_SHELL_CLASS =
+  "rounded-md border border-border bg-surface-panel";
 
 export const TABLE_FRAME_CLASS =
   "overflow-x-auto rounded-xl border border-border bg-surface-overlay";

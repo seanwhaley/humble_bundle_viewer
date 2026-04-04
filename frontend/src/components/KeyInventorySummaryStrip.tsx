@@ -25,15 +25,9 @@ export default function KeyInventorySummaryStrip({
   return (
     <div className={METRIC_STRIP_GRID_CLASS}>
       {items.map((item) => (
-        <div
-          key={item.label}
-          className={METRIC_STRIP_CARD_CLASS}>
-          <p className={SECTION_EYEBROW_CLASS}>
-            {item.label}
-          </p>
-          <p className={METRIC_STRIP_VALUE_CLASS}>
-            {item.value}
-          </p>
+        <div key={item.label} className={METRIC_STRIP_CARD_CLASS}>
+          <p className={SECTION_EYEBROW_CLASS}>{item.label}</p>
+          <p className={METRIC_STRIP_VALUE_CLASS}>{item.value}</p>
           <p className={METRIC_STRIP_HINT_CLASS}>{item.hint}</p>
         </div>
       ))}

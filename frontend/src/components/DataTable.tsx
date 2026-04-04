@@ -121,8 +121,7 @@ interface DataTableProps<TData, TValue> {
   allowHorizontalScroll?: boolean;
 }
 
-interface IndeterminateCheckboxProps
-  extends InputHTMLAttributes<HTMLInputElement> {
+interface IndeterminateCheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
   indeterminate?: boolean;
 }
 
@@ -172,7 +171,7 @@ export function DataTable<TData, TValue>({
   const [internalRowSelection, setInternalRowSelection] =
     useState<RowSelectionState>({});
   const [openFilterColumnId, setOpenFilterColumnId] = useState<string | null>(
-    null
+    null,
   );
   const filterMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -190,7 +189,7 @@ export function DataTable<TData, TValue>({
     onRowSelectionChange ??
     ((updater) =>
       setInternalRowSelection((current) =>
-        typeof updater === "function" ? updater(current) : updater
+        typeof updater === "function" ? updater(current) : updater,
       ));
 
   useEffect(() => {
@@ -234,7 +233,11 @@ export function DataTable<TData, TValue>({
       return value.flatMap((item) => normalizeValue(item));
     }
     if (value instanceof Date) return [value.toISOString()];
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
       return [String(value)];
     }
     try {
@@ -270,7 +273,9 @@ export function DataTable<TData, TValue>({
         };
         const id =
           def.id ??
-          (typeof defAny.accessorKey === "string" ? defAny.accessorKey : undefined);
+          (typeof defAny.accessorKey === "string" ?
+            defAny.accessorKey
+          : undefined);
         const meta = def.meta as { filterKind?: string } | undefined;
         if (id && meta?.filterKind) {
           map.set(id, meta.filterKind);
@@ -288,11 +293,16 @@ export function DataTable<TData, TValue>({
    * Multi-select column filter that matches any selected token.
    */
   const multiSelectFilter: FilterFn<TData> = (row, columnId, filterValue) => {
-    if (filterValue === undefined || filterValue === null || filterValue === "") {
+    if (
+      filterValue === undefined ||
+      filterValue === null ||
+      filterValue === ""
+    ) {
       return true;
     }
-    const selectedValues = Array.isArray(filterValue)
-      ? filterValue.map((value) => String(value))
+    const selectedValues =
+      Array.isArray(filterValue) ?
+        filterValue.map((value) => String(value))
       : [String(filterValue)];
     if (!selectedValues.length) return true;
 
@@ -308,7 +318,9 @@ export function DataTable<TData, TValue>({
         <IndeterminateCheckbox
           checked={table.getIsAllRowsSelected()}
           indeterminate={table.getIsSomeRowsSelected()}
-          onChange={(event) => table.toggleAllRowsSelected(event.target.checked)}
+          onChange={(event) =>
+            table.toggleAllRowsSelected(event.target.checked)
+          }
           aria-label="Select all rows"
         />
       </div>
@@ -330,7 +342,7 @@ export function DataTable<TData, TValue>({
 
   const tableColumns = useMemo(
     () => (enableRowSelection ? [selectionColumn, ...columns] : columns),
-    [enableRowSelection, columns]
+    [enableRowSelection, columns],
   );
 
   const table = useReactTable({
@@ -440,7 +452,8 @@ export function DataTable<TData, TValue>({
    */
   const formatOptionLabel = (value: string, filterKind?: string) => {
     if (value === BLANK_TOKEN) return "Blank";
-    if (filterKind === "keyValue" && value === REVEALED_TOKEN) return "Reviewed";
+    if (filterKind === "keyValue" && value === REVEALED_TOKEN)
+      return "Reviewed";
     const trimmed = value.replace(/\s+/g, " ").trim();
     if (trimmed.length <= 40) return trimmed;
     return `${trimmed.slice(0, 37)}…`;
@@ -450,7 +463,7 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {/* Toolbar */}
       {showToolbar && (
-        <div className={cn(FILTER_PANEL_CLASS, tableToolbarClass)}> 
+        <div className={cn(FILTER_PANEL_CLASS, tableToolbarClass)}>
           <div className={tableToolbarRowClass}>
             <div className={tableToolbarSearchSectionClass}>
               {!hideSearch && (
@@ -476,8 +489,7 @@ export function DataTable<TData, TValue>({
                     key={filter.id}
                     variant="info"
                     size="compact"
-                    casing="ui"
-                  >
+                    casing="ui">
                     {filter.label}: {filter.count}
                   </Badge>
                 ))}
@@ -489,8 +501,7 @@ export function DataTable<TData, TValue>({
                   variant="ghost"
                   size="sm"
                   className={COMPACT_ACTION_BUTTON_CLASS}
-                  onClick={() => setGlobalFilter("")}
-                >
+                  onClick={() => setGlobalFilter("")}>
                   Clear search
                 </Button>
               )}
@@ -499,8 +510,7 @@ export function DataTable<TData, TValue>({
                   variant="ghost"
                   size="sm"
                   className={COMPACT_ACTION_BUTTON_CLASS}
-                  onClick={() => table.resetColumnFilters()}
-                >
+                  onClick={() => table.resetColumnFilters()}>
                   Clear column filters
                 </Button>
               )}
@@ -513,16 +523,14 @@ export function DataTable<TData, TValue>({
                     variant="ghost"
                     size="sm"
                     className={COMPACT_ACTION_BUTTON_CLASS}
-                    onClick={handleSelectAll}
-                  >
+                    onClick={handleSelectAll}>
                     Select all
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     className={COMPACT_ACTION_BUTTON_CLASS}
-                    onClick={handleSelectNone}
-                  >
+                    onClick={handleSelectNone}>
                     Select none
                   </Button>
                 </>
@@ -532,216 +540,239 @@ export function DataTable<TData, TValue>({
         </div>
       )}
 
-      <div
-        className={cn(TABLE_SHELL_CLASS, tableOverflowVisibleClass)}
-      >
+      <div className={cn(TABLE_SHELL_CLASS, tableOverflowVisibleClass)}>
         <div
           className={cn(
-            allowHorizontalScroll
-              ? tableScrollWrapperClass
-              : tableFixedWrapperClass
-          )}
-        >
-        <table
-          className={cn(
-            tableBaseClass,
-            allowHorizontalScroll ? tableAutoLayoutClass : tableFixedLayoutClass
-          )}
-        >
-            <thead className={cn(tableHeaderSurfaceClass, tableHeaderBorderClass)}>
-                {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className={tableHeaderRowClass}>
-                    {headerGroup.headers.map((header) => {
+            allowHorizontalScroll ?
+              tableScrollWrapperClass
+            : tableFixedWrapperClass,
+          )}>
+          <table
+            className={cn(
+              tableBaseClass,
+              allowHorizontalScroll ? tableAutoLayoutClass : (
+                tableFixedLayoutClass
+              ),
+            )}>
+            <thead
+              className={cn(tableHeaderSurfaceClass, tableHeaderBorderClass)}>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id} className={tableHeaderRowClass}>
+                  {headerGroup.headers.map((header) => {
                     const filterValue = header.column.getFilterValue();
-                    const selectedCount = Array.isArray(filterValue)
-                      ? filterValue.length
-                      : filterValue
-                        ? 1
-                        : 0;
-                    const isFilterOpen = openFilterColumnId === header.column.id;
+                    const selectedCount =
+                      Array.isArray(filterValue) ? filterValue.length
+                      : filterValue ? 1
+                      : 0;
+                    const isFilterOpen =
+                      openFilterColumnId === header.column.id;
                     const isSelectionColumn = header.column.id === "select";
-                    const columnMeta =
-                      header.column.columnDef.meta as TableColumnMeta | undefined;
+                    const columnMeta = header.column.columnDef.meta as
+                      | TableColumnMeta
+                      | undefined;
                     return (
-                        <th
-                          key={header.id}
-                          className={cn(
-                            tableHeaderCellClass,
-                            tableHeaderContentClass,
-                            isSelectionColumn
-                              ? tableSelectionHeaderCellClass
-                              : tableHeaderCellPaddingClass,
-                            columnMeta?.headerClassName
-                          )}
-                        >
+                      <th
+                        key={header.id}
+                        className={cn(
+                          tableHeaderCellClass,
+                          tableHeaderContentClass,
+                          isSelectionColumn ?
+                            tableSelectionHeaderCellClass
+                          : tableHeaderCellPaddingClass,
+                          columnMeta?.headerClassName,
+                        )}>
                         {header.isPlaceholder ? null : (
+                          <div
+                            className={cn(
+                              isSelectionColumn ?
+                                tableSelectionHeaderStackClass
+                              : tableHeaderStackClass,
+                            )}>
                             <div
-                                className={cn(
-                                    isSelectionColumn
-                                      ? tableSelectionHeaderStackClass
-                                      : tableHeaderStackClass
-                                )}
-                            >
-                                <div
-                                  className={cn(
-                                    tableHeaderToggleClass,
-                                    isSelectionColumn
-                                      ? "justify-center"
-                                      : "justify-between",
-                                    !isSelectionColumn &&
-                                      header.column.getCanSort() &&
-                                      tableHeaderSortableClass
+                              className={cn(
+                                tableHeaderToggleClass,
+                                isSelectionColumn ? "justify-center" : (
+                                  "justify-between"
+                                ),
+                                !isSelectionColumn &&
+                                  header.column.getCanSort() &&
+                                  tableHeaderSortableClass,
+                              )}
+                              onClick={
+                                isSelectionColumn ? undefined : (
+                                  header.column.getToggleSortingHandler()
+                                )
+                              }>
+                              <div className={tableHeaderLabelRowClass}>
+                                <span>
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
                                   )}
-                                  onClick={
-                                    isSelectionColumn
-                                      ? undefined
-                                      : header.column.getToggleSortingHandler()
-                                  }
-                                >
-                                  <div className={tableHeaderLabelRowClass}>
-                                    <span>
-                                        {flexRender(
-                                            header.column.columnDef.header,
-                                            header.getContext()
-                                        )}
-                                    </span>
-                                    {header.column.getCanSort() && !isSelectionColumn && (
-                                        <ArrowUpDown className="h-3 w-3 shrink-0" />
-                                    )}
-                                  </div>
-                                </div>
-                                {!isSelectionColumn && header.column.getCanFilter() && (
-                                  <div
-                                    ref={(element) => {
-                                      filterMenuRefs.current[header.column.id] = element;
-                                    }}
-                                    className={tableFilterAnchorClass}
-                                    onClick={(event) => event.stopPropagation()}
-                                  >
-                                    <button
-                                      type="button"
-                                      className={tableFilterTriggerClass}
-                                      title="Filter column (Ctrl/Cmd click to select multiple)"
-                                      aria-haspopup="listbox"
-                                      onClick={(event) => {
-                                        event.stopPropagation();
-                                        setOpenFilterColumnId((current) =>
-                                          current === header.column.id
-                                            ? null
-                                            : header.column.id
-                                        );
-                                      }}
-                                    >
-                                      <div className={tableFilterTriggerContentClass}>
-                                        <Filter className="h-3 w-3" />
-                                        <span>Filter</span>
-                                        {selectedCount > 0 && (
-                                          <span className={tableFilterCountBadgeClass}>
-                                            {selectedCount}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </button>
-                                    {isFilterOpen && (
-                                      <div className={cn(FLOATING_PANEL_CLASS, tableFilterMenuClass)}>
-                                        <div className={tableFilterMenuHeaderClass}>
-                                          <span>Filter</span>
-                                          <button
-                                            type="button"
-                                            className={tableFilterMenuClearClass}
-                                            onClick={(event) => {
-                                              event.preventDefault();
-                                              event.stopPropagation();
-                                              header.column.setFilterValue(undefined);
-                                            }}
-                                          >
-                                            Clear
-                                          </button>
-                                        </div>
-                                        <select
-                                          multiple
-                                          title="Hold Ctrl (Cmd on Mac) to select multiple"
-                                          className={cn(COMPACT_FORM_SELECT_CLASS, tableFilterMenuSelectClass)}
-                                          value={(filterValue as string[]) ?? []}
-                                          onChange={(event) => {
-                                            const selected = Array.from(event.target.selectedOptions)
-                                              .map((option) => option.value)
-                                              .filter(Boolean);
-                                            header.column.setFilterValue(
-                                              selected.length ? selected : undefined
-                                            );
-                                          }}
-                                        >
-                                          {(
-                                            columnOptions[header.column.id] ?? []
-                                          ).map((option) => (
-                                            <option key={option} value={option}>
-                                              {formatOptionLabel(
-                                                option,
-                                                (header.column.columnDef.meta as { filterKind?: string } | undefined)
-                                                  ?.filterKind
-                                              )}
-                                            </option>
-                                          ))}
-                                        </select>
-                                        <p className={tableFilterMenuHintClass}>
-                                          Hold Ctrl or Cmd to select multiple values.
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
+                                </span>
+                                {header.column.getCanSort() &&
+                                  !isSelectionColumn && (
+                                    <ArrowUpDown className="h-3 w-3 shrink-0" />
+                                  )}
+                              </div>
                             </div>
+                            {!isSelectionColumn &&
+                              header.column.getCanFilter() && (
+                                <div
+                                  ref={(element) => {
+                                    filterMenuRefs.current[header.column.id] =
+                                      element;
+                                  }}
+                                  className={tableFilterAnchorClass}
+                                  onClick={(event) => event.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    className={tableFilterTriggerClass}
+                                    title="Filter column (Ctrl/Cmd click to select multiple)"
+                                    aria-haspopup="listbox"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      setOpenFilterColumnId((current) =>
+                                        current === header.column.id ?
+                                          null
+                                        : header.column.id,
+                                      );
+                                    }}>
+                                    <div
+                                      className={
+                                        tableFilterTriggerContentClass
+                                      }>
+                                      <Filter className="h-3 w-3" />
+                                      <span>Filter</span>
+                                      {selectedCount > 0 && (
+                                        <span
+                                          className={
+                                            tableFilterCountBadgeClass
+                                          }>
+                                          {selectedCount}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </button>
+                                  {isFilterOpen && (
+                                    <div
+                                      className={cn(
+                                        FLOATING_PANEL_CLASS,
+                                        tableFilterMenuClass,
+                                      )}>
+                                      <div
+                                        className={tableFilterMenuHeaderClass}>
+                                        <span>Filter</span>
+                                        <button
+                                          type="button"
+                                          className={tableFilterMenuClearClass}
+                                          onClick={(event) => {
+                                            event.preventDefault();
+                                            event.stopPropagation();
+                                            header.column.setFilterValue(
+                                              undefined,
+                                            );
+                                          }}>
+                                          Clear
+                                        </button>
+                                      </div>
+                                      <select
+                                        multiple
+                                        title="Hold Ctrl (Cmd on Mac) to select multiple"
+                                        className={cn(
+                                          COMPACT_FORM_SELECT_CLASS,
+                                          tableFilterMenuSelectClass,
+                                        )}
+                                        value={(filterValue as string[]) ?? []}
+                                        onChange={(event) => {
+                                          const selected = Array.from(
+                                            event.target.selectedOptions,
+                                          )
+                                            .map((option) => option.value)
+                                            .filter(Boolean);
+                                          header.column.setFilterValue(
+                                            selected.length ? selected : (
+                                              undefined
+                                            ),
+                                          );
+                                        }}>
+                                        {(
+                                          columnOptions[header.column.id] ?? []
+                                        ).map((option) => (
+                                          <option key={option} value={option}>
+                                            {formatOptionLabel(
+                                              option,
+                                              (
+                                                header.column.columnDef.meta as
+                                                  | { filterKind?: string }
+                                                  | undefined
+                                              )?.filterKind,
+                                            )}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <p className={tableFilterMenuHintClass}>
+                                        Hold Ctrl or Cmd to select multiple
+                                        values.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                          </div>
                         )}
-                        </th>
+                      </th>
                     );
-                    })}
-                    </tr>
-                ))}
+                  })}
+                </tr>
+              ))}
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
-                {table.getRowModel().rows?.length ? (
+              {table.getRowModel().rows?.length ?
                 table.getRowModel().rows.map((row) => (
-                    <tr
+                  <tr
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                  className={tableBodyRowClass}
-                    >
+                    className={tableBodyRowClass}>
                     {row.getVisibleCells().map((cell) => {
-                        const isSelectionColumn = cell.column.id === "select";
-                        const columnMeta = cell.column.columnDef.meta as TableColumnMeta | undefined;
-                        return (
+                      const isSelectionColumn = cell.column.id === "select";
+                      const columnMeta = cell.column.columnDef.meta as
+                        | TableColumnMeta
+                        | undefined;
+                      return (
                         <td
-                            key={cell.id}
+                          key={cell.id}
                           className={cn(
                             tableCellBaseClass,
-                            isSelectionColumn
-                              ? tableSelectionCellClass
-                              : tableBodyCellClass,
-                            columnMeta?.cellClassName
+                            isSelectionColumn ?
+                              tableSelectionCellClass
+                            : tableBodyCellClass,
+                            columnMeta?.cellClassName,
                           )}
-                            title={typeof cell.getValue() === 'string' ? String(cell.getValue()) : undefined}
-                        >
-                        {flexRender(
+                          title={
+                            typeof cell.getValue() === "string" ?
+                              String(cell.getValue())
+                            : undefined
+                          }>
+                          {flexRender(
                             cell.column.columnDef.cell,
-                            cell.getContext()
-                        )}
+                            cell.getContext(),
+                          )}
                         </td>
-                    )})}
-                    </tr>
+                      );
+                    })}
+                  </tr>
                 ))
-                ) : (
-                <tr>
-                    <td
+              : <tr>
+                  <td
                     colSpan={table.getVisibleLeafColumns().length}
-                    className={tableEmptyStateClass}
-                    >
+                    className={tableEmptyStateClass}>
                     No results.
-                    </td>
+                  </td>
                 </tr>
-                )}
+              }
             </tbody>
-            </table>
+          </table>
         </div>
       </div>
 
@@ -757,8 +788,9 @@ export function DataTable<TData, TValue>({
               className={COMPACT_FORM_SELECT_CLASS}
               aria-label="Rows per page"
               value={table.getState().pagination.pageSize}
-              onChange={(event) => table.setPageSize(Number(event.target.value))}
-            >
+              onChange={(event) =>
+                table.setPageSize(Number(event.target.value))
+              }>
               {[10, 25, 50, 100].map((size) => (
                 <option key={size} value={size}>
                   {size}
@@ -772,8 +804,9 @@ export function DataTable<TData, TValue>({
               className={COMPACT_FORM_SELECT_CLASS}
               aria-label="Page number"
               value={table.getState().pagination.pageIndex}
-              onChange={(event) => table.setPageIndex(Number(event.target.value))}
-            >
+              onChange={(event) =>
+                table.setPageIndex(Number(event.target.value))
+              }>
               {Array.from({ length: table.getPageCount() }, (_, index) => (
                 <option key={index} value={index}>
                   {index + 1} of {table.getPageCount()}
@@ -787,16 +820,14 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
+            disabled={!table.getCanPreviousPage()}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
+            disabled={!table.getCanNextPage()}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

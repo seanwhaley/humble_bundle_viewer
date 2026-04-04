@@ -27,6 +27,29 @@ describe("librarySelection", () => {
     expect(readStoredLibraryPath()).toBe("D:/Saved/library_products.json");
   });
 
+  it("stores the current library path when no saved path exists yet", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    renderHook(
+      () =>
+        useRestoreStoredLibraryPath({
+          current_path: "D:/Captured/library_products.json",
+          exists: true,
+          default_save_dir: "D:/Downloads",
+          default_library_path: "D:/Downloads/library_products.json",
+        }),
+      { wrapper: createWrapper(client) },
+    );
+
+    await waitFor(() => {
+      expect(window.localStorage.getItem(LIBRARY_PATH_STORAGE_KEY)).toBe(
+        "D:/Captured/library_products.json",
+      );
+    });
+  });
+
   it("restores the saved library path on startup and invalidates viewer queries", async () => {
     window.localStorage.setItem(
       LIBRARY_PATH_STORAGE_KEY,

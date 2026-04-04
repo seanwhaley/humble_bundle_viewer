@@ -131,9 +131,7 @@ describe("SalesOverview", () => {
       .getAllByRole("link", { name: "Review Game bundles" })
       .map((link) => link.getAttribute("href"));
     expect(gameShortcutHrefs).toContain("/sales/games?focus=all-new");
-    expect(gameShortcutHrefs).toContain(
-      "/sales/games?focus=expiring-soon",
-    );
+    expect(gameShortcutHrefs).toContain("/sales/games?focus=expiring-soon");
     expect(
       screen.getByRole("link", { name: "Review Book bundles" }),
     ).toHaveAttribute("href", "/sales/books?focus=partial-overlap");

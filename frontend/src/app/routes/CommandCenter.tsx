@@ -62,7 +62,10 @@ import {
   SECTION_TITLE_TEXT_CLASS,
   STATUS_DETAIL_LIST_CLASS,
 } from "../../styles/page";
-import { COMMAND_STATUS_PANEL_CLASS, STATUS_MESSAGE_CLASS } from "../../styles/status";
+import {
+  COMMAND_STATUS_PANEL_CLASS,
+  STATUS_MESSAGE_CLASS,
+} from "../../styles/status";
 
 type CommandStatus = "idle" | "running" | "success" | "error";
 
@@ -882,7 +885,9 @@ export default function CommandCenter() {
             expandable advanced sections. Editing
             <code className={cn(INLINE_CODE_TEXT_CLASS, "mx-1")}>.env</code>
             and
-            <code className={cn(INLINE_CODE_TEXT_CLASS, "ml-1")}>config.yaml</code>{" "}
+            <code className={cn(INLINE_CODE_TEXT_CLASS, "ml-1")}>
+              config.yaml
+            </code>{" "}
             still requires the CLI or manual updates.
           </>
         }
@@ -899,26 +904,20 @@ export default function CommandCenter() {
         <CardContent className="space-y-4">
           <div className={GRID_THREE_COLUMN_CLASS}>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Guided workflows
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Guided workflows</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Refresh current sales reports with the safest default actions.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Rebuilds and exports
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Rebuilds and exports</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Regenerate saved artifacts, schema files, or order models when
                 the viewer inputs changed.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Metadata enrichment
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Metadata enrichment</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
                 Cache external pages first, then extract richer metadata only
                 when you want deeper media detail.

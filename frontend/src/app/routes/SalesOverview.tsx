@@ -12,7 +12,10 @@ import StatTile from "../../components/StatTile";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import {
   type CurrentBundleSummary,
   type CurrentBundleTierOverlap,
@@ -606,7 +609,9 @@ export default function SalesOverview() {
     (bundlesStatus?.report_exists && bundlesReportError) ||
     (choiceStatus?.report_exists && choiceReportError)
   ) {
-    return <RouteErrorState message="Failed to load one or more current sales reports." />;
+    return (
+      <RouteErrorState message="Failed to load one or more current sales reports." />
+    );
   }
 
   return (
@@ -617,9 +622,7 @@ export default function SalesOverview() {
             <div>
               <div className={SECTION_CHROME_CLASS}>
                 <Sparkles className="h-4 w-4" />
-                <p className={SECTION_EYEBROW_CLASS}>
-                  Current sales analysis
-                </p>
+                <p className={SECTION_EYEBROW_CLASS}>Current sales analysis</p>
               </div>
               <p className={PANEL_INTRO_TEXT_CLASS}>
                 Compare the current Choice month and live bundle tiers in one
@@ -633,7 +636,11 @@ export default function SalesOverview() {
                 <Filter className="h-3.5 w-3.5 text-muted-foreground" />
                 Content filter · {filterSummaryLabel}
               </summary>
-              <div className={cn(FLOATING_PANEL_CLASS, FLOATING_DISCLOSURE_PANEL_CLASS)}>
+              <div
+                className={cn(
+                  FLOATING_PANEL_CLASS,
+                  FLOATING_DISCLOSURE_PANEL_CLASS,
+                )}>
                 <div className={FLOATING_DISCLOSURE_HEADER_CLASS}>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     Included sources
@@ -727,8 +734,8 @@ export default function SalesOverview() {
               No bundle data in the current filter
             </h2>
             <p className={PANEL_INTRO_TEXT_CLASS}>
-              The totals above still include Current Choice when selected, but the
-              aggregate bundle analysis below only renders when at least one
+              The totals above still include Current Choice when selected, but
+              the aggregate bundle analysis below only renders when at least one
               bundle type with saved data is in scope.
             </p>
           </CardHeader>
@@ -738,14 +745,12 @@ export default function SalesOverview() {
             <CardHeader className="p-6 pb-0">
               <div className={SECTION_CHROME_CLASS}>
                 <Sparkles className="h-4 w-4" />
-                <p className={SECTION_EYEBROW_CLASS}>
-                  Included sources
-                </p>
+                <p className={SECTION_EYEBROW_CLASS}>Included sources</p>
               </div>
               <p className={PANEL_LEAD_TEXT_CLASS}>
-                Keep the current filter grounded with concise source summaries and
-                direct links, without repeating another full layer of duplicate
-                metric cards.
+                Keep the current filter grounded with concise source summaries
+                and direct links, without repeating another full layer of
+                duplicate metric cards.
               </p>
             </CardHeader>
 
@@ -783,21 +788,19 @@ export default function SalesOverview() {
             <CardHeader className="p-6 pb-0">
               <div className={SECTION_CHROME_CLASS}>
                 <Sparkles className="h-4 w-4" />
-                <p className={SECTION_EYEBROW_CLASS}>
-                  Decision shortcuts
-                </p>
+                <p className={SECTION_EYEBROW_CLASS}>Decision shortcuts</p>
               </div>
               <div className="mt-3 space-y-2 text-sm text-card-foreground">
                 <p>
                   Start with the four high-signal bundle questions below, then
-                  jump directly into the matching bundle-type route when you know
-                  what kind of decision you need to make next.
+                  jump directly into the matching bundle-type route when you
+                  know what kind of decision you need to make next.
                 </p>
                 <p className="text-muted-foreground">
                   Current Choice still stays in the summary totals above when
-                  selected, but these shortcut cards stay bundle-only because the
-                  criteria depend on bundle tier overlap, expiry countdowns, and
-                  tracked tier savings.
+                  selected, but these shortcut cards stay bundle-only because
+                  the criteria depend on bundle tier overlap, expiry countdowns,
+                  and tracked tier savings.
                 </p>
               </div>
             </CardHeader>
@@ -805,9 +808,7 @@ export default function SalesOverview() {
             <CardContent className="p-6 pt-5">
               <div className={GRID_TWO_FOUR_RELAXED_CLASS}>
                 {bundleCriteriaCards.map((card) => (
-                  <section
-                    key={card.id}
-                    className={SHORTCUT_CARD_CLASS}>
+                  <section key={card.id} className={SHORTCUT_CARD_CLASS}>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       {card.label}
                     </p>
@@ -818,8 +819,8 @@ export default function SalesOverview() {
                       </span>
                     </p>
                     <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                      {formatPercent(card.percent)} of the selected bundles match
-                      this criterion.
+                      {formatPercent(card.percent)} of the selected bundles
+                      match this criterion.
                     </p>
                     <p className={SECTION_DESCRIPTION_CLASS}>
                       {card.description}
@@ -926,13 +927,11 @@ export default function SalesOverview() {
                     </span>{" "}
                     into bundle-type matches plus a remaining{" "}
                     <span className={EMPHASIS_TEXT_CLASS}>Not matching</span>{" "}
-                    slice, so each one still represents the whole filtered bundle
-                    set.
+                    slice, so each one still represents the whole filtered
+                    bundle set.
                   </p>
                   <p>
-                    <span className={EMPHASIS_TEXT_CLASS}>
-                      All-new bundles
-                    </span>{" "}
+                    <span className={EMPHASIS_TEXT_CLASS}>All-new bundles</span>{" "}
                     and{" "}
                     <span className={EMPHASIS_TEXT_CLASS}>
                       Partial-overlap bundles
@@ -943,29 +942,29 @@ export default function SalesOverview() {
                     <span className={EMPHASIS_TEXT_CLASS}>
                       Bundle expiry timeline
                     </span>{" "}
-                    now runs from the farthest saved expiry on the left toward day 0
-                    on the right, so the chart reads like a countdown instead of a
-                    category pie.
+                    now runs from the farthest saved expiry on the left toward
+                    day 0 on the right, so the chart reads like a countdown
+                    instead of a category pie.
                   </p>
                   <p>
                     <span className={EMPHASIS_TEXT_CLASS}>
                       Tracked savings distribution curve
                     </span>{" "}
-                    now starts just below the current minimum tracked savings and
-                    uses tighter percentage bands so you can read the shape of the
-                    live discount spread instead of staring at a single
+                    now starts just below the current minimum tracked savings
+                    and uses tighter percentage bands so you can read the shape
+                    of the live discount spread instead of staring at a single
                     deep-discount threshold.
                   </p>
                   <p>
                     <span className={EMPHASIS_TEXT_CLASS}>Hover popups</span>{" "}
                     now focus on bundle counts, product counts, top-tier spend,
-                    tracked retail, and savings context instead of listing package
-                    titles.
+                    tracked retail, and savings context instead of listing
+                    package titles.
                   </p>
                   <p>
                     <span className={EMPHASIS_TEXT_CLASS}>Current Choice</span>{" "}
-                    still contributes to the totals in the summary strip above when
-                    selected, but it is intentionally excluded from these
+                    still contributes to the totals in the summary strip above
+                    when selected, but it is intentionally excluded from these
                     bundle-only match charts because it is not part of the
                     games/books/software bundle-type breakdown.
                   </p>

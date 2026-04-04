@@ -21,11 +21,9 @@ export function RouteLoadingState({
   return (
     <div className={ROUTE_LOADING_CONTAINER_CLASS}>
       <div className={ROUTE_LOADING_CONTENT_CLASS}>
-        {variant === "pulse" ? (
+        {variant === "pulse" ?
           <span className={ROUTE_LOADING_PULSE_DOT_CLASS} />
-        ) : (
-          <Loader2 className={ROUTE_LOADING_ICON_CLASS} />
-        )}
+        : <Loader2 className={ROUTE_LOADING_ICON_CLASS} />}
         <span>{label}</span>
       </div>
     </div>

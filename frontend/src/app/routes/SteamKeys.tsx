@@ -15,7 +15,10 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { useLibraryData } from "../../data/api";
 import {
   applyProductFilters,
@@ -125,7 +128,9 @@ export default function SteamKeys() {
         }
         return (
           <span
-            className={val <= 30 ? "font-bold text-status-warning-foreground" : ""}>
+            className={
+              val <= 30 ? "font-bold text-status-warning-foreground" : ""
+            }>
             {val} days
           </span>
         );
@@ -198,25 +203,31 @@ export default function SteamKeys() {
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Keys in scope</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.total} Steam key row{summary.total === 1 ? "" : "s"} match the current library filters.
+                {summary.total} Steam key row{summary.total === 1 ? "" : "s"}{" "}
+                match the current library filters.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Still hidden</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.needsReveal} key value{summary.needsReveal === 1 ? "" : "s"} are still hidden by Humble.
+                {summary.needsReveal} key value
+                {summary.needsReveal === 1 ? "" : "s"} are still hidden by
+                Humble.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Direct redeem</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.directRedeem} row{summary.directRedeem === 1 ? "" : "s"} have a direct Steam redemption path.
+                {summary.directRedeem} row
+                {summary.directRedeem === 1 ? "" : "s"} have a direct Steam
+                redemption path.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Expiring</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.expiring} row{summary.expiring === 1 ? "" : "s"} are expired or inside the warning window.
+                {summary.expiring} row{summary.expiring === 1 ? "" : "s"} are
+                expired or inside the warning window.
               </p>
             </div>
           </div>
@@ -238,7 +249,9 @@ export default function SteamKeys() {
                   variant={selected ? "secondary" : "outline"}
                   onClick={() => setScope(value as KeyInventoryScope)}>
                   {label}
-                  <span className="ml-1 text-xs text-muted-foreground">{count}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    {count}
+                  </span>
                 </Button>
               );
             })}

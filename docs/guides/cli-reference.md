@@ -99,6 +99,8 @@ Behavior:
 - Reads defaults from `current_bundles.*` in `backend/config.yaml`.
 - Falls back to `current_bundles.library_path`, then `viewer.library_path`, then `artifacts.base_dir/library_products.json` unless `--library-file` is provided.
 - Defaults to all three supported bundle types (`games`, `books`, `software`) unless narrowed with `--bundle-type` or config.
+- Refreshes the live bundles index every run, but reuses saved active bundle page artifacts for still-live bundle URLs when the saved HTML and parsed details already exist.
+- Emits in-process runtime status while the command runs so operators can see index fetch progress, active bundle counts, reused-vs-fetched bundle pages, report-building, and elapsed/ETA updates instead of waiting for only the final summary.
 - Writes bundle index/page artifacts plus `bundle_overlap_report.json` and `bundle_overlap_report.md` under `current_bundles.base_dir` unless `--output-dir` is provided.
 - Prints the important artifact output paths after the run so longer workflows leave a clear trail in the terminal.
 

@@ -114,17 +114,26 @@ vi.mock("../../../../src/data/selectors", () => ({
     totalProducts: 2,
     totalContainedItems: 3,
   })),
-  countContainedItems: vi.fn((product: any) => product.subproducts?.length ?? 0),
+  countContainedItems: vi.fn(
+    (product: any) => product.subproducts?.length ?? 0,
+  ),
   getFilterOptions: vi.fn(() => ({
     categories: ["Books", "Games"],
     platforms: ["pdf", "windows"],
     keyTypes: ["steam"],
   })),
-  getCompactBundleName: vi.fn((name: string) => ({ display: name, full: name })),
+  getCompactBundleName: vi.fn((name: string) => ({
+    display: name,
+    full: name,
+  })),
   isSteamKeyType: vi.fn((value: string | undefined) => value === "steam"),
   summarizeAuthors: vi.fn((authors: string[]) => authors.join(", ")),
-  normalizeCategoryLabel: vi.fn((value: string | undefined) => value || "Other"),
-  normalizePlatformLabel: vi.fn((value: string | undefined) => value || "Unknown"),
+  normalizeCategoryLabel: vi.fn(
+    (value: string | undefined) => value || "Other",
+  ),
+  normalizePlatformLabel: vi.fn(
+    (value: string | undefined) => value || "Unknown",
+  ),
 }));
 
 function renderRoute() {
@@ -239,7 +248,9 @@ describe("Purchases", () => {
     fireEvent.click(screen.getByRole("button", { name: /Included items/i }));
 
     expect(
-      screen.getByText(/Included-item analysis is a secondary deep-inspection mode/i),
+      screen.getByText(
+        /Included-item analysis is a secondary deep-inspection mode/i,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Rendered rows: 1")).toBeInTheDocument();
     expect(
@@ -258,6 +269,8 @@ describe("Purchases", () => {
     fireEvent.click(screen.getByRole("button", { name: /Back to purchases/i }));
 
     expect(screen.getByText("Purchases workspace")).toBeInTheDocument();
-    expect(screen.queryByText("Order detail: Bundle One")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Order detail: Bundle One"),
+    ).not.toBeInTheDocument();
   });
 });

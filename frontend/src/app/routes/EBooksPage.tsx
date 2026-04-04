@@ -27,7 +27,10 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
 import FilterBar, { type FilterBarField } from "../../components/FilterBar";
@@ -555,27 +558,27 @@ export default function EBooksPage() {
         <CardContent className="space-y-4">
           <div className={GRID_THREE_COLUMN_CLASS}>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Titles in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Titles in scope</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(filteredEbooks.length)} eBook title{filteredEbooks.length === 1 ? "" : "s"} match the current filters.
+                {formatNumber(filteredEbooks.length)} eBook title
+                {filteredEbooks.length === 1 ? "" : "s"} match the current
+                filters.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Selected now
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Selected now</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(selectedCount)} title{selectedCount === 1 ? "" : "s"} are selected for route-level actions.
+                {formatNumber(selectedCount)} title
+                {selectedCount === 1 ? "" : "s"} are selected for route-level
+                actions.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
-              <p className={SECTION_EYEBROW_CLASS}>
-                Formats in scope
-              </p>
+              <p className={SECTION_EYEBROW_CLASS}>Formats in scope</p>
               <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                {formatNumber(scopedBulkFormats.length)} format{scopedBulkFormats.length === 1 ? "" : "s"} are available in the current bulk-download scope.
+                {formatNumber(scopedBulkFormats.length)} format
+                {scopedBulkFormats.length === 1 ? "" : "s"} are available in the
+                current bulk-download scope.
               </p>
             </div>
           </div>
@@ -591,7 +594,8 @@ export default function EBooksPage() {
                 <ChevronDown className="h-4 w-4" />
               : <ChevronRight className="h-4 w-4" />}
               <Download className="h-4 w-4" />
-              Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+              Bulk browser downloads
+              {selectedCount > 0 ? ` (${selectedCount})` : ""}
             </Button>
             <Button
               variant={showManagedSync ? "default" : "outline"}
@@ -633,9 +637,7 @@ export default function EBooksPage() {
           extraContent={
             <div className={GRID_TWO_FOUR_COLUMN_CLASS}>
               <div className={FORM_FIELD_STACK_CLASS}>
-                <label className={FIELD_LABEL_CLASS}>
-                  Author
-                </label>
+                <label className={FIELD_LABEL_CLASS}>Author</label>
                 <input
                   className={FORM_SELECT_CLASS}
                   title="Author"
@@ -646,9 +648,7 @@ export default function EBooksPage() {
                 />
               </div>
               <div className={FORM_FIELD_STACK_CLASS}>
-                <label className={FIELD_LABEL_CLASS}>
-                  Format
-                </label>
+                <label className={FIELD_LABEL_CLASS}>Format</label>
                 <select
                   className={FORM_SELECT_CLASS}
                   title="Format"
@@ -676,9 +676,7 @@ export default function EBooksPage() {
           <CardHeader className="pb-3">
             <div className={PANEL_HEADER_STACK_ROW_CLASS}>
               <div>
-                <h3 className={SECTION_TITLE_CLASS}>
-                  Bulk browser downloads
-                </h3>
+                <h3 className={SECTION_TITLE_CLASS}>Bulk browser downloads</h3>
                 <p className="text-sm text-muted-foreground">
                   Select titles in the table first, then choose whether you want
                   every file, one matching format, or a planned smallest/largest
@@ -787,7 +785,8 @@ export default function EBooksPage() {
             <p className={PANEL_HELP_TEXT_CLASS}>
               {selectedCount > 0 ?
                 "Format choices are scoped to the currently selected titles so the picker stays focused on relevant reader formats."
-              : "Select one or more rows in the table to enable bulk downloads and narrow the format list."}
+              : "Select one or more rows in the table to enable bulk downloads and narrow the format list."
+              }
             </p>
             {bulkPlannerError && (
               <p className={PANEL_ERROR_TEXT_CLASS}>{bulkPlannerError}</p>

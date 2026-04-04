@@ -324,10 +324,12 @@ export default function AdvancedManagedSyncPanel({
         shared Python rules decide filenames, file types, and relative paths
         before the browser saves anything locally. It still reuses matching
         files, preserves mismatches with numbered copies, writes progress to{" "}
-        <span className={MONO_INLINE_TEXT_CLASS}>.hb-library-viewer/sync-manifest.json</span>
+        <span className={MONO_INLINE_TEXT_CLASS}>
+          .hb-library-viewer/sync-manifest.json
+        </span>
         , and uses up to {maxParallelDownloads} parallel worker(s) from{" "}
-        <span className={MONO_INLINE_TEXT_CLASS}>config.yaml</span> while the backend spaces
-        upstream stream starts to respect the minimum rate limit.
+        <span className={MONO_INLINE_TEXT_CLASS}>config.yaml</span> while the
+        backend spaces upstream stream starts to respect the minimum rate limit.
       </p>
       {!managedDownloadSupported && (
         <p className={STATUS_WARNING_TEXT_XS_CLASS}>
@@ -341,9 +343,7 @@ export default function AdvancedManagedSyncPanel({
         <div className={COMPACT_INFO_PANEL_CLASS}>
           <div className={PANEL_HEADER_TOP_ALIGN_ROW_CLASS}>
             <div>
-              <p className={COMPACT_METRIC_LABEL_CLASS}>
-                Sync progress
-              </p>
+              <p className={COMPACT_METRIC_LABEL_CLASS}>Sync progress</p>
               <p className="mt-1 text-sm text-card-foreground">
                 Reviewed {progress.reviewedTitles} of {progress.totalTitles}{" "}
                 title(s) and {progress.reviewedFiles} of {progress.totalFiles}{" "}
@@ -364,33 +364,25 @@ export default function AdvancedManagedSyncPanel({
 
           <div className={GRID_FOUR_METRIC_CLASS}>
             <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
-              <div className={COMPACT_METRIC_LABEL_CLASS}>
-                Titles in scope
-              </div>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>Titles in scope</div>
               <div className="mt-1 text-sm text-card-foreground">
                 {progress.totalTitles}
               </div>
             </div>
             <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
-              <div className={COMPACT_METRIC_LABEL_CLASS}>
-                Files planned
-              </div>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>Files planned</div>
               <div className="mt-1 text-sm text-card-foreground">
                 {progress.totalFiles}
               </div>
             </div>
             <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
-              <div className={COMPACT_METRIC_LABEL_CLASS}>
-                Downloaded
-              </div>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>Downloaded</div>
               <div className="mt-1 text-sm text-status-success-foreground">
                 {progress.downloadedFiles}
               </div>
             </div>
             <div className={LIBRARY_CONTEXT_METRIC_CLASS}>
-              <div className={COMPACT_METRIC_LABEL_CLASS}>
-                Skipped existing
-              </div>
+              <div className={COMPACT_METRIC_LABEL_CLASS}>Skipped existing</div>
               <div className="mt-1 text-sm text-card-foreground">
                 {progress.skippedExistingFiles}
               </div>
@@ -415,7 +407,9 @@ export default function AdvancedManagedSyncPanel({
           {progress.currentFile && (
             <p className="mt-1 text-xs text-muted-foreground">
               Current file:{" "}
-              <span className={MONO_INLINE_TEXT_CLASS}>{progress.currentFile}</span>
+              <span className={MONO_INLINE_TEXT_CLASS}>
+                {progress.currentFile}
+              </span>
             </p>
           )}
         </div>
@@ -433,7 +427,10 @@ export default function AdvancedManagedSyncPanel({
             <span>Failed: {summary.failedFiles}</span>
           </div>
           <p className="mt-2 text-muted-foreground">
-            Manifest: <span className={MONO_INLINE_TEXT_CLASS}>{summary.manifestPath}</span>
+            Manifest:{" "}
+            <span className={MONO_INLINE_TEXT_CLASS}>
+              {summary.manifestPath}
+            </span>
           </p>
         </div>
       )}

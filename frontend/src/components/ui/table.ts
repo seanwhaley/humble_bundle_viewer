@@ -83,7 +83,8 @@ export const tableFilterMenuClearClass =
 
 export const tableFilterMenuSelectClass = "h-40 w-full py-1";
 
-export const tableFilterMenuHintClass = "pt-2 text-[10px] text-muted-foreground";
+export const tableFilterMenuHintClass =
+  "pt-2 text-[10px] text-muted-foreground";
 
 export const tableBodyRowClass =
   "border-b border-border transition-colors hover:bg-accent/60 data-[state=selected]:bg-accent";

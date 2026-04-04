@@ -24,7 +24,10 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import {
   type CurrentBundleSummary,
   type CurrentBundleType,
@@ -522,7 +525,7 @@ const getDownloadExpiryMeta = (
 function SourceCard({ card }: { card: SourceCardModel }) {
   return (
     <Link to={card.href} className="group block">
-      <Card className={cn(FEATURE_CARD_CLASS, "h-full") }>
+      <Card className={cn(FEATURE_CARD_CLASS, "h-full")}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-3">
             <h3 className={METRIC_LABEL_CLASS}>{card.title}</h3>
@@ -612,7 +615,8 @@ export default function Home() {
   >("month");
 
   const hasLibraryData = libraryStatus?.exists === true && Boolean(data);
-  const activeLibraryFilterCount = hasLibraryData ? getActiveFilterCount(filters) : 0;
+  const activeLibraryFilterCount =
+    hasLibraryData ? getActiveFilterCount(filters) : 0;
   const activeFilterCount =
     activeLibraryFilterCount +
     (selectedLiveBundleTypes.length === allLiveBundleTypes.length ? 0 : 1);
@@ -647,7 +651,9 @@ export default function Home() {
   }
 
   if (bundlesStatus?.report_exists && bundlesReportError) {
-    return <RouteErrorState message="Failed to load the current bundle data for viewer home." />;
+    return (
+      <RouteErrorState message="Failed to load the current bundle data for viewer home." />
+    );
   }
 
   const libraryProducts = data?.products ?? [];
@@ -817,9 +823,7 @@ export default function Home() {
               {hasLibraryData && (
                 <>
                   <div className={CHECKBOX_PANEL_CLASS}>
-                    <label className={FIELD_LABEL_CLASS}>
-                      Search
-                    </label>
+                    <label className={FIELD_LABEL_CLASS}>Search</label>
                     <Input
                       className="mt-2"
                       placeholder="Search..."
@@ -831,9 +835,7 @@ export default function Home() {
                   </div>
 
                   <div className={CHECKBOX_PANEL_CLASS}>
-                    <label className={FIELD_LABEL_CLASS}>
-                      Category
-                    </label>
+                    <label className={FIELD_LABEL_CLASS}>Category</label>
                     <select
                       className={cn("mt-2", FORM_SELECT_CLASS)}
                       title="Category"
@@ -851,9 +853,7 @@ export default function Home() {
                   </div>
 
                   <div className={CHECKBOX_PANEL_CLASS}>
-                    <label className={FIELD_LABEL_CLASS}>
-                      Platform
-                    </label>
+                    <label className={FIELD_LABEL_CLASS}>Platform</label>
                     <select
                       className={cn("mt-2", FORM_SELECT_CLASS)}
                       title="Platform"
@@ -880,7 +880,9 @@ export default function Home() {
                         label="Only show purchases with keys"
                         description="Use the key inventory to narrow the library totals and charts."
                         onChange={(checked) =>
-                          setFilters({ keyPresence: checked ? "has_keys" : null })
+                          setFilters({
+                            keyPresence: checked ? "has_keys" : null,
+                          })
                         }
                       />
                       <FilterToggle
@@ -910,7 +912,9 @@ export default function Home() {
                           type="date"
                           value={filters.startDate ?? ""}
                           onChange={(event) =>
-                            setFilters({ startDate: event.target.value || null })
+                            setFilters({
+                              startDate: event.target.value || null,
+                            })
                           }
                         />
                       </div>
@@ -968,7 +972,7 @@ export default function Home() {
         </Card>
       )}
 
-      {hasLibraryData ? (
+      {hasLibraryData ?
         <Card surface="panel">
           <CardHeader className="p-5 pb-0">
             <PaneHeader
@@ -993,9 +997,7 @@ export default function Home() {
                   <SurfaceBadge>
                     Library snapshot {libraryFreshness.label.toLowerCase()}
                   </SurfaceBadge>
-                  <SurfaceBadge>
-                    {downloadExpiryMeta.label}
-                  </SurfaceBadge>
+                  <SurfaceBadge>{downloadExpiryMeta.label}</SurfaceBadge>
                   {activeLibraryFilterCount > 0 && (
                     <SurfaceBadge>
                       {activeLibraryFilterCount} active library filter
@@ -1135,8 +1137,7 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <Card surface="panel">
+      : <Card surface="panel">
           <CardHeader className="p-5 pb-0">
             <PaneHeader
               titleAs="h2"
@@ -1145,8 +1146,8 @@ export default function Home() {
                 <>
                   Load an existing <code>library_products.json</code> or run a
                   fresh capture when you want ownership totals, downloads, keys,
-                  and the library analytics sections. Until then, Home
-                  stays focused on the live bundle and Choice snapshots.
+                  and the library analytics sections. Until then, Home stays
+                  focused on the live bundle and Choice snapshots.
                 </>
               }
               titleClassName="text-xl"
@@ -1165,7 +1166,8 @@ export default function Home() {
                     Library analytics unavailable
                   </SurfaceBadge>
                   <SurfaceBadge>
-                    Live bundles and Current Choice still load without a selected library
+                    Live bundles and Current Choice still load without a
+                    selected library
                   </SurfaceBadge>
                 </>
               }
@@ -1185,7 +1187,7 @@ export default function Home() {
             </Button>
           </CardContent>
         </Card>
-      )}
+      }
 
       <Card surface="panel">
         <CardHeader className="p-5 pb-0">
@@ -1208,9 +1210,7 @@ export default function Home() {
                 <SurfaceBadge>
                   Bundle snapshot {bundleFreshness.label.toLowerCase()}
                 </SurfaceBadge>
-                <SurfaceBadge>
-                  {choiceStatusChipLabel}
-                </SurfaceBadge>
+                <SurfaceBadge>{choiceStatusChipLabel}</SurfaceBadge>
               </>
             }
             topRightClassName={SUMMARY_HEADER_META_CLASS}
@@ -1254,165 +1254,168 @@ export default function Home() {
             }>
             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
               <SurfaceBadge>
-                Click category, platform, and key-type bars to filter the dashboard
+                Click category, platform, and key-type bars to filter the
+                dashboard
               </SurfaceBadge>
               <SurfaceBadge>
-                Use the grouped breakdowns below after the top-of-page buyer view
-                answers the urgent question
+                Use the grouped breakdowns below after the top-of-page buyer
+                view answers the urgent question
               </SurfaceBadge>
             </div>
           </HomeSection>
 
           {showDeeperAnalytics && (
             <>
-          <HomeSection
-            eyebrow="Inventory mix"
-            icon={Sparkles}
-            title="See how the current scope breaks down"
-            description="Compare the two biggest breakdowns side by side so category and platform answers stay easy to scan.">
-            <div className="mb-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <SurfaceBadge>
-                Click a category or platform bar to update the current scope
-              </SurfaceBadge>
-            </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-              <div className="col-span-4">
-                <BarChart
-                  title="Purchase categories"
-                  data={categoryCounts}
-                  selected={filters.category}
-                  onSelect={(value) =>
-                    setFilters({
-                      category: filters.category === value ? null : value,
-                    })
-                  }
-                />
-              </div>
-              <div className="col-span-3">
-                <BarChart
-                  title="Download platform"
-                  data={platformCounts}
-                  selected={filters.platform}
-                  onSelect={(value) =>
-                    setFilters({
-                      platform: filters.platform === value ? null : value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          </HomeSection>
-
-          <HomeSection
-            eyebrow="Activity trends"
-            icon={Sparkles}
-            title="Track purchase volume and spend over time"
-            description="Keep the time grouping control next to the charts it changes so trend reading stays self-explanatory."
-            action={
-              <div className={INLINE_TOGGLE_PANEL_CLASS}>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Group by
-                </span>
-                <div className={SEGMENTED_CONTROL_CLASS}>
-                  <Button
-                    variant={timeScale === "day" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTimeScale("day")}
-                    title="Daily">
-                    <CalendarDays className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={timeScale === "month" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTimeScale("month")}
-                    title="Monthly">
-                    <Calendar className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={timeScale === "quarter" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTimeScale("quarter")}
-                    title="Quarterly">
-                    <CalendarRange className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={timeScale === "year" ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-7 px-2"
-                    onClick={() => setTimeScale("year")}
-                    title="Annually">
-                    <Clock className="h-4 w-4" />
-                  </Button>
+              <HomeSection
+                eyebrow="Inventory mix"
+                icon={Sparkles}
+                title="See how the current scope breaks down"
+                description="Compare the two biggest breakdowns side by side so category and platform answers stay easy to scan.">
+                <div className="mb-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <SurfaceBadge>
+                    Click a category or platform bar to update the current scope
+                  </SurfaceBadge>
                 </div>
-              </div>
-            }>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <BarChart
-                title={`Purchases over time (${timeScale})`}
-                data={history.orders}
-              />
-              <BarChart
-                title={`Spending over time (${timeScale})`}
-                data={history.spending}
-              />
-            </div>
-          </HomeSection>
+                <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                  <div className="col-span-4">
+                    <BarChart
+                      title="Purchase categories"
+                      data={categoryCounts}
+                      selected={filters.category}
+                      onSelect={(value) =>
+                        setFilters({
+                          category: filters.category === value ? null : value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <BarChart
+                      title="Download platform"
+                      data={platformCounts}
+                      selected={filters.platform}
+                      onSelect={(value) =>
+                        setFilters({
+                          platform: filters.platform === value ? null : value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </HomeSection>
 
-          <HomeSection
-            eyebrow="Supporting breakdowns"
-            icon={Sparkles}
-            title="Publisher and key mix"
-            description="Group the secondary breakdowns together so the page gets progressively more detailed as you scroll.">
-            <div className="mb-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
-              <SurfaceBadge>
-                Key type bars also narrow the current dashboard scope
-              </SurfaceBadge>
-            </div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <BarChart title="Top Publishers" data={publisherCounts} />
-              <BarChart
-                title="Key type"
-                data={keyTypeCounts}
-                selected={filters.keyType}
-                onSelect={(value) =>
-                  setFilters({
-                    keyType: filters.keyType === value ? null : value,
-                  })
-                }
-              />
-            </div>
-          </HomeSection>
+              <HomeSection
+                eyebrow="Activity trends"
+                icon={Sparkles}
+                title="Track purchase volume and spend over time"
+                description="Keep the time grouping control next to the charts it changes so trend reading stays self-explanatory."
+                action={
+                  <div className={INLINE_TOGGLE_PANEL_CLASS}>
+                    <span className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      Group by
+                    </span>
+                    <div className={SEGMENTED_CONTROL_CLASS}>
+                      <Button
+                        variant={timeScale === "day" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeScale("day")}
+                        title="Daily">
+                        <CalendarDays className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={timeScale === "month" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeScale("month")}
+                        title="Monthly">
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={
+                          timeScale === "quarter" ? "secondary" : "ghost"
+                        }
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeScale("quarter")}
+                        title="Quarterly">
+                        <CalendarRange className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant={timeScale === "year" ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => setTimeScale("year")}
+                        title="Annually">
+                        <Clock className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                }>
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <BarChart
+                    title={`Purchases over time (${timeScale})`}
+                    data={history.orders}
+                  />
+                  <BarChart
+                    title={`Spending over time (${timeScale})`}
+                    data={history.spending}
+                  />
+                </div>
+              </HomeSection>
 
-          <Card surface="panel">
-            <CardHeader className="p-5 pb-0">
-              <h3 className="text-lg font-semibold tracking-tight text-card-foreground">
-                Browse by category
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Jump into category-specific detail views after using the
-                homepage analytics to narrow your scope.
-              </p>
-            </CardHeader>
-            <CardContent className="p-5 pt-4">
-              <div className="mt-3 flex flex-wrap gap-2">
-                {options.categories.map((category) => (
-                  <Button
-                    key={category}
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="h-auto py-2">
-                    <Link to={`/library/category/${category}`}>
-                      {normalizeCategoryLabel(category)}
-                    </Link>
-                  </Button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+              <HomeSection
+                eyebrow="Supporting breakdowns"
+                icon={Sparkles}
+                title="Publisher and key mix"
+                description="Group the secondary breakdowns together so the page gets progressively more detailed as you scroll.">
+                <div className="mb-4 flex flex-wrap gap-2 text-xs text-muted-foreground">
+                  <SurfaceBadge>
+                    Key type bars also narrow the current dashboard scope
+                  </SurfaceBadge>
+                </div>
+                <div className="mt-5 grid gap-4 md:grid-cols-2">
+                  <BarChart title="Top Publishers" data={publisherCounts} />
+                  <BarChart
+                    title="Key type"
+                    data={keyTypeCounts}
+                    selected={filters.keyType}
+                    onSelect={(value) =>
+                      setFilters({
+                        keyType: filters.keyType === value ? null : value,
+                      })
+                    }
+                  />
+                </div>
+              </HomeSection>
+
+              <Card surface="panel">
+                <CardHeader className="p-5 pb-0">
+                  <h3 className="text-lg font-semibold tracking-tight text-card-foreground">
+                    Browse by category
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Jump into category-specific detail views after using the
+                    homepage analytics to narrow your scope.
+                  </p>
+                </CardHeader>
+                <CardContent className="p-5 pt-4">
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {options.categories.map((category) => (
+                      <Button
+                        key={category}
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="h-auto py-2">
+                        <Link to={`/library/category/${category}`}>
+                          {normalizeCategoryLabel(category)}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </>

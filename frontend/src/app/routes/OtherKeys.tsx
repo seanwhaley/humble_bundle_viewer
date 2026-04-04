@@ -16,7 +16,10 @@ import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { useLibraryData } from "../../data/api";
 import {
   applyProductFilters,
@@ -87,7 +90,10 @@ export default function OtherKeys() {
     [filteredProducts],
   );
 
-  const summary = useMemo(() => buildKeyInventorySummary(otherKeys), [otherKeys]);
+  const summary = useMemo(
+    () => buildKeyInventorySummary(otherKeys),
+    [otherKeys],
+  );
 
   const keys = useMemo(() => {
     const scoped = filterKeyInventoryByScope(otherKeys, scope);
@@ -157,7 +163,9 @@ export default function OtherKeys() {
         }
         return (
           <span
-            className={val <= 30 ? "font-bold text-status-warning-foreground" : ""}>
+            className={
+              val <= 30 ? "font-bold text-status-warning-foreground" : ""
+            }>
             {val} days
           </span>
         );
@@ -234,25 +242,31 @@ export default function OtherKeys() {
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Keys in scope</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.total} other-key row{summary.total === 1 ? "" : "s"} match the current library filters.
+                {summary.total} other-key row{summary.total === 1 ? "" : "s"}{" "}
+                match the current library filters.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Still hidden</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.needsReveal} key value{summary.needsReveal === 1 ? "" : "s"} still need to be revealed.
+                {summary.needsReveal} key value
+                {summary.needsReveal === 1 ? "" : "s"} still need to be
+                revealed.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Ready to claim</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.redeemable} row{summary.redeemable === 1 ? "" : "s"} include a direct claim or redeem destination.
+                {summary.redeemable} row{summary.redeemable === 1 ? "" : "s"}{" "}
+                include a direct claim or redeem destination.
               </p>
             </div>
             <div className={INSET_PANEL_COMPACT_CLASS}>
               <p className={SECTION_EYEBROW_CLASS}>Instruction-first</p>
               <p className="mt-2 text-sm text-card-foreground">
-                {summary.instructions} row{summary.instructions === 1 ? "" : "s"} rely on instructions before redemption.
+                {summary.instructions} row
+                {summary.instructions === 1 ? "" : "s"} rely on instructions
+                before redemption.
               </p>
             </div>
           </div>
@@ -274,7 +288,9 @@ export default function OtherKeys() {
                   variant={selected ? "secondary" : "outline"}
                   onClick={() => setScope(value as KeyInventoryScope)}>
                   {label}
-                  <span className="ml-1 text-xs text-muted-foreground">{count}</span>
+                  <span className="ml-1 text-xs text-muted-foreground">
+                    {count}
+                  </span>
                 </Button>
               );
             })}

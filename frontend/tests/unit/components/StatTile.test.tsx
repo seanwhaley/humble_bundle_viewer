@@ -34,7 +34,12 @@ describe("StatTile", () => {
 
   it("allows callers to opt into a different shared surface", () => {
     const { container } = render(
-      <StatTile label="Downloads" value="128" surface="panel" shadow="default" />,
+      <StatTile
+        label="Downloads"
+        value="128"
+        surface="panel"
+        shadow="default"
+      />,
     );
 
     expect(container.firstElementChild).toHaveClass("bg-surface-panel");

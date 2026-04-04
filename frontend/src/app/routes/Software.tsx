@@ -23,7 +23,10 @@ import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import PageFiltersButton from "../../components/ui/PageFiltersButton";
 import PaneHeader from "../../components/ui/PaneHeader";
-import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
+import {
+  RouteErrorState,
+  RouteLoadingState,
+} from "../../components/ui/RouteState";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -439,27 +442,27 @@ export default function Software() {
             <CardContent className="space-y-4">
               <div className={GRID_THREE_COLUMN_CLASS}>
                 <div className={INSET_PANEL_COMPACT_CLASS}>
-                  <p className={SECTION_EYEBROW_CLASS}>
-                    Titles in scope
-                  </p>
+                  <p className={SECTION_EYEBROW_CLASS}>Titles in scope</p>
                   <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                    {formatNumber(softwareRows.length)} software title{softwareRows.length === 1 ? "" : "s"} match the current filters.
+                    {formatNumber(softwareRows.length)} software title
+                    {softwareRows.length === 1 ? "" : "s"} match the current
+                    filters.
                   </p>
                 </div>
                 <div className={INSET_PANEL_COMPACT_CLASS}>
-                  <p className={SECTION_EYEBROW_CLASS}>
-                    Selected now
-                  </p>
+                  <p className={SECTION_EYEBROW_CLASS}>Selected now</p>
                   <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                    {formatNumber(selectedCount)} title{selectedCount === 1 ? "" : "s"} are selected for route-level actions.
+                    {formatNumber(selectedCount)} title
+                    {selectedCount === 1 ? "" : "s"} are selected for
+                    route-level actions.
                   </p>
                 </div>
                 <div className={INSET_PANEL_COMPACT_CLASS}>
-                  <p className={SECTION_EYEBROW_CLASS}>
-                    Variants in scope
-                  </p>
+                  <p className={SECTION_EYEBROW_CLASS}>Variants in scope</p>
                   <p className={INSET_PANEL_BODY_TEXT_CLASS}>
-                    {formatNumber(variantOptions.length)} platform and installer variant{variantOptions.length === 1 ? "" : "s"} are available in the current scope.
+                    {formatNumber(variantOptions.length)} platform and installer
+                    variant{variantOptions.length === 1 ? "" : "s"} are
+                    available in the current scope.
                   </p>
                 </div>
               </div>
@@ -470,7 +473,8 @@ export default function Software() {
                   variant={showBulkDownloadsPanel ? "default" : "outline"}
                   className={COMPACT_ACTION_BUTTON_CLASS}
                   onClick={() => setShowBulkDownloads((value) => !value)}>
-                  Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                  Bulk browser downloads
+                  {selectedCount > 0 ? ` (${selectedCount})` : ""}
                 </Button>
                 <Button
                   size="sm"
@@ -518,9 +522,7 @@ export default function Software() {
               <CardHeader className="pb-3">
                 <div className={PANEL_HEADER_SPLIT_ROW_CLASS}>
                   <div>
-                    <h3 className={SECTION_TITLE_CLASS}>
-                      Bulk downloads
-                    </h3>
+                    <h3 className={SECTION_TITLE_CLASS}>Bulk downloads</h3>
                     <p className="text-sm text-muted-foreground">
                       Select titles in the table first, then choose whether you
                       want every file, one matching variant, or a planned
@@ -650,7 +652,8 @@ export default function Software() {
                 <p className={PANEL_HELP_TEXT_CLASS}>
                   {selectedCount > 0 ?
                     "Variant options are scoped to the currently selected titles so you do not have to scroll through irrelevant file types."
-                  : "Select one or more rows in the table to enable bulk downloads and narrow the variant list."}
+                  : "Select one or more rows in the table to enable bulk downloads and narrow the variant list."
+                  }
                 </p>
 
                 {bulkPlannerError && (

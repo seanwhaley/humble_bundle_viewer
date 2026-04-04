@@ -110,9 +110,7 @@ vi.mock("../../../../src/components/DataTable", () => ({
       <p>{searchPlaceholder}</p>
       <button
         type="button"
-        onClick={() =>
-          onRowSelectionChange?.({ [getRowId(data[0])]: true })
-        }>
+        onClick={() => onRowSelectionChange?.({ [getRowId(data[0])]: true })}>
         Select first software row
       </button>
       <p>Rendered rows: {data.length}</p>
@@ -180,7 +178,9 @@ describe("Software", () => {
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     expect(screen.getByText("Software FilterBar")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Advanced local sync" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Advanced local sync" }),
+    );
     expect(screen.getByText("Managed sync panel")).toBeInTheDocument();
   });
 
@@ -191,18 +191,26 @@ describe("Software", () => {
       screen.getByRole("button", { name: "Bulk browser downloads" }),
     );
     expect(
-      screen.getByText(/Select one or more rows in the table to enable bulk downloads/i),
+      screen.getByText(
+        /Select one or more rows in the table to enable bulk downloads/i,
+      ),
     ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Select first software row" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Select first software row" }),
+    );
 
     expect(screen.getByText("Selected titles: 1")).toBeInTheDocument();
     expect(
-      screen.getByText(/Variant options are scoped to the currently selected titles/i),
+      screen.getByText(
+        /Variant options are scoped to the currently selected titles/i,
+      ),
     ).toBeInTheDocument();
 
     const variantSelect = screen.getByLabelText("Download software variant");
-    const optionLabels = within(variantSelect).getAllByRole("option").map((option) => option.textContent);
+    const optionLabels = within(variantSelect)
+      .getAllByRole("option")
+      .map((option) => option.textContent);
     expect(optionLabels).toEqual(
       expect.arrayContaining(["Select platform + type", "Windows"]),
     );

@@ -44,10 +44,7 @@ export default function BarChart({
     xAxis: {
       type: "category",
       data: data.map((item) => item.label),
-      axisLabel: {
-        rotate: 20,
-        color: theme.mutedForeground,
-      },
+      axisLabel: { rotate: 20 },
       axisLine: {
         lineStyle: {
           color: theme.border,

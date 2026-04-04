@@ -228,7 +228,7 @@ Use the shared status tokens consistently across routes:
 
 ## Route-level rules
 
-- `Overview.tsx`, `CommandCenter.tsx`, and `LibrarySetup.tsx` should be treated as reference implementations for semantic cards, badges, tokenized status panels, and route-shell hierarchy.
+- `Home.tsx`, `CommandCenter.tsx`, and `Setup.tsx` should be treated as reference implementations for semantic cards, badges, tokenized status panels, and route-shell hierarchy.
 - New setup or maintenance UI states must use the shared primitives first, not one-off class strings.
 - New viewer routes should prefer compact intro cards, summary-first layout, quick-focus or filter disclosures, and semantic status treatments before introducing route-local chrome.
 - Status panels may use token classes directly when a full-width message block is more appropriate than a badge.

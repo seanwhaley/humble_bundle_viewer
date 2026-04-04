@@ -35,7 +35,11 @@ export function PageIntro({
             {title}
           </TitleTag>
           {description && (
-            <p className={cn(PAGE_INTRO_DESCRIPTION_CLASS, descriptionClassName)}>
+            <p
+              className={cn(
+                PAGE_INTRO_DESCRIPTION_CLASS,
+                descriptionClassName,
+              )}>
               {description}
             </p>
           )}

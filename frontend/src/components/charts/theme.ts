@@ -44,10 +44,7 @@ const resolveCssVarAlpha = (name: string, alpha: number, fallback: string) => {
 
 export const getChartTheme = () => ({
   surface: resolveCssVar("--surface-panel", FALLBACKS.surface),
-  surfaceMuted: resolveCssVar(
-    "--surface-panel-strong",
-    FALLBACKS.surfaceMuted,
-  ),
+  surfaceMuted: resolveCssVar("--surface-panel-strong", FALLBACKS.surfaceMuted),
   surfaceSoft: resolveCssVar("--surface-overlay", FALLBACKS.surfaceSoft),
   border: resolveCssVar("--border", FALLBACKS.border),
   borderSoft: resolveCssVarAlpha("--border", 0.12, FALLBACKS.borderSoft),

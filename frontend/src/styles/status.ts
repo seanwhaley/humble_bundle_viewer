@@ -31,9 +31,11 @@ export const STATUS_SUCCESS_BODY_TEXT_CLASS =
 export const STATUS_SCOPE_PANEL_CLASS =
   "rounded-md border border-border bg-surface-overlay px-2.5 py-1.5 text-right text-[11px] text-muted-foreground";
 
-export const STATUS_WARNING_TEXT_XS_CLASS = "text-xs text-status-warning-foreground";
+export const STATUS_WARNING_TEXT_XS_CLASS =
+  "text-xs text-status-warning-foreground";
 
-export const STATUS_ERROR_TEXT_XS_CLASS = "text-xs text-status-error-foreground";
+export const STATUS_ERROR_TEXT_XS_CLASS =
+  "text-xs text-status-error-foreground";
 
 export const STATUS_SUCCESS_TEXT_RIGHT_CLASS =
   "text-right text-sm font-medium text-status-success-foreground";
@@ -53,7 +55,8 @@ export const WARNING_BANNER_HEADER_CLASS =
 export const WARNING_BANNER_TITLE_CLASS =
   "text-[11px] font-semibold uppercase tracking-[0.18em]";
 
-export const WARNING_BANNER_BODY_CLASS = "mt-1 text-sm font-medium text-foreground";
+export const WARNING_BANNER_BODY_CLASS =
+  "mt-1 text-sm font-medium text-foreground";
 
 export const WARNING_BANNER_DETAIL_CLASS =
   "mt-1 text-xs text-status-warning-foreground";
@@ -63,22 +66,21 @@ export const WARNING_TEXT_EMPHASIS_CLASS =
 
 export const SUCCESS_TEXT_CLASS = "font-medium text-status-success-foreground";
 
-export const WARNING_TEXT_CLASS = "font-semibold text-status-warning-foreground";
+export const WARNING_TEXT_CLASS =
+  "font-semibold text-status-warning-foreground";
 
 export const EXPIRED_TEXT_CLASS = "font-bold text-destructive";
 
-export const DOWNLOAD_ACTION_STATUS_CLASS: Record<
-  LinkExpirationState,
-  string
-> = {
-  unknown: "",
-  valid: "",
-  upcoming: "",
-  expiring:
-    "border-status-warning/40 bg-status-warning/10 text-status-warning-foreground hover:bg-status-warning/15",
-  expired:
-    "border-status-error/40 bg-status-error/10 text-status-error-foreground hover:bg-status-error/15",
-};
+export const DOWNLOAD_ACTION_STATUS_CLASS: Record<LinkExpirationState, string> =
+  {
+    unknown: "",
+    valid: "",
+    upcoming: "",
+    expiring:
+      "border-status-warning/40 bg-status-warning/10 text-status-warning-foreground hover:bg-status-warning/15",
+    expired:
+      "border-status-error/40 bg-status-error/10 text-status-error-foreground hover:bg-status-error/15",
+  };
 
 export const DOWNLOAD_EXPIRY_BADGE_TONE_CLASS: Record<
   LinkExpirationState,

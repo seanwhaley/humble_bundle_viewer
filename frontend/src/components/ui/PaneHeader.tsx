@@ -72,7 +72,8 @@ export default function PaneHeader({
       )}
 
       {description && (
-        <div className={cn("text-sm text-muted-foreground", descriptionClassName)}>
+        <div
+          className={cn("text-sm text-muted-foreground", descriptionClassName)}>
           {description}
         </div>
       )}
