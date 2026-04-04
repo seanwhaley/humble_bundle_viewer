@@ -16,10 +16,18 @@ export default {
     extend: {
       colors: {
         border: "hsl(var(--border))",
+        "border-strong": "hsl(var(--border-strong))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        surface: {
+          panel: "hsl(var(--surface-panel))",
+          "panel-strong": "hsl(var(--surface-panel-strong))",
+          inset: "hsl(var(--surface-inset))",
+          overlay: "hsl(var(--surface-overlay))",
+          soft: "hsl(var(--surface-soft))",
+        },
         status: {
           success: {
             DEFAULT: "hsl(var(--status-success))",

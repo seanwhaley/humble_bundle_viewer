@@ -3,7 +3,9 @@
  */
 import ReactECharts from "echarts-for-react";
 
+import ChartFrame from "./ChartFrame";
 import { echarts } from "./echarts";
+import { getChartTheme } from "./theme";
 
 export interface WordCloudDatum {
   label: string;
@@ -18,8 +20,6 @@ interface WordCloudChartProps {
   onSelect?: (value: string) => void;
 }
 
-const PALETTE = ["#e2e8f0", "#c4b5fd", "#93c5fd", "#67e8f9", "#f5d0fe"];
-
 const hashLabel = (label: string) =>
   Array.from(label).reduce((hash, char) => hash + char.charCodeAt(0), 0);
 
@@ -33,11 +33,21 @@ export default function WordCloudChart({
   emptyMessage = "No themes available.",
   onSelect,
 }: WordCloudChartProps) {
+  const theme = getChartTheme();
+  const palette = [
+    theme.warningForeground,
+    theme.infoForeground,
+    theme.successForeground,
+    theme.mutedForeground,
+    theme.foreground,
+  ];
+
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-400">
-        {emptyMessage}
-      </div>
+      <ChartFrame
+        emptyMessage={emptyMessage}
+        emptyHeightClassName="min-h-[80px]"
+      />
     );
   }
 
@@ -73,16 +83,16 @@ export default function WordCloudChart({
           focus: "self" as const,
           textStyle: {
             textShadowBlur: 10,
-            textShadowColor: "rgba(15, 23, 42, 0.65)",
+            textShadowColor: theme.backdrop,
           },
         },
         data: data.map((item) => {
           const isSelected =
             normalizedSelected === item.label.trim().toLowerCase();
           const color =
-            isSelected ? "#ffffff" : (
-              PALETTE[hashLabel(item.label) % PALETTE.length]
-            );
+            isSelected ?
+              theme.accent
+            : palette[hashLabel(item.label) % palette.length];
 
           return {
             name: item.label,
@@ -93,7 +103,7 @@ export default function WordCloudChart({
             },
             emphasis: {
               textStyle: {
-                color: "#ffffff",
+                color: theme.foreground,
               },
             },
           };
@@ -103,13 +113,15 @@ export default function WordCloudChart({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-      {title && <p className="text-sm font-medium text-slate-200">{title}</p>}
+    <ChartFrame
+      title={title}
+      titleClassName="text-sm font-medium uppercase normal-case tracking-normal text-card-foreground"
+      className="bg-surface-soft">
       <ReactECharts
         echarts={echarts}
         option={option}
         opts={{ renderer: "canvas" }}
-        style={{ height: 320 }}
+        className="h-[320px]"
         onEvents={
           onSelect ?
             {
@@ -121,6 +133,6 @@ export default function WordCloudChart({
           : undefined
         }
       />
-    </div>
+    </ChartFrame>
   );
 }

@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -37,9 +43,9 @@ vi.mock("../../../src/data/api", () => ({
 }));
 
 vi.mock("../../../src/data/maintenance", async () => {
-  const actual = await vi.importActual<typeof import("../../../src/data/maintenance")>(
-    "../../../src/data/maintenance",
-  );
+  const actual = await vi.importActual<
+    typeof import("../../../src/data/maintenance")
+  >("../../../src/data/maintenance");
 
   return {
     ...actual,
@@ -116,6 +122,7 @@ describe("CommandCenter", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -126,21 +133,20 @@ describe("CommandCenter", () => {
       "href",
       "/setup",
     );
-    expect(screen.getByRole("link", { name: "Jump to Guided workflows" })).toHaveAttribute(
-      "href",
-      "#guided-workflows",
-    );
-    expect(screen.getByRole("link", { name: "Jump to Rebuilds and exports" })).toHaveAttribute(
-      "href",
-      "#rebuilds-and-exports",
-    );
-    expect(screen.getByRole("link", { name: "Jump to Metadata enrichment" })).toHaveAttribute(
-      "href",
-      "#metadata-enrichment",
-    );
+    expect(
+      screen.getByRole("link", { name: "Jump to Guided workflows" }),
+    ).toHaveAttribute("href", "#guided-workflows");
+    expect(
+      screen.getByRole("link", { name: "Jump to Rebuilds and exports" }),
+    ).toHaveAttribute("href", "#rebuilds-and-exports");
+    expect(
+      screen.getByRole("link", { name: "Jump to Metadata enrichment" }),
+    ).toHaveAttribute("href", "#metadata-enrichment");
     expect(screen.getByText("Fresh")).toBeInTheDocument();
     expect(screen.getByText("Missing")).toBeInTheDocument();
-    expect(screen.getByText("Bundle types: games, books, software")).toBeInTheDocument();
+    expect(
+      screen.getByText("Bundle types: games, books, software"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Saved bundles: 7")).toBeInTheDocument();
     expect(screen.getByText("Month: Not captured yet")).toBeInTheDocument();
   });
@@ -174,7 +180,11 @@ describe("CommandCenter", () => {
     renderRoute();
 
     expect(screen.getByText("Loading")).toBeInTheDocument();
-    expect(screen.getByText(/Checking the latest saved current-sales bundle analysis/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Checking the latest saved current-sales bundle analysis/i,
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText("Unavailable")).toBeInTheDocument();
     expect(
       screen.getByText(/timestamp could not be parsed/i),
@@ -202,6 +212,86 @@ describe("CommandCenter", () => {
     renderRoute();
 
     expect(screen.getByText("Stale")).toBeInTheDocument();
+  });
+
+  it("keeps current Choice fresh for the rest of the captured month", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-31T12:00:00Z"));
+
+    mocks.useCurrentChoiceStatus.mockReturnValue({
+      data: {
+        output_dir: "data/artifacts/current_choice",
+        page_html_path: "choice.html",
+        snapshot_json_path: "choice.json",
+        report_json_path: "choice-report.json",
+        report_markdown_path: "choice-report.md",
+        library_path: "data/artifacts/library_products.json",
+        report_exists: true,
+        markdown_exists: true,
+        generated_at: "2026-03-01T00:00:00Z",
+        month_label: "March 2026",
+        game_count: 8,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderRoute();
+
+    const statusCard = screen
+      .getByText("Saved Choice report status")
+      .closest("div.rounded-lg");
+    if (!statusCard) {
+      throw new Error("Expected the saved Choice report summary card.");
+    }
+
+    expect(within(statusCard).getByText("Fresh")).toBeInTheDocument();
+    expect(
+      within(statusCard).getByText(
+        /March 2026 stays current through the rest of this month/i,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("marks current Choice stale once the saved month is no longer current", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-31T12:00:00Z"));
+
+    mocks.useCurrentChoiceStatus.mockReturnValue({
+      data: {
+        output_dir: "data/artifacts/current_choice",
+        page_html_path: "choice.html",
+        snapshot_json_path: "choice.json",
+        report_json_path: "choice-report.json",
+        report_markdown_path: "choice-report.md",
+        library_path: "data/artifacts/library_products.json",
+        report_exists: true,
+        markdown_exists: true,
+        generated_at: "2026-03-01T00:00:00Z",
+        month_label: "February 2026",
+        game_count: 8,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderRoute();
+
+    const statusCard = screen
+      .getByText("Saved Choice report status")
+      .closest("div.rounded-lg");
+    if (!statusCard) {
+      throw new Error("Expected the saved Choice report summary card.");
+    }
+
+    expect(within(statusCard).getByText("Stale")).toBeInTheDocument();
+    expect(
+      within(statusCard).getByText(
+        /February 2026 is no longer the current Choice month/i,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("runs the current bundles refresh workflow and renders success actions", async () => {
@@ -234,16 +324,22 @@ describe("CommandCenter", () => {
 
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze current bundles" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze current bundles" }),
+    );
 
     expect(mocks.postMaintenanceCommand).toHaveBeenCalledWith(
       "/api/maintenance/analyze-current-bundles",
       { bundle_types: ["games", "books", "software"] },
     );
     expect(
-      screen.getByText(/Refreshing current bundle analysis for games, books, and software/i),
+      screen.getByText(
+        /Refreshing current bundle analysis for games, books, and software/i,
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Analyze current bundles" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Analyze current bundles" }),
+    ).toBeDisabled();
 
     resolvePromise?.({
       command: "analyze-current-bundles",
@@ -263,13 +359,16 @@ describe("CommandCenter", () => {
       },
     });
 
-    expect(await screen.findByText("Bundle refresh complete.")).toBeInTheDocument();
-    expect(screen.getByText("Bundle index HTML: index.html")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Bundle refresh complete."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Bundle index HTML: index.html"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Bundles captured: 3")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Sales Overview" })).toHaveAttribute(
-      "href",
-      "/venue/overview",
-    );
+    expect(
+      screen.getByRole("link", { name: "Open Sales Overview" }),
+    ).toHaveAttribute("href", "/sales");
     expect(document.querySelector("button a")).toBeNull();
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["current-bundles-status"],
@@ -302,10 +401,16 @@ describe("CommandCenter", () => {
     const form = getFormForButton("Generate order models");
     expect(within(form).getByDisplayValue("custom/api")).toBeInTheDocument();
     expect(within(form).getByDisplayValue("custom_*.json")).toBeInTheDocument();
-    expect(within(form).getByDisplayValue("custom/models.py")).toBeInTheDocument();
-    expect(within(form).getByDisplayValue("CustomOrderList")).toBeInTheDocument();
+    expect(
+      within(form).getByDisplayValue("custom/models.py"),
+    ).toBeInTheDocument();
+    expect(
+      within(form).getByDisplayValue("CustomOrderList"),
+    ).toBeInTheDocument();
 
-    fireEvent.click(within(form).getByRole("button", { name: "Reset to defaults" }));
+    fireEvent.click(
+      within(form).getByRole("button", { name: "Reset to defaults" }),
+    );
 
     await waitFor(() => {
       expect(
@@ -313,15 +418,27 @@ describe("CommandCenter", () => {
       ).toBeInTheDocument();
     });
 
-    expect(within(form).getByDisplayValue("orders_batch_*.json")).toBeInTheDocument();
+    expect(
+      within(form).getByDisplayValue("orders_batch_*.json"),
+    ).toBeInTheDocument();
     expect(
       within(form).getByDisplayValue("data/artifacts/order_payload_models.py"),
     ).toBeInTheDocument();
-    expect(within(form).getByDisplayValue("OrderPayloadList")).toBeInTheDocument();
-    expect(window.localStorage.getItem("humble.commands.generateApiDir")).toBeNull();
-    expect(window.localStorage.getItem("humble.commands.generatePattern")).toBeNull();
-    expect(window.localStorage.getItem("humble.commands.generateOutputModels")).toBeNull();
-    expect(window.localStorage.getItem("humble.commands.generateClassName")).toBeNull();
+    expect(
+      within(form).getByDisplayValue("OrderPayloadList"),
+    ).toBeInTheDocument();
+    expect(
+      window.localStorage.getItem("humble.commands.generateApiDir"),
+    ).toBeNull();
+    expect(
+      window.localStorage.getItem("humble.commands.generatePattern"),
+    ).toBeNull();
+    expect(
+      window.localStorage.getItem("humble.commands.generateOutputModels"),
+    ).toBeNull();
+    expect(
+      window.localStorage.getItem("humble.commands.generateClassName"),
+    ).toBeNull();
   });
 
   it("persists advanced option open state for the current browser session", async () => {
@@ -342,7 +459,9 @@ describe("CommandCenter", () => {
       expect(details).toHaveAttribute("open");
     });
 
-    expect(window.sessionStorage.getItem(storageKey)).toBe(JSON.stringify(true));
+    expect(window.sessionStorage.getItem(storageKey)).toBe(
+      JSON.stringify(true),
+    );
 
     unmount();
     renderRoute();
@@ -351,7 +470,9 @@ describe("CommandCenter", () => {
       .getByText("Advanced input and output paths")
       .closest("details");
     if (!restoredDetails) {
-      throw new Error("Expected the restored advanced options details element.");
+      throw new Error(
+        "Expected the restored advanced options details element.",
+      );
     }
 
     expect(restoredDetails).toHaveAttribute("open");
@@ -384,7 +505,9 @@ describe("CommandCenter", () => {
           "data/artifacts/order_payload_models.py",
         ),
       ).toBeInTheDocument();
-      expect(within(generateForm).getByDisplayValue("OrderPayloadList")).toBeInTheDocument();
+      expect(
+        within(generateForm).getByDisplayValue("OrderPayloadList"),
+      ).toBeInTheDocument();
 
       const schemaForm = getFormForButton("Build viewer schema");
       expect(
@@ -424,12 +547,20 @@ describe("CommandCenter", () => {
     renderRoute();
 
     const cacheForm = getFormForButton("Cache subproduct pages");
-    fireEvent.change(within(cacheForm).getByPlaceholderText("Optional title or publisher filter"), {
-      target: { value: "  discworld  " },
-    });
-    fireEvent.change(within(cacheForm).getByPlaceholderText("Optional exact URL override"), {
-      target: { value: "   " },
-    });
+    fireEvent.change(
+      within(cacheForm).getByPlaceholderText(
+        "Optional title or publisher filter",
+      ),
+      {
+        target: { value: "  discworld  " },
+      },
+    );
+    fireEvent.change(
+      within(cacheForm).getByPlaceholderText("Optional exact URL override"),
+      {
+        target: { value: "   " },
+      },
+    );
     fireEvent.change(within(cacheForm).getByPlaceholderText("Limit"), {
       target: { value: "5" },
     });
@@ -440,7 +571,9 @@ describe("CommandCenter", () => {
       target: { value: "" },
     });
 
-    fireEvent.click(within(cacheForm).getByRole("button", { name: "Cache subproduct pages" }));
+    fireEvent.click(
+      within(cacheForm).getByRole("button", { name: "Cache subproduct pages" }),
+    );
 
     await waitFor(() => {
       expect(mocks.postMaintenanceCommand).toHaveBeenCalledWith(
@@ -457,12 +590,20 @@ describe("CommandCenter", () => {
       );
     });
 
-    expect(await screen.findByText("Page cache refreshed.")).toBeInTheDocument();
-    expect(screen.getByText("Manifest: cache-manifest.json")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Page cache refreshed."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Manifest: cache-manifest.json"),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze current Choice" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze current Choice" }),
+    );
 
-    expect(await screen.findByText("Choice refresh failed.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Choice refresh failed."),
+    ).toBeInTheDocument();
   });
 
   it("submits the remaining command workflows and renders their success details", async () => {
@@ -527,52 +668,84 @@ describe("CommandCenter", () => {
 
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: "Analyze current Choice" }));
-    expect(await screen.findByText("Choice refresh complete.")).toBeInTheDocument();
-    expect(screen.getByText("Games captured: 8")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open Current Choice" })).toHaveAttribute(
-      "href",
-      "/venue/choice",
+    fireEvent.click(
+      screen.getByRole("button", { name: "Analyze current Choice" }),
     );
+    expect(
+      await screen.findByText("Choice refresh complete."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Games captured: 8")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Open Current Choice" }),
+    ).toHaveAttribute("href", "/sales/choice");
 
     const schemaForm = getFormForButton("Build viewer schema");
-    fireEvent.change(within(schemaForm).getByPlaceholderText("Schema output path"), {
-      target: { value: "docs/assets/tools/custom-schema.json" },
-    });
-    fireEvent.click(within(schemaForm).getByRole("button", { name: "Build viewer schema" }));
+    fireEvent.change(
+      within(schemaForm).getByPlaceholderText("Schema output path"),
+      {
+        target: { value: "docs/assets/tools/custom-schema.json" },
+      },
+    );
+    fireEvent.click(
+      within(schemaForm).getByRole("button", { name: "Build viewer schema" }),
+    );
     expect(
       await within(schemaForm).findByText("Command completed successfully."),
     ).toBeInTheDocument();
-    expect(within(schemaForm).getByText("Schema: docs/assets/tools/custom-schema.json")).toBeInTheDocument();
+    expect(
+      within(schemaForm).getByText(
+        "Schema: docs/assets/tools/custom-schema.json",
+      ),
+    ).toBeInTheDocument();
 
     const rebuildOrderForm = getFormForButton("Rebuild order models");
-    fireEvent.click(within(rebuildOrderForm).getByRole("button", { name: "Rebuild order models" }));
-    expect(await within(rebuildOrderForm).findByText("Order models rebuilt.")).toBeInTheDocument();
-    expect(within(rebuildOrderForm).getByText("Missing paths: missing-batch.json")).toBeInTheDocument();
+    fireEvent.click(
+      within(rebuildOrderForm).getByRole("button", {
+        name: "Rebuild order models",
+      }),
+    );
+    expect(
+      await within(rebuildOrderForm).findByText("Order models rebuilt."),
+    ).toBeInTheDocument();
+    expect(
+      within(rebuildOrderForm).getByText("Missing paths: missing-batch.json"),
+    ).toBeInTheDocument();
 
     const rebuildLibraryForm = getFormForButton("Rebuild library artifacts");
     fireEvent.click(
-      within(rebuildLibraryForm).getByRole("button", { name: "Rebuild library artifacts" }),
+      within(rebuildLibraryForm).getByRole("button", {
+        name: "Rebuild library artifacts",
+      }),
     );
     expect(
       await within(rebuildLibraryForm).findByText("Library artifacts rebuilt."),
     ).toBeInTheDocument();
-    expect(within(rebuildLibraryForm).getByText("Products: 99")).toBeInTheDocument();
-    expect(mocks.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["library"] });
+    expect(
+      within(rebuildLibraryForm).getByText("Products: 99"),
+    ).toBeInTheDocument();
+    expect(mocks.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["library"],
+    });
     expect(mocks.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["library-status"],
     });
 
     const metadataForm = getFormForButton("Extract metadata");
-    fireEvent.click(within(metadataForm).getByRole("button", { name: "Extract metadata" }));
+    fireEvent.click(
+      within(metadataForm).getByRole("button", { name: "Extract metadata" }),
+    );
     expect(
       await within(metadataForm).findByText("Metadata extraction finished."),
     ).toBeInTheDocument();
     expect(
-      within(metadataForm).getByText("Metadata: data/artifacts/subproduct_metadata.json"),
+      within(metadataForm).getByText(
+        "Metadata: data/artifacts/subproduct_metadata.json",
+      ),
     ).toBeInTheDocument();
     expect(
-      within(metadataForm).getByText("Report: data/artifacts/subproduct_metadata.md"),
+      within(metadataForm).getByText(
+        "Report: data/artifacts/subproduct_metadata.md",
+      ),
     ).toBeInTheDocument();
   });
 });

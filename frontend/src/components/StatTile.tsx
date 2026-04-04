@@ -1,7 +1,17 @@
 /**
  * Compact stat tile used for dashboard metrics.
  */
+import type { VariantProps } from "class-variance-authority";
+
+import { cardVariants } from "./ui/card";
 import { cn } from "../lib/utils";
+import {
+  METRIC_LABEL_CLASS,
+  STAT_TILE_CONTENT_CLASS,
+  STAT_TILE_INTERACTIVE_CLASS,
+  STAT_TILE_SUBTITLE_CLASS,
+  STAT_TILE_VALUE_CLASS,
+} from "../styles/roles";
 
 interface StatTileProps {
   label: string;
@@ -10,6 +20,8 @@ interface StatTileProps {
   onClick?: () => void;
   className?: string;
   docId?: string;
+  surface?: VariantProps<typeof cardVariants>["surface"];
+  shadow?: VariantProps<typeof cardVariants>["shadow"];
 }
 
 /**
@@ -22,29 +34,34 @@ export default function StatTile({
   onClick,
   className,
   docId,
+  surface = "inset",
+  shadow = "none",
 }: StatTileProps) {
   const tileClasses = cn(
-    "bg-card text-card-foreground rounded-xl border border-border shadow-sm",
-    onClick &&
-      "cursor-pointer text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    cardVariants({
+      surface,
+      shadow,
+      interactive: Boolean(onClick),
+    }),
+    onClick && STAT_TILE_INTERACTIVE_CLASS,
     className,
   );
 
   const content = (
-    <div className="p-4" data-doc-id={docId}>
+    <div className={STAT_TILE_CONTENT_CLASS} data-doc-id={docId}>
       <div
-        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+        className={METRIC_LABEL_CLASS}
         data-doc-id={docId ? `${docId}-label` : undefined}>
         {label}
       </div>
       <div
-        className="mt-1 text-2xl font-bold tracking-tight"
+        className={STAT_TILE_VALUE_CLASS}
         data-doc-id={docId ? `${docId}-value` : undefined}>
         {value}
       </div>
       {subtitle && (
         <div
-          className="mt-1 text-xs text-muted-foreground"
+          className={STAT_TILE_SUBTITLE_CLASS}
           data-doc-id={docId ? `${docId}-subtitle` : undefined}>
           {subtitle}
         </div>

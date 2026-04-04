@@ -48,7 +48,6 @@ import yaml
 
 from .utils import ConfigError
 
-
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = BACKEND_ROOT.parent
 DEFAULT_ENV_PATH = BACKEND_ROOT / ".env"
@@ -581,7 +580,7 @@ class ViewerConfig(BaseModel):
     """
 
     link_expiry_warning_hours: PositiveInt = Field(
-        default=24,
+        default=6,
         description="Hours before expiry to warn about download links",
     )
     default_library_dir: Path | None = Field(

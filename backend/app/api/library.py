@@ -20,6 +20,7 @@ from app.services.library_loader import (
     set_library_path,
 )
 from app.services.library_runner import run_library_capture
+from app.services.native_dialogs import pick_directory
 from hb_library_viewer.config import RuntimeSettings
 from hb_library_viewer.utils import BrowserError, ConfigError, HumbleBundleError
 
@@ -37,7 +38,7 @@ def _is_within_root(candidate: Path, root: Path) -> bool:
 
 
 def _library_allowed_roots() -> tuple[Path, ...]:
-    """Return the configured directories allowed for library read/write operations."""
+    """Return the configured directories allowed for selecting existing library files."""
 
     runtime_settings = RuntimeSettings()
     viewer_config = runtime_settings.viewer
@@ -66,8 +67,12 @@ def _library_allowed_roots() -> tuple[Path, ...]:
     return tuple(roots)
 
 
-def _ensure_allowed_library_path(path: Path) -> Path:
-    """Reject library file paths outside configured viewer/artifact roots."""
+def _ensure_library_filename(path: Path) -> Path:
+    """Normalize a capture output path and require the standard filename.
+
+    Setup should pass the chosen output path into the same shared capture flow
+    the CLI uses, so capture output paths remain explicit and user-directed.
+    """
 
     resolved = path.expanduser().resolve()
     if resolved.name != _LIBRARY_FILENAME:
@@ -77,19 +82,18 @@ def _ensure_allowed_library_path(path: Path) -> Path:
                 "Library path must target library_products.json or a containing folder."
             ),
         )
+    return resolved
 
-    allowed_roots = _library_allowed_roots()
-    if any(_is_within_root(resolved, root) for root in allowed_roots):
-        return resolved
 
-    allowed_display = ", ".join(str(root) for root in allowed_roots)
-    raise HTTPException(
-        status_code=400,
-        detail=(
-            "Library paths must stay inside configured viewer or artifact directories. "
-            f"Allowed roots: {allowed_display}"
-        ),
-    )
+def _ensure_allowed_library_path(path: Path) -> Path:
+    """Backward-compatible alias for library path normalization.
+
+    Existing-library selection should follow the same local-path flexibility as
+    capture output paths, while still requiring the standard
+    `library_products.json` filename.
+    """
+
+    return _ensure_library_filename(path)
 
 
 def _resolve_subproduct_page_path(raw_path: str) -> Path:
@@ -178,6 +182,37 @@ def get_library_status() -> LibraryStatusResponse:
     )
 
 
+class PickSaveFolderRequest(BaseModel):
+    """Request to open a native folder picker for the setup flow."""
+
+    initial_path: str | None = Field(
+        default=None,
+        description="Optional initial directory shown in the native folder picker.",
+    )
+
+
+class PickSaveFolderResponse(BaseModel):
+    """Response for the native save-folder picker."""
+
+    selected_path: str | None
+
+
+@router.post("/library/pick-save-folder", response_model=PickSaveFolderResponse)
+def pick_save_folder(request: PickSaveFolderRequest) -> PickSaveFolderResponse:
+    """Open a native folder picker and return the selected directory path."""
+
+    try:
+        selected = pick_directory(request.initial_path)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+    if selected is None:
+        return PickSaveFolderResponse(selected_path=None)
+
+    selected_dir = selected.expanduser().resolve()
+    return PickSaveFolderResponse(selected_path=str(selected_dir))
+
+
 class RunLibraryRequest(BaseModel):
     """Request to capture library data via the viewer API."""
 
@@ -223,7 +258,7 @@ def _normalize_output_path(raw_path: str) -> Path:
 def run_library(request: RunLibraryRequest) -> RunLibraryResponse:
     """Capture library data using a provided session cookie."""
     try:
-        output_path = _ensure_allowed_library_path(
+        output_path = _ensure_library_filename(
             _normalize_output_path(request.output_path)
         )
         result = run_library_capture(

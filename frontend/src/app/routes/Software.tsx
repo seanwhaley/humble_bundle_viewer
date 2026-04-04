@@ -2,7 +2,7 @@
  * Software library route grouped by subproduct downloads.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Download, Monitor } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 
 import { useLibraryData, useViewerConfig } from "../../data/api";
@@ -15,11 +15,15 @@ import {
   isSoftwarePlatform,
   normalizePlatformLabel,
 } from "../../data/selectors";
-import { formatBytes, formatDate } from "../../utils/format";
+import { cn } from "../../lib/utils";
+import { formatBytes, formatDate, formatNumber } from "../../utils/format";
 import { DataTable } from "../../components/DataTable";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import PageFiltersButton from "../../components/ui/PageFiltersButton";
+import PaneHeader from "../../components/ui/PaneHeader";
+import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
 import { ProductCell } from "../../components/ProductCell";
 import SubproductInfoLink from "../../components/SubproductInfoLink";
 import { Tooltip } from "../../components/ui/tooltip";
@@ -38,6 +42,28 @@ import {
 } from "../../utils/downloads";
 import ExpiredLinkDialog from "../../components/ExpiredLinkDialog";
 import DownloadRouteEmptyState from "../../components/DownloadRouteEmptyState";
+import {
+  COMPACT_ACTION_BUTTON_CLASS,
+  COMPACT_FORM_SELECT_CLASS,
+  CONTENT_BODY_TEXT_CLASS,
+  CONTENT_PREVIEW_TEXT_CLASS,
+  DOWNLOAD_ACTION_BAR_CLASS,
+  DOWNLOAD_ACTION_BUTTON_CLASS,
+  INSET_PANEL_COMPACT_CLASS,
+  INSET_PANEL_BODY_TEXT_CLASS,
+  SECTION_EYEBROW_CLASS,
+  SECTION_TITLE_CLASS,
+} from "../../styles/roles";
+import { DOWNLOAD_ACTION_STATUS_CLASS } from "../../styles/status";
+import {
+  GRID_THREE_COLUMN_CLASS,
+  PAGE_ACTION_ROW_CLASS,
+  PAGE_STACK_TIGHT_CLASS,
+  PANEL_ERROR_TEXT_CLASS,
+  PANEL_HEADER_SPLIT_ROW_CLASS,
+  PANEL_HELP_TEXT_CLASS,
+} from "../../styles/page";
+import { usePageHeaderActions } from "../layout/PageHeaderContext";
 
 interface SoftwareRow {
   id: string;
@@ -211,6 +237,17 @@ export default function Software() {
       setSelectedVariant("");
     }
   }, [selectedVariant, variantOptions]);
+  const headerActions = useMemo(
+    () => (
+      <PageFiltersButton
+        expanded={showFiltersPanel}
+        activeCount={activeFilterCount}
+        onClick={() => setShowFilters((value) => !value)}
+      />
+    ),
+    [activeFilterCount, showFiltersPanel],
+  );
+  usePageHeaderActions(headerActions);
 
   const triggerPlannedBulkDownload = async (
     sizePolicy: "smallest" | "largest",
@@ -251,7 +288,7 @@ export default function Software() {
       accessorKey: "publisher",
       header: "Publisher",
       cell: ({ getValue }) => (
-        <div className="whitespace-normal break-words text-sm text-foreground">
+        <div className={CONTENT_BODY_TEXT_CLASS}>
           {(getValue() as string) || "—"}
         </div>
       ),
@@ -274,7 +311,7 @@ export default function Software() {
           content={
             row.original.descriptionSnippet || "No summary metadata yet"
           }>
-          <p className="line-clamp-3 whitespace-normal break-words text-xs text-muted-foreground">
+          <p className={CONTENT_PREVIEW_TEXT_CLASS}>
             {row.original.descriptionSnippet || "No summary metadata yet"}
           </p>
         </Tooltip>
@@ -299,7 +336,7 @@ export default function Software() {
       accessorKey: "variants",
       header: "Files",
       cell: ({ getValue }) => (
-        <div className="whitespace-normal break-words text-xs text-muted-foreground">
+        <div className={CONTENT_PREVIEW_TEXT_CLASS}>
           {(getValue() as string[]).join(", ")}
         </div>
       ),
@@ -318,12 +355,12 @@ export default function Software() {
           ),
         ).sort((a, b) => a.localeCompare(b));
         return (
-          <div className="flex flex-wrap items-start gap-1.5">
+          <div className={DOWNLOAD_ACTION_BAR_CLASS}>
             <Tooltip content="Download every installer/archive for this title">
               <Button
                 variant="secondary"
                 size="sm"
-                className="h-7 text-xs"
+                className={DOWNLOAD_ACTION_BUTTON_CLASS}
                 disabled={!downloads.length}
                 onClick={() => {
                   if (hasExpiredLinks(downloads, expiringSoonMs)) {
@@ -344,11 +381,6 @@ export default function Software() {
 
               if (match) {
                 const status = getLinkStatus(match.url, expiringSoonMs);
-                const statusClass =
-                  status === "expired" ? "border-rose-500/60 text-rose-200"
-                  : status === "expiring" ? "border-amber-400/60 text-amber-200"
-                  : "";
-
                 return (
                   <Tooltip
                     key={variant}
@@ -356,7 +388,10 @@ export default function Software() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className={`h-7 text-xs ${statusClass}`}
+                      className={cn(
+                        DOWNLOAD_ACTION_BUTTON_CLASS,
+                        DOWNLOAD_ACTION_STATUS_CLASS[status],
+                      )}
                       onClick={() => {
                         if (status === "expired") {
                           setShowExpiredDialog(true);
@@ -378,119 +413,88 @@ export default function Software() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <RouteLoadingState label="Loading software…" />;
   }
 
   if (error) {
-    return (
-      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
-        Failed to load library data.
-      </div>
-    );
+    return <RouteErrorState message="Failed to load library data." />;
   }
 
   return (
-    <div className="w-full flex flex-col space-y-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Monitor className="h-8 w-8 text-primary" />
-          Software Library
-        </h2>
-        <p className="text-muted-foreground">
-          Review {softwareRows.length} software titles grouped into one row per
-          subproduct, with platform and file-type variants kept visible.
-        </p>
-      </div>
-
+    <div className={PAGE_STACK_TIGHT_CLASS}>
       {!softwareRows.length && (
         <DownloadRouteEmptyState routeLabel="Software" />
       )}
 
       {!!softwareRows.length && (
         <>
-          <Card className="bg-card/60">
-            <CardHeader className="space-y-4 pb-4">
-              <div>
-                <Badge variant="info">Browse-first layout</Badge>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-card-foreground">
-                  Start with the table, then open filters, bulk downloads, or
-                  managed sync only when you need them
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Software titles tend to have the noisiest variant lists, so
-                  the heavier tools stay tucked away until you are ready to use
-                  them. Bulk variant downloads also scope themselves to the
-                  titles you selected in the table.
-                </p>
-              </div>
+          <Card surface="panel">
+            <CardHeader className="pb-4">
+              <PaneHeader
+                title="Review software titles and variants before you download or sync"
+                description="Compare publishers, platforms, and installer variants first. Bulk browser downloads and advanced local sync stay route-level so the table remains easy to scan and selection-driven."
+                eyebrow={<Badge variant="info">Software workflow</Badge>}
+              />
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-lg border border-border bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Library scope
+              <div className={GRID_THREE_COLUMN_CLASS}>
+                <div className={INSET_PANEL_COMPACT_CLASS}>
+                  <p className={SECTION_EYEBROW_CLASS}>
+                    Titles in scope
                   </p>
-                  <p className="mt-2 text-sm text-card-foreground">
-                    {softwareRows.length} software titles are ready to browse.
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Active selection
-                  </p>
-                  <p className="mt-2 text-sm text-card-foreground">
-                    {selectedCount} title{selectedCount === 1 ? "" : "s"} selected for bulk actions.
+                  <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                    {formatNumber(softwareRows.length)} software title{softwareRows.length === 1 ? "" : "s"} match the current filters.
                   </p>
                 </div>
-                <div className="rounded-lg border border-border bg-muted/30 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                    Variant coverage
+                <div className={INSET_PANEL_COMPACT_CLASS}>
+                  <p className={SECTION_EYEBROW_CLASS}>
+                    Selected now
                   </p>
-                  <p className="mt-2 text-sm text-card-foreground">
-                    {variantOptions.length} platform and file-type variants in the current scope.
+                  <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                    {formatNumber(selectedCount)} title{selectedCount === 1 ? "" : "s"} are selected for route-level actions.
+                  </p>
+                </div>
+                <div className={INSET_PANEL_COMPACT_CLASS}>
+                  <p className={SECTION_EYEBROW_CLASS}>
+                    Variants in scope
+                  </p>
+                  <p className={INSET_PANEL_BODY_TEXT_CLASS}>
+                    {formatNumber(variantOptions.length)} platform and installer variant{variantOptions.length === 1 ? "" : "s"} are available in the current scope.
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={showFiltersPanel ? "default" : "outline"}
-                  onClick={() => setShowFilters((value) => !value)}>
-                  Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-                </Button>
+              <div className={PAGE_ACTION_ROW_CLASS}>
                 <Button
                   size="sm"
                   variant={showBulkDownloadsPanel ? "default" : "outline"}
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   onClick={() => setShowBulkDownloads((value) => !value)}>
-                  Bulk downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                  Bulk browser downloads{selectedCount > 0 ? ` (${selectedCount})` : ""}
                 </Button>
                 <Button
                   size="sm"
                   variant={showManagedSync ? "default" : "outline"}
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   onClick={() => setShowManagedSync((value) => !value)}>
-                  Managed sync
+                  Advanced local sync
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
+              <p className={PANEL_HELP_TEXT_CLASS}>
                 Downloads still use your browser's normal save flow. Browsers
-                may prompt before allowing multiple files to open at once.
+                may prompt before allowing multiple files to open at once. Bulk
+                browser downloads and advanced local sync both follow the titles
+                currently selected in the table.
                 {hasExpiringSelection && " Some selected links expire soon."}
               </p>
             </CardContent>
           </Card>
 
           {showFiltersPanel && (
-            <Card className="bg-card/60">
+            <Card surface="panel">
               <CardHeader className="pb-3">
-                <h3 className="text-base font-semibold text-card-foreground">
+                <h3 className={SECTION_TITLE_CLASS}>
                   Narrow the library before you download
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -510,11 +514,11 @@ export default function Software() {
           )}
 
           {showBulkDownloadsPanel && (
-            <Card className="bg-card/60">
+            <Card surface="panel">
               <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className={PANEL_HEADER_SPLIT_ROW_CLASS}>
                   <div>
-                    <h3 className="text-base font-semibold text-card-foreground">
+                    <h3 className={SECTION_TITLE_CLASS}>
                       Bulk downloads
                     </h3>
                     <p className="text-sm text-muted-foreground">
@@ -529,11 +533,11 @@ export default function Software() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className={PAGE_ACTION_ROW_CLASS}>
                   <Button
                     size="sm"
                     variant="default"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     disabled={
                       !selectedCount || hasExpiredSelection || bulkPlannerActive
                     }
@@ -551,7 +555,7 @@ export default function Software() {
                     Download all
                   </Button>
                   <select
-                    className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
+                    className={COMPACT_FORM_SELECT_CLASS}
                     value={selectedVariant}
                     onChange={(event) => setSelectedVariant(event.target.value)}
                     disabled={!selectedCount || bulkPlannerActive}
@@ -566,7 +570,7 @@ export default function Software() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     disabled={
                       !selectedCount ||
                       !selectedVariant ||
@@ -614,7 +618,7 @@ export default function Software() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     disabled={
                       !selectedCount || hasExpiredSelection || bulkPlannerActive
                     }
@@ -629,7 +633,7 @@ export default function Software() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     disabled={
                       !selectedCount || hasExpiredSelection || bulkPlannerActive
                     }
@@ -643,14 +647,14 @@ export default function Software() {
                   </Button>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
+                <p className={PANEL_HELP_TEXT_CLASS}>
                   {selectedCount > 0 ?
                     "Variant options are scoped to the currently selected titles so you do not have to scroll through irrelevant file types."
                   : "Select one or more rows in the table to enable bulk downloads and narrow the variant list."}
                 </p>
 
                 {bulkPlannerError && (
-                  <p className="text-xs text-rose-300">{bulkPlannerError}</p>
+                  <p className={PANEL_ERROR_TEXT_CLASS}>{bulkPlannerError}</p>
                 )}
               </CardContent>
             </Card>

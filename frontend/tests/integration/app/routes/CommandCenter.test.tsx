@@ -232,11 +232,11 @@ describe("CommandCenter", () => {
     expect(await screen.findByText("Current bundle report refreshed.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Open Sales Overview" })).toHaveAttribute(
       "href",
-      "/venue/overview",
+      "/sales",
     );
     expect(screen.getByRole("link", { name: "Open Game Bundles" })).toHaveAttribute(
       "href",
-      "/venue/bundles/games",
+      "/sales/games",
     );
   });
 });

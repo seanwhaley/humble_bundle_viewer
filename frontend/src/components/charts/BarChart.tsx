@@ -2,7 +2,9 @@
  * Simple bar chart wrapper for ECharts.
  */
 import ReactECharts from "echarts-for-react";
+import ChartFrame from "./ChartFrame";
 import { echarts } from "./echarts";
+import { getChartTheme } from "./theme";
 
 interface ChartDataPoint {
   id?: string;
@@ -27,6 +29,8 @@ export default function BarChart({
   selected,
   onSelect,
 }: BarChartProps) {
+  const theme = getChartTheme();
+
   const getSelectionValue = (item: ChartDataPoint) => {
     if (item.selectValue !== undefined) {
       return item.selectValue;
@@ -40,9 +44,32 @@ export default function BarChart({
     xAxis: {
       type: "category",
       data: data.map((item) => item.label),
-      axisLabel: { rotate: 20 },
+      axisLabel: {
+        rotate: 20,
+        color: theme.mutedForeground,
+      },
+      axisLine: {
+        lineStyle: {
+          color: theme.border,
+        },
+      },
+      axisTick: {
+        lineStyle: {
+          color: theme.border,
+        },
+      },
     },
-    yAxis: { type: "value" },
+    yAxis: {
+      type: "value",
+      axisLabel: {
+        color: theme.mutedForeground,
+      },
+      splitLine: {
+        lineStyle: {
+          color: theme.borderSoft,
+        },
+      },
+    },
     series: [
       {
         type: "bar",
@@ -56,9 +83,9 @@ export default function BarChart({
             name: item.label,
             selectValue: selectionValue,
             itemStyle:
-              selected && selectionValue === selected
-                ? { color: "#38bdf8" }
-                : undefined,
+              selected && selectionValue === selected ?
+                { color: theme.accent }
+              : undefined,
             emphasis: {
               disabled: !isSelectable,
             },
@@ -69,27 +96,26 @@ export default function BarChart({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-      <div className="text-xs uppercase text-slate-400">{title}</div>
+    <ChartFrame title={title} titleClassName="mb-0">
       <ReactECharts
         echarts={echarts}
         option={option}
         opts={{ renderer: "svg" }}
-        style={{ height: 240 }}
+        className="h-[240px]"
         onEvents={
-          onSelect
-            ? {
-                click: (params: any) => {
-                  const value = params.data?.selectValue;
-                  if (value === null || value === undefined || value === "") {
-                    return;
-                  }
-                  onSelect(String(value));
-                },
-              }
-            : undefined
+          onSelect ?
+            {
+              click: (params: any) => {
+                const value = params.data?.selectValue;
+                if (value === null || value === undefined || value === "") {
+                  return;
+                }
+                onSelect(String(value));
+              },
+            }
+          : undefined
         }
       />
-    </div>
+    </ChartFrame>
   );
 }

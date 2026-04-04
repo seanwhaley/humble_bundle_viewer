@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors",
+  "inline-flex items-center rounded-full border transition-colors",
   {
     variants: {
       variant: {
@@ -20,37 +20,61 @@ const badgeVariants = cva(
           "border-status-error/40 bg-status-error/10 text-status-error-foreground",
         neutral:
           "border-status-neutral/80 bg-status-neutral/80 text-status-neutral-foreground",
+        surface: "border-border bg-surface-overlay text-card-foreground",
+        muted: "border-border bg-surface-inset text-muted-foreground",
+      },
+      size: {
+        default: "px-2.5 py-1 text-[11px]",
+        compact: "px-2.5 py-1 text-xs",
+        tiny: "px-2 py-0.5 text-[10px]",
+      },
+      casing: {
+        label: "font-semibold uppercase tracking-[0.16em]",
+        ui: "font-medium normal-case tracking-normal",
       },
     },
     defaultVariants: {
       variant: "neutral",
+      size: "default",
+      casing: "label",
     },
   },
 );
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+type BadgeSize = NonNullable<VariantProps<typeof badgeVariants>["size"]>;
+type BadgeCasing = NonNullable<VariantProps<typeof badgeVariants>["casing"]>;
 
-export interface BadgeProps {
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
-  id?: string;
-  title?: string;
   variant?: BadgeVariant;
-  "aria-label"?: string;
+  size?: BadgeSize;
+  casing?: BadgeCasing;
 }
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ "aria-label": ariaLabel, children, className, id, title, variant }, ref) => (
-    <div
-      ref={ref}
-      aria-label={ariaLabel}
-      id={id}
-      title={title}
-      className={cn(badgeVariants({ variant }), className)}
-    >
-      {children}
-    </div>
-  ),
+  (
+    {
+      "aria-label": ariaLabel,
+      casing,
+      children,
+      className,
+      size,
+      variant,
+      ...props
+    },
+    ref,
+  ) => {
+    return (
+      <div
+        ref={ref}
+        aria-label={ariaLabel}
+        className={cn(badgeVariants({ casing, size, variant }), className)}
+        {...props}>
+        {children}
+      </div>
+    );
+  },
 );
 Badge.displayName = "Badge";
 

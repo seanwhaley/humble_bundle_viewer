@@ -6,12 +6,16 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "../../components/DataTable";
-import KeyInventorySummaryStrip from "../../components/KeyInventorySummaryStrip";
 import { ProductCell } from "../../components/ProductCell";
 import KeyValueCell from "../../components/KeyValueCell";
 import RedemptionLinksButton from "../../components/RedemptionLinksButton";
 import FilterBar, { type FilterBarField } from "../../components/FilterBar";
+import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardHeader } from "../../components/ui/card";
+import PageFiltersButton from "../../components/ui/PageFiltersButton";
+import PaneHeader from "../../components/ui/PaneHeader";
+import { RouteErrorState, RouteLoadingState } from "../../components/ui/RouteState";
 import { useLibraryData, useViewerConfig } from "../../data/api";
 import {
   applyProductFilters,
@@ -28,6 +32,12 @@ import {
 import { useFilters } from "../../state/filters";
 import { FlattenedKey } from "../../data/types";
 import { formatDate } from "../../utils/format";
+import {
+  FILTER_PANEL_CLASS,
+  INSET_PANEL_COMPACT_CLASS,
+  SECTION_EYEBROW_CLASS,
+} from "../../styles/roles";
+import { usePageHeaderActions } from "../layout/PageHeaderContext";
 
 /**
  * Table focused on keys that are expired or approaching expiration.
@@ -43,6 +53,7 @@ export default function ExpiringKeys() {
   const { data: viewerConfig } = useViewerConfig();
   const { filters, setFilters } = useFilters();
   const [triageScope, setTriageScope] = useState<ExpiringKeyScope>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const revealPolicy = useMemo(
     () => ({
@@ -119,6 +130,24 @@ export default function ExpiringKeys() {
     () => filterExpiringKeysByScope(expiringKeys, triageScope, revealPolicy),
     [expiringKeys, triageScope, revealPolicy],
   );
+  const activeFilterCount = [
+    filters.category,
+    filters.keyType,
+    filters.startDate,
+    filters.endDate,
+  ].filter(Boolean).length;
+  const filtersPanelOpen = showFilters || activeFilterCount > 0;
+  const headerActions = useMemo(
+    () => (
+      <PageFiltersButton
+        expanded={filtersPanelOpen}
+        activeCount={activeFilterCount}
+        onClick={() => setShowFilters((current) => !current)}
+      />
+    ),
+    [activeFilterCount, filtersPanelOpen],
+  );
+  usePageHeaderActions(headerActions);
 
   const expirationStats = useMemo(() => {
     let expired = 0;
@@ -172,7 +201,10 @@ export default function ExpiringKeys() {
           return <span className="text-muted-foreground">–</span>;
 
         return (
-          <span className={val < 30 ? "text-orange-500 font-bold" : ""}>
+          <span
+            className={
+              val < 30 ? "font-semibold text-status-warning-foreground" : ""
+            }>
             {val} days
           </span>
         );
@@ -195,7 +227,7 @@ export default function ExpiringKeys() {
             compact
             label={getKeyRedemptionActionLabel(row.original)}
           />
-        : <span className="text-xs text-slate-500">
+        : <span className="text-xs text-muted-foreground">
             {row.original.status.includes("Expired") ? "Closed" : "Handled"}
           </span>,
     },
@@ -207,96 +239,87 @@ export default function ExpiringKeys() {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <RouteLoadingState label="Loading expiring keys…" />;
   }
 
   if (error || !data) {
-    return (
-      <div className="rounded-md bg-destructive/15 p-4 text-destructive">
-        Failed to load library data.
-      </div>
-    );
+    return <RouteErrorState message="Failed to load library data." />;
   }
 
   return (
     <div className="w-full flex flex-col space-y-4">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-orange-500 flex items-center gap-2">
-          <AlertTriangle className="h-8 w-8" />
-          Urgent key triage
-        </h2>
-        <p className="text-muted-foreground">
-          {expiringKeys.length} keys with expiration info —{" "}
-          {expirationStats.expired} expired, {expirationStats.expiring} still on
-          a countdown, {actionSummary.openActionCount} open actions,{" "}
-          {summary.revealed} revealed.
-        </p>
-        <p className="text-sm text-muted-foreground/90 mt-2">
-          Start with still-open windows first. Expired rows stay visible for
-          reference, but quick scopes and row actions now prioritize the keys
-          that can still be claimed.
-        </p>
-      </div>
-
-      <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4">
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-orange-300">
-              Active redemption window
-            </p>
-            <p className="mt-1 text-lg font-semibold text-white">
-              {actionSummary.openActionCount} unexpired key
-              {actionSummary.openActionCount === 1 ? "" : "s"} still need action
-            </p>
-            <p className="mt-1 text-sm text-slate-300">
-              {actionSummary.nextExpiringDaysRemaining !== null ?
-                `Next deadline closes in ${actionSummary.nextExpiringDaysRemaining} day${actionSummary.nextExpiringDaysRemaining === 1 ? "" : "s"}.`
-              : "No active countdowns remain in the current filter set."}{" "}
-              {actionSummary.expiredReferenceCount > 0 ?
-                `${actionSummary.expiredReferenceCount} expired row${actionSummary.expiredReferenceCount === 1 ? "" : "s"} remain below as reference.`
-              : ""}
-            </p>
+      <Card surface="panel">
+        <CardHeader className="pb-4">
+          <PaneHeader
+            titleAs="h2"
+            title="Prioritize the keys that still have a redemption window"
+            note={`${expiringKeys.length} keys with expiration info — ${expirationStats.expired} expired, ${expirationStats.expiring} still on a countdown, ${actionSummary.openActionCount} open actions, ${summary.revealed} revealed.`}
+            description="Start with open windows, reveal-sensitive rows, and near-term deadlines first. Expired rows stay visible for reference, but the quick scopes keep the queue centered on claimable work."
+            eyebrow={<Badge variant="warning">Key deadlines</Badge>}
+          />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Keys in triage
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {summary.total} expired or dated key rows in the current filter scope.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Open actions
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {actionSummary.openActionCount} unexpired key
+                {actionSummary.openActionCount === 1 ? "" : "s"} still need action.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Needs reveal
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {triageCounts.needs_reveal} unexpired row
+                {triageCounts.needs_reveal === 1 ? "" : "s"} still hide the key value.
+              </p>
+            </div>
+            <div className={INSET_PANEL_COMPACT_CLASS}>
+              <p className={SECTION_EYEBROW_CLASS}>
+                Expired reference
+              </p>
+              <p className="mt-2 text-sm text-card-foreground">
+                {actionSummary.expiredReferenceCount} expired row
+                {actionSummary.expiredReferenceCount === 1 ? "" : "s"} remain visible below for reference.
+              </p>
+            </div>
           </div>
-          <Button
-            size="sm"
-            variant={triageScope === "needs_action" ? "secondary" : "outline"}
-            onClick={() => setTriageScope("needs_action")}>
-            Focus open actions
-            <span className="ml-1 text-xs text-slate-300">
-              {triageCounts.needs_action}
-            </span>
-          </Button>
-        </div>
-      </div>
 
-      <KeyInventorySummaryStrip
-        items={[
-          {
-            label: "Keys in triage",
-            value: summary.total,
-            hint: "Expired or dated key rows after current library filters",
-          },
-          {
-            label: "Open actions",
-            value: actionSummary.openActionCount,
-            hint: "Unexpired rows still worth claiming under the current reveal policy",
-          },
-          {
-            label: "Needs reveal",
-            value: triageCounts.needs_reveal,
-            hint: "Unexpired rows where Humble still hides the key value",
-          },
-          {
-            label: "Expired",
-            value: actionSummary.expiredReferenceCount,
-            hint: "Reference rows already past the redemption window",
-          },
-        ]}
-      />
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Active redemption window
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {actionSummary.nextExpiringDaysRemaining !== null ?
+                  `Next deadline closes in ${actionSummary.nextExpiringDaysRemaining} day${actionSummary.nextExpiringDaysRemaining === 1 ? "" : "s"}.`
+                : "No active countdowns remain in the current filter set."}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={triageScope === "needs_action" ? "secondary" : "outline"}
+              onClick={() => setTriageScope("needs_action")}>
+              Focus open actions
+              <span className="ml-1 text-xs text-muted-foreground">
+                {triageCounts.needs_action}
+              </span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex flex-wrap gap-2">
         {[
@@ -315,18 +338,35 @@ export default function ExpiringKeys() {
               variant={selected ? "secondary" : "outline"}
               onClick={() => setTriageScope(value as ExpiringKeyScope)}>
               {label}
-              <span className="ml-1 text-xs text-slate-300">{count}</span>
+              <span className="ml-1 text-xs text-muted-foreground">{count}</span>
             </Button>
           );
         })}
       </div>
 
-      <FilterBar
-        categories={options.categories}
-        platforms={options.platforms}
-        keyTypes={options.keyTypes}
-        fields={EXPIRING_KEY_FILTER_FIELDS}
-      />
+      {filtersPanelOpen && (
+        <Card surface="panel" className={FILTER_PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <h3 className="text-base font-semibold text-card-foreground">
+              Filter the triage queue
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Narrow by category, key type, or acquisition date when you want the
+              triage table to focus on a smaller set of deadlines.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <FilterBar
+              categories={options.categories}
+              platforms={options.platforms}
+              keyTypes={options.keyTypes}
+              fields={EXPIRING_KEY_FILTER_FIELDS}
+              hideHeader
+              isExpanded
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <DataTable
         columns={columns}

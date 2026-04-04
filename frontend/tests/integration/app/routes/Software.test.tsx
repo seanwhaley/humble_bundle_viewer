@@ -4,6 +4,10 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Software from "../../../../src/app/routes/Software";
+import {
+  PageHeaderProvider,
+  usePageHeaderState,
+} from "../../../../src/app/layout/PageHeaderContext";
 
 const mocks = vi.hoisted(() => ({
   useLibraryData: vi.fn(),
@@ -128,9 +132,17 @@ vi.mock("../../../../src/components/ExpiredLinkDialog", () => ({
 function renderRoute() {
   return render(
     <MemoryRouter future={memoryRouterFuture}>
-      <Software />
+      <PageHeaderProvider>
+        <HeaderActionsHost />
+        <Software />
+      </PageHeaderProvider>
     </MemoryRouter>,
   );
+}
+
+function HeaderActionsHost() {
+  const { actions } = usePageHeaderState();
+  return <div>{actions}</div>;
 }
 
 describe("Software", () => {
@@ -161,19 +173,23 @@ describe("Software", () => {
 
     expect(screen.queryByText("Software FilterBar")).not.toBeInTheDocument();
     expect(screen.queryByText("Managed sync panel")).not.toBeInTheDocument();
-    expect(screen.getByText("2 software titles are ready to browse.")).toBeInTheDocument();
+    expect(
+      screen.getByText("2 software titles match the current filters."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     expect(screen.getByText("Software FilterBar")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Managed sync" }));
+    fireEvent.click(screen.getByRole("button", { name: "Advanced local sync" }));
     expect(screen.getByText("Managed sync panel")).toBeInTheDocument();
   });
 
   it("scopes bulk variant choices to the currently selected rows", () => {
     renderRoute();
 
-    fireEvent.click(screen.getByRole("button", { name: "Bulk downloads" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Bulk browser downloads" }),
+    );
     expect(
       screen.getByText(/Select one or more rows in the table to enable bulk downloads/i),
     ).toBeInTheDocument();

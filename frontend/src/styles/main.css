@@ -4,12 +4,19 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  :root[data-theme="hb-dark"] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
  
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+
+    --surface-panel: 222 47% 11%;
+    --surface-panel-strong: 222 41% 13.5%;
+    --surface-inset: 217.2 32.6% 17.5%;
+    --surface-overlay: 222 38% 14%;
+    --surface-soft: 221 35% 16%;
  
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
@@ -30,6 +37,7 @@
     --destructive-foreground: 210 40% 98%;
  
     --border: 217.2 32.6% 17.5%;
+    --border-strong: 215 19% 50%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
 

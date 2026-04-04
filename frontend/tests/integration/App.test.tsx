@@ -15,19 +15,19 @@ vi.mock("../../src/app/layout/Layout", () => ({
   },
 }));
 
-vi.mock("../../src/app/routes/Overview", () => ({
-  default: () => <div>Overview route</div>,
+vi.mock("../../src/app/routes/Home", () => ({
+  default: () => <div>Home route</div>,
 }));
 
-vi.mock("../../src/app/routes/VenueChoice", () => ({
-  default: () => <div>VenueChoice route</div>,
+vi.mock("../../src/app/routes/CurrentChoice", () => ({
+  default: () => <div>CurrentChoice route</div>,
 }));
 
-vi.mock("../../src/app/routes/CurrentSalesOverview", () => ({
-  default: () => <div>CurrentSalesOverview route</div>,
+vi.mock("../../src/app/routes/SalesOverview", () => ({
+  default: () => <div>SalesOverview route</div>,
 }));
 
-vi.mock("../../src/app/routes/VenueBundlePage", () => ({
+vi.mock("../../src/app/routes/SalesBundlePage", () => ({
   default: ({ bundleType }: { bundleType: string }) => (
     <div>Bundle page: {bundleType}</div>
   ),
@@ -36,7 +36,7 @@ vi.mock("../../src/app/routes/VenueBundlePage", () => ({
 import App from "../../src/App";
 
 describe("App", () => {
-  it("renders the overview route inside the layout shell", async () => {
+  it("renders the home route inside the layout shell", async () => {
     render(
       <MemoryRouter
         initialEntries={["/"]}
@@ -46,32 +46,32 @@ describe("App", () => {
     );
 
     expect(screen.getByTestId("layout-shell")).toBeInTheDocument();
-    expect(await screen.findByText("Overview route")).toBeInTheDocument();
+    expect(await screen.findByText("Home route")).toBeInTheDocument();
   });
 
   it("renders the current choice route", async () => {
     render(
       <MemoryRouter
-        initialEntries={["/venue/choice"]}
+        initialEntries={["/sales/choice"]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <App />
       </MemoryRouter>,
     );
 
-    expect(await screen.findByText("VenueChoice route")).toBeInTheDocument();
+    expect(await screen.findByText("CurrentChoice route")).toBeInTheDocument();
   });
 
-  it("redirects the legacy current bundles route to Sales Overview", async () => {
+  it("renders the sales overview route", async () => {
     render(
       <MemoryRouter
-        initialEntries={["/current-bundles"]}
+        initialEntries={["/sales"]}
         future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <App />
       </MemoryRouter>,
     );
 
     expect(
-      await screen.findByText("CurrentSalesOverview route"),
+      await screen.findByText("SalesOverview route"),
     ).toBeInTheDocument();
   });
 });

@@ -34,7 +34,7 @@ export function Sheet({ isOpen, onClose, children, title }: SheetProps) {
     <div className="fixed inset-0 z-50 flex justify-end">
        {/* Backdrop */}
        <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" 
+          className="absolute inset-0 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200" 
             onClick={onClose} 
        />
        {/* Panel */}

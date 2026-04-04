@@ -37,6 +37,6 @@ describe("ExpiredLinkDialog", () => {
 
     fireEvent.click(screen.getByText("Go to downloads"));
     expect(onClose).toHaveBeenCalledTimes(2);
-    expect(navigateMock).toHaveBeenCalledWith("/downloads");
+    expect(navigateMock).toHaveBeenCalledWith("/library/other-downloads");
   });
 });

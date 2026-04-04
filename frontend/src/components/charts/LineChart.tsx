@@ -2,7 +2,9 @@
  * Simple line chart wrapper for ECharts.
  */
 import ReactECharts from "echarts-for-react";
+import ChartFrame from "./ChartFrame";
 import { echarts } from "./echarts";
+import { getChartTheme } from "./theme";
 
 interface ChartDataPoint {
   id?: string;
@@ -33,14 +35,11 @@ export default function LineChart({
   valueLabel = "Count",
   tooltipFormatter,
 }: LineChartProps) {
+  const theme = getChartTheme();
+
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-        <div className="mb-2 text-xs uppercase text-slate-400">{title}</div>
-        <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-slate-800 bg-slate-950/40 px-6 text-center text-sm text-slate-500">
-          {emptyMessage}
-        </div>
-      </div>
+      <ChartFrame title={title} emptyMessage={emptyMessage} />
     );
   }
 
@@ -68,21 +67,21 @@ export default function LineChart({
       data: data.map((item) => item.label),
       boundaryGap: false,
       axisLabel: {
-        color: "#94a3b8",
+        color: theme.mutedForeground,
       },
     },
     yAxis: {
       type: "value",
       name: valueLabel,
       nameTextStyle: {
-        color: "#64748b",
+        color: theme.mutedForeground,
       },
       axisLabel: {
-        color: "#94a3b8",
+        color: theme.mutedForeground,
       },
       splitLine: {
         lineStyle: {
-          color: "rgba(148, 163, 184, 0.12)",
+          color: theme.borderSoft,
         },
       },
     },
@@ -94,15 +93,15 @@ export default function LineChart({
         symbolSize: 8,
         lineStyle: {
           width: 3,
-          color: "#818cf8",
+          color: theme.accent,
         },
         itemStyle: {
-          color: "#38bdf8",
-          borderColor: "#020617",
+          color: theme.infoForeground,
+          borderColor: theme.surface,
           borderWidth: 2,
         },
         areaStyle: {
-          color: "rgba(99, 102, 241, 0.18)",
+          color: theme.accentSoft,
         },
         data: data.map((item) => ({
           value: item.value,
@@ -115,14 +114,13 @@ export default function LineChart({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-      <div className="mb-2 text-xs uppercase text-slate-400">{title}</div>
+    <ChartFrame title={title}>
       <ReactECharts
         echarts={echarts}
         option={option}
         opts={{ renderer: "svg" }}
-        style={{ height: 240 }}
+        className="h-[240px]"
       />
-    </div>
+    </ChartFrame>
   );
 }

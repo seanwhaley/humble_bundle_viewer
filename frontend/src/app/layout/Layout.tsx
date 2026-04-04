@@ -30,12 +30,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "../../lib/utils";
+import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
+import { RouteLoadingState } from "../../components/ui/RouteState";
+import PaneHeader from "../../components/ui/PaneHeader";
 import {
   useOptionalLibraryData,
   useLibraryStatus,
   useViewerConfig,
 } from "../../data/api";
+import { useRestoreStoredLibraryPath } from "../../data/librarySelection";
 import {
   buildExpiringKeyActionSummary,
   collectProductDownloads,
@@ -45,6 +49,72 @@ import {
 } from "../../data/selectors";
 import { formatDateTime, formatNumber } from "../../utils/format";
 import { getLinkExpirationSummary } from "../../utils/downloads";
+import { PageHeaderProvider, usePageHeaderState } from "./PageHeaderContext";
+import {
+  COMPACT_META_CLASS,
+  LIBRARY_CONTEXT_METRICS_CLASS,
+  LIBRARY_CONTEXT_METRIC_CLASS,
+  LIBRARY_CONTEXT_PANEL_CLASS,
+  METRIC_VALUE_CLASS,
+  ROUTE_MESSAGE_INFO_CLASS,
+  SECTION_EYEBROW_CLASS,
+  TRUNCATED_TITLE_TEXT_CLASS,
+} from "../../styles/roles";
+import {
+  APP_CONTENT_PAD_CLASS,
+  APP_CONTENT_STACK_CLASS,
+  APP_DESKTOP_ONLY_ACTION_CLASS,
+  APP_HEADER_ACTIONS_CLASS,
+  APP_HEADER_CLASS,
+  APP_HEADER_EYEBROW_CLASS,
+  APP_HEADER_IDENTITY_CLASS,
+  APP_ICON_CLASS,
+  APP_HEADER_SUBTITLE_CLASS,
+  APP_HEADER_TITLE_BLOCK_CLASS,
+  APP_HEADER_TITLE_CLASS,
+  APP_HEADER_TITLE_ROW_CLASS,
+  APP_MAIN_CLASS,
+  APP_MAIN_COLLAPSED_CLASS,
+  APP_MAIN_EXPANDED_CLASS,
+  APP_MOBILE_ONLY_ACTION_CLASS,
+  APP_MOBILE_BACKDROP_CLASS,
+  APP_SHELL_CLASS,
+  APP_SIDEBAR_BRAND_CLASS,
+  APP_SIDEBAR_BRAND_SUBTITLE_CLASS,
+  APP_SIDEBAR_BRAND_TITLE_CLASS,
+  APP_SIDEBAR_CLASS,
+  APP_SIDEBAR_GROUP_CLASS,
+  APP_SIDEBAR_GROUP_HEADING_CLASS,
+  APP_SIDEBAR_GROUPS_CLASS,
+  APP_SIDEBAR_HEADER_CLASS,
+  APP_SIDEBAR_HEADER_COLLAPSED_CLASS,
+  APP_SIDEBAR_HEADER_EXPANDED_CLASS,
+  APP_SIDEBAR_NAV_CLASS,
+  APP_SIDEBAR_OFFSCREEN_CLASS,
+  APP_SIDEBAR_ONSCREEN_CLASS,
+  APP_SIDEBAR_WIDTH_COLLAPSED_CLASS,
+  APP_SIDEBAR_WIDTH_EXPANDED_CLASS,
+  SIDEBAR_ITEM_BADGE_CLASS,
+  SIDEBAR_ITEM_DOT_CLASS,
+  SIDEBAR_ITEM_LABEL_CLASS,
+  getSidebarItemClass,
+} from "../../styles/navigation";
+import {
+  DOWNLOAD_EXPIRY_BADGE_TONE_CLASS,
+  DOWNLOAD_EXPIRY_BADGE_CLASS,
+  WARNING_BANNER_CLASS,
+  WARNING_BANNER_BODY_CLASS,
+  WARNING_BANNER_DETAIL_CLASS,
+  WARNING_BANNER_HEADER_CLASS,
+  WARNING_BANNER_LAYOUT_CLASS,
+  WARNING_BANNER_TITLE_CLASS,
+} from "../../styles/status";
+import {
+  PAGE_ACTION_ROW_CLASS,
+  ROUTE_MESSAGE_BODY_CLASS,
+  ROUTE_MESSAGE_EMPHASIS_CLASS,
+  ROUTE_MESSAGE_TITLE_CLASS,
+} from "../../styles/page";
 
 type SidebarNavItem = {
   to: string;
@@ -54,24 +124,26 @@ type SidebarNavItem = {
 };
 
 type RouteMeta = {
+  eyebrow?: string | null;
   title: string;
   subtitle: string;
+  hideLibraryContext?: boolean;
 };
 
 const SIDEBAR_GROUPS: Array<{ heading: string; items: SidebarNavItem[] }> = [
   {
     heading: "Viewer",
-    items: [{ to: "/", icon: LayoutDashboard, label: "Viewer Home" }],
+    items: [{ to: "/", icon: LayoutDashboard, label: "Home" }],
   },
   {
     heading: "Current sales",
     items: [
-      { to: "/venue/overview", icon: LayoutDashboard, label: "Sales Overview" },
-      { to: "/venue/choice", icon: Sparkles, label: "Current Choice" },
-      { to: "/venue/bundles/games", icon: Gamepad2, label: "Game Bundles" },
-      { to: "/venue/bundles/books", icon: BookOpen, label: "Book Bundles" },
+      { to: "/sales", icon: LayoutDashboard, label: "Sales Overview" },
+      { to: "/sales/choice", icon: Sparkles, label: "Current Choice" },
+      { to: "/sales/games", icon: Gamepad2, label: "Game Bundles" },
+      { to: "/sales/books", icon: BookOpen, label: "Book Bundles" },
       {
-        to: "/venue/bundles/software",
+        to: "/sales/software",
         icon: Monitor,
         label: "Software Bundles",
       },
@@ -79,32 +151,34 @@ const SIDEBAR_GROUPS: Array<{ heading: string; items: SidebarNavItem[] }> = [
   },
   {
     heading: "Purchases",
-    items: [{ to: "/orders", icon: ShoppingCart, label: "Purchases" }],
+    items: [
+      { to: "/library/purchases", icon: ShoppingCart, label: "Purchases" },
+    ],
   },
   {
     heading: "Downloads",
     items: [
-      { to: "/ebooks", icon: BookOpen, label: "Ebooks" },
-      { to: "/audiobooks", icon: Headphones, label: "Audiobooks" },
-      { to: "/videos", icon: Film, label: "Videos" },
-      { to: "/software", icon: Monitor, label: "Software" },
-      { to: "/downloads", icon: Download, label: "Other" },
+      { to: "/library/ebooks", icon: BookOpen, label: "eBooks" },
+      { to: "/library/audiobooks", icon: Headphones, label: "Audiobooks" },
+      { to: "/library/videos", icon: Film, label: "Videos" },
+      { to: "/library/software", icon: Monitor, label: "Software" },
+      { to: "/library/other-downloads", icon: Download, label: "Other" },
     ],
   },
   {
     heading: "Keys",
     items: [
-      { to: "/expiring-keys", icon: AlertTriangle, label: "Expiring" },
-      { to: "/steam-keys", icon: Key, label: "Steam" },
-      { to: "/non-steam-keys", icon: Key, label: "Non-Steam" },
+      { to: "/library/expiring-keys", icon: AlertTriangle, label: "Expiring" },
+      { to: "/library/steam-keys", icon: Key, label: "Steam" },
+      { to: "/library/other-keys", icon: Key, label: "Other Keys" },
     ],
   },
   {
     heading: "Tools",
     items: [
       { to: "/setup", icon: Plug, label: "Setup" },
-      { to: "/commands", icon: Terminal, label: "Command Center" },
-      { to: "/structure", icon: Network, label: "Schema" },
+      { to: "/command-center", icon: Terminal, label: "Command Center" },
+      { to: "/schema", icon: Network, label: "Schema" },
     ],
   },
 ];
@@ -113,14 +187,15 @@ const DOWNLOAD_ROUTE_VISIBILITY_BY_PATH: Record<
   string,
   keyof DownloadRouteVisibility
 > = {
-  "/downloads": "downloads",
-  "/software": "software",
-  "/videos": "videos",
-  "/ebooks": "ebooks",
-  "/audiobooks": "audiobooks",
+  "/library/other-downloads": "downloads",
+  "/library/software": "software",
+  "/library/videos": "videos",
+  "/library/ebooks": "ebooks",
+  "/library/audiobooks": "audiobooks",
 };
 
 const DEFAULT_ROUTE_META: RouteMeta = {
+  eyebrow: "Workspace",
   title: "HB Library Viewer",
   subtitle:
     "Browse captured purchases, downloads, keys, and media from one workspace.",
@@ -141,8 +216,45 @@ const getFilename = (value?: string) => {
   return parts[parts.length - 1] || value;
 };
 
+const getRelativeSnapshotLabel = (value?: string | null) => {
+  if (!value) {
+    return "Snapshot unavailable";
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "Snapshot saved";
+  }
+
+  const today = new Date();
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const startOfSavedDay = new Date(
+    parsed.getFullYear(),
+    parsed.getMonth(),
+    parsed.getDate(),
+  );
+  const diffDays = Math.round(
+    (startOfToday.getTime() - startOfSavedDay.getTime()) /
+      (24 * 60 * 60 * 1000),
+  );
+
+  if (diffDays <= 0) {
+    return "Captured today";
+  }
+
+  if (diffDays === 1) {
+    return "Captured yesterday";
+  }
+
+  return `Captured ${diffDays} days old`;
+};
+
 const getRouteMeta = (pathname: string): RouteMeta => {
-  const categoryMatch = matchPath("/category/:category", pathname);
+  const categoryMatch = matchPath("/library/category/:category", pathname);
   if (categoryMatch) {
     const category = humanizeSlug(categoryMatch.params.category);
     return {
@@ -151,13 +263,18 @@ const getRouteMeta = (pathname: string): RouteMeta => {
     };
   }
 
-  const venueBundleMatch = matchPath("/venue/bundles/:bundleType", pathname);
-  if (venueBundleMatch) {
-    const bundleType = venueBundleMatch.params.bundleType;
+  const salesBundleMatch = matchPath("/sales/:bundleType", pathname);
+  if (
+    salesBundleMatch &&
+    ["games", "books", "software"].includes(
+      salesBundleMatch.params.bundleType || "",
+    )
+  ) {
+    const bundleType = salesBundleMatch.params.bundleType;
     const bundleTypeLabel =
-      bundleType === "games" ? "Game bundles"
-      : bundleType === "books" ? "Book bundles"
-      : bundleType === "software" ? "Software bundles"
+      bundleType === "games" ? "Game Bundles"
+      : bundleType === "books" ? "Book Bundles"
+      : bundleType === "software" ? "Software Bundles"
       : `${humanizeSlug(bundleType)} bundles`;
     return {
       title: bundleTypeLabel,
@@ -167,7 +284,7 @@ const getRouteMeta = (pathname: string): RouteMeta => {
   }
 
   switch (pathname) {
-    case "/venue/overview":
+    case "/sales":
       return {
         title: "Sales Overview",
         subtitle:
@@ -175,74 +292,79 @@ const getRouteMeta = (pathname: string): RouteMeta => {
       };
     case "/":
       return {
-        title: "Viewer Home",
+        eyebrow: null,
+        title: "Home",
         subtitle:
-          "Start with today’s buyer view, then move into owned-library signals, recent purchases, and download workflows.",
+          "Start with the library in scope, then scan live bundles and this month’s Choice before moving into deeper library workflows.",
+        hideLibraryContext: true,
       };
-    case "/orders":
+    case "/library/purchases":
       return {
         title: "Purchases",
         subtitle:
           "Review what each purchase contains and open related downloads, keys, and media.",
+        hideLibraryContext: true,
       };
-    case "/current-bundles":
-      return {
-        title: "Current Bundles",
-        subtitle:
-          "Legacy shortcut that redirects to the new current sales bundle pages.",
-      };
-    case "/venue/choice":
+    case "/sales/choice":
       return {
         title: "Current Choice",
         subtitle:
           "Compare this month’s Humble Choice lineup against your captured library using the saved backend report.",
       };
-    case "/downloads":
+    case "/library/other-downloads":
       return {
         title: "Other downloads",
         subtitle:
           "Browse direct-download content that is not already covered by the dedicated media pages.",
+        hideLibraryContext: true,
       };
-    case "/software":
+    case "/library/software":
       return {
         title: "Software",
         subtitle:
           "Group software installers by title and platform/file-type variant.",
+        hideLibraryContext: true,
       };
-    case "/videos":
+    case "/library/videos":
       return {
         title: "Videos",
         subtitle: "Review video downloads grouped by title and file type.",
+        hideLibraryContext: true,
       };
-    case "/ebooks":
+    case "/library/ebooks":
       return {
-        title: "Ebooks",
+        title: "eBooks",
         subtitle:
           "Find ebook formats, compare file types, and sync selected titles locally.",
+        hideLibraryContext: true,
       };
-    case "/audiobooks":
+    case "/library/audiobooks":
       return {
         title: "Audiobooks",
         subtitle:
           "Review audiobook formats and sync supported titles to a local folder.",
+        hideLibraryContext: true,
       };
-    case "/steam-keys":
+    case "/library/steam-keys":
       return {
         title: "Steam keys",
         subtitle:
           "Inspect Steam redemption inventory and jump into reveal or follow-up workflows.",
+        hideLibraryContext: true,
       };
-    case "/non-steam-keys":
+    case "/library/other-keys":
       return {
-        title: "Non-Steam keys",
+        title: "Other Keys",
         subtitle:
-          "Review non-Steam redemption inventory such as Epic, GOG, and other claim types.",
+          "Review Other Keys redemption inventory, including Epic, GOG, and launcher-specific claim types.",
+        hideLibraryContext: true,
       };
-    case "/expiring-keys":
+    case "/library/expiring-keys":
       return {
         title: "Expiring keys",
         subtitle:
           "Focus on keys that may need attention before their redemption window closes.",
+        hideLibraryContext: true,
       };
     case "/setup":
       return {
@@ -250,13 +372,13 @@ const getRouteMeta = (pathname: string): RouteMeta => {
         subtitle:
           "Capture a fresh library file or point the viewer at an existing artifact.",
       };
-    case "/commands":
+    case "/command-center":
       return {
         title: "Command Center",
         subtitle:
           "Run guided workflows and CLI-backed actions without leaving the viewer.",
       };
-    case "/structure":
+    case "/schema":
       return {
         title: "Schema",
         subtitle:
@@ -278,7 +400,7 @@ const SidebarItem = ({
   collapsed,
 }: {
   to: string;
-  icon: any;
+  icon: LucideIcon;
   label: string;
   badge?: string;
   collapsed: boolean;
@@ -286,27 +408,15 @@ const SidebarItem = ({
   return (
     <NavLink
       to={to}
-      className={({ isActive }) =>
-        cn(
-          "relative flex items-center gap-3 rounded-lg px-3 py-2 text-slate-400 transition-all hover:text-slate-100 hover:bg-slate-800",
-          isActive && "bg-indigo-600/10 text-indigo-400 font-medium",
-          collapsed && "justify-center px-2",
-        )
-      }>
-      <Icon className="h-5 w-5 shrink-0" />
+      className={({ isActive }) => getSidebarItemClass(isActive, collapsed)}>
+      <Icon className={APP_ICON_CLASS} />
       {!collapsed && (
         <>
-          <span className="truncate">{label}</span>
-          {badge && (
-            <span className="ml-auto rounded-full border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
-              {badge}
-            </span>
-          )}
+          <span className={SIDEBAR_ITEM_LABEL_CLASS}>{label}</span>
+          {badge && <span className={SIDEBAR_ITEM_BADGE_CLASS}>{badge}</span>}
         </>
       )}
-      {collapsed && badge && (
-        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber-400" />
-      )}
+      {collapsed && badge && <span className={SIDEBAR_ITEM_DOT_CLASS} />}
     </NavLink>
   );
 };
@@ -314,36 +424,51 @@ const SidebarItem = ({
 /**
  * Suspense fallback for lazy-loaded routes.
  */
-const RouteFallback = () => (
-  <div className="flex h-[50vh] items-center justify-center text-slate-400">
-    <div className="flex items-center gap-3">
-      <span className="h-2 w-2 animate-ping rounded-full bg-slate-500" />
-      <span>Loading view…</span>
-    </div>
-  </div>
-);
+const RouteFallback = () => <RouteLoadingState variant="pulse" />;
 
 /**
  * Layout shell that renders the sidebar and the routed content.
  */
 export default function Layout() {
+  return (
+    <PageHeaderProvider>
+      <LayoutShell />
+    </PageHeaderProvider>
+  );
+}
+
+/**
+ * Layout shell that consumes route-owned page-header actions.
+ */
+function LayoutShell() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const { data: libraryStatus } = useLibraryStatus();
   const { data: viewerConfig } = useViewerConfig();
+  const { actions } = usePageHeaderState();
 
   const isSetupRoute = location.pathname.startsWith("/setup");
-  const isCommandsRoute = location.pathname.startsWith("/commands");
+  const isCommandsRoute = location.pathname.startsWith("/command-center");
+  const isHomeRoute = location.pathname === "/";
   const isCurrentSalesRoute =
-    location.pathname.startsWith("/venue/") ||
-    location.pathname === "/current-bundles";
+    location.pathname === "/sales" || location.pathname.startsWith("/sales/");
+  const { isRestoring } = useRestoreStoredLibraryPath(libraryStatus);
+  const isLibraryOptionalRoute =
+    isSetupRoute || isCommandsRoute || isCurrentSalesRoute || isHomeRoute;
   const shouldGate =
-    libraryStatus && !libraryStatus.exists && !isSetupRoute && !isCommandsRoute;
+    libraryStatus &&
+    !libraryStatus.exists &&
+    !isLibraryOptionalRoute &&
+    !isRestoring;
   const routeMeta = useMemo(
     () => getRouteMeta(location.pathname),
     [location.pathname],
   );
+  const headerEyebrow =
+    routeMeta.eyebrow === undefined ?
+      DEFAULT_ROUTE_META.eyebrow
+    : routeMeta.eyebrow;
   const { data: libraryData } = useOptionalLibraryData(
     libraryStatus?.exists === true,
   );
@@ -372,7 +497,7 @@ export default function Layout() {
     [downloadRouteVisibility],
   );
   const currentLibraryName = getFilename(libraryStatus?.current_path);
-  const capturedLabel = formatDateTime(libraryData?.captured_at);
+  const capturedLabel = getRelativeSnapshotLabel(libraryData?.captured_at);
   const expiringSoonMs =
     (viewerConfig?.link_expiry_warning_hours ?? 24) * 60 * 60 * 1000;
   const downloadExpirySummary = useMemo(
@@ -405,39 +530,44 @@ export default function Layout() {
     switch (downloadExpirySummary.state) {
       case "upcoming":
         return {
-          tone: "border-slate-700 bg-slate-950/80 text-slate-300",
-          label: `Next download expiry ${formatDateTime(downloadExpirySummary.referenceMs)}`,
+          tone: DOWNLOAD_EXPIRY_BADGE_TONE_CLASS.upcoming,
+          label: "Download expiry tracked",
         };
       case "expiring":
         return {
-          tone: "border-amber-500/30 bg-amber-500/10 text-amber-200",
-          label: `Next download expiry ${formatDateTime(downloadExpirySummary.referenceMs)}`,
+          tone: DOWNLOAD_EXPIRY_BADGE_TONE_CLASS.expiring,
+          label: "Download links expiring soon",
         };
       case "partialExpired":
         return {
-          tone: "border-rose-500/30 bg-rose-500/10 text-rose-200",
-          label: `Some downloads expired · next expiry ${formatDateTime(downloadExpirySummary.referenceMs)}`,
+          tone: DOWNLOAD_EXPIRY_BADGE_TONE_CLASS.expired,
+          label: "Some downloads expired",
         };
       case "allExpired":
         return {
-          tone: "border-rose-500/30 bg-rose-500/10 text-rose-200",
-          label: `All known downloads expired ${formatDateTime(downloadExpirySummary.referenceMs)}`,
+          tone: DOWNLOAD_EXPIRY_BADGE_TONE_CLASS.expired,
+          label: "All known downloads expired",
         };
       case "unknown":
       default:
         return {
-          tone: "border-slate-700 bg-slate-950/80 text-slate-300",
+          tone: DOWNLOAD_EXPIRY_BADGE_TONE_CLASS.unknown,
           label: "Download expiry unknown",
         };
     }
   }, [downloadExpirySummary]);
   const showLibraryContext = Boolean(
-    libraryStatus?.exists && libraryData && !isCurrentSalesRoute,
+    libraryStatus?.exists &&
+    libraryData &&
+    !isCurrentSalesRoute &&
+    !routeMeta.hideLibraryContext,
   );
-  const showUrgentKeyBanner =
-    showLibraryContext &&
+  const showUrgentKeyBanner = Boolean(
+    libraryStatus?.exists &&
+    libraryData &&
     urgentKeysSummary.openActionCount > 0 &&
-    (location.pathname === "/" || location.pathname === "/steam-keys");
+    (location.pathname === "/" || location.pathname === "/library/steam-keys"),
+  );
 
   // Close mobile menu on navigate
   useEffect(() => {
@@ -451,11 +581,11 @@ export default function Layout() {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100">
+    <div className={APP_SHELL_CLASS}>
       {/* Mobile Backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className={APP_MOBILE_BACKDROP_CLASS}
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
@@ -463,23 +593,27 @@ export default function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-800 bg-slate-900 transition-all duration-300",
-          collapsed ? "w-[60px]" : "w-64",
+          APP_SIDEBAR_CLASS,
+          collapsed ?
+            APP_SIDEBAR_WIDTH_COLLAPSED_CLASS
+          : APP_SIDEBAR_WIDTH_EXPANDED_CLASS,
           // Mobile handling: off-screen by default, on-screen if open
-          "-translate-x-full md:translate-x-0",
-          mobileMenuOpen && "translate-x-0",
+          APP_SIDEBAR_OFFSCREEN_CLASS,
+          mobileMenuOpen && APP_SIDEBAR_ONSCREEN_CLASS,
         )}>
         <div
           className={cn(
-            "flex h-16 items-center border-b border-slate-800 px-4",
-            collapsed ? "justify-center" : "justify-between",
+            APP_SIDEBAR_HEADER_CLASS,
+            collapsed ?
+              APP_SIDEBAR_HEADER_COLLAPSED_CLASS
+            : APP_SIDEBAR_HEADER_EXPANDED_CLASS,
           )}>
           {!collapsed && (
-            <div className="min-w-0">
-              <span className="block truncate text-lg font-bold tracking-tight text-white">
+            <div className={APP_SIDEBAR_BRAND_CLASS}>
+              <span className={APP_SIDEBAR_BRAND_TITLE_CLASS}>
                 HB Library Viewer
               </span>
-              <span className="block truncate text-xs text-slate-400">
+              <span className={APP_SIDEBAR_BRAND_SUBTITLE_CLASS}>
                 Captured Humble Bundle workspace
               </span>
             </div>
@@ -487,7 +621,7 @@ export default function Layout() {
           <Button
             variant="ghost"
             size="icon"
-            className="hidden md:flex"
+            className={APP_DESKTOP_ONLY_ACTION_CLASS}
             onClick={() => setCollapsed(!collapsed)}>
             {collapsed ?
               <ChevronRight className="h-4 w-4" />
@@ -496,18 +630,18 @@ export default function Layout() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className={APP_MOBILE_ONLY_ACTION_CLASS}
             onClick={() => setMobileMenuOpen(false)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-2">
-          <div className="space-y-4">
+        <nav className={APP_SIDEBAR_NAV_CLASS}>
+          <div className={APP_SIDEBAR_GROUPS_CLASS}>
             {visibleSidebarGroups.map((group) => (
-              <div key={group.heading} className="space-y-1">
+              <div key={group.heading} className={APP_SIDEBAR_GROUP_CLASS}>
                 {!collapsed && (
-                  <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <p className={APP_SIDEBAR_GROUP_HEADING_CLASS}>
                     {group.heading}
                   </p>
                 )}
@@ -519,7 +653,7 @@ export default function Layout() {
                     label={item.label}
                     badge={
                       (
-                        item.to === "/expiring-keys" &&
+                        item.to === "/library/expiring-keys" &&
                         urgentKeysSummary.openActionCount > 0
                       ) ?
                         formatNumber(urgentKeysSummary.openActionCount)
@@ -537,91 +671,100 @@ export default function Layout() {
       {/* Main Content */}
       <main
         className={cn(
-          "flex-1 transition-all duration-300",
-          collapsed ?
-            "md:ml-[60px] md:w-[calc(100%-60px)]"
-          : "md:ml-64 md:w-[calc(100%-16rem)]",
+          APP_MAIN_CLASS,
+          collapsed ? APP_MAIN_COLLAPSED_CLASS : APP_MAIN_EXPANDED_CLASS,
         )}>
-        <header className="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b border-slate-800 bg-slate-950/80 px-4 py-2.5 backdrop-blur md:px-5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setMobileMenuOpen(true)}>
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo-300">
-              Workspace
-            </p>
-            <div className="flex min-w-0 flex-col gap-0.5 md:flex-row md:items-baseline md:gap-3">
-              <h1 className="truncate text-base font-semibold text-white md:text-lg">
-                {routeMeta.title}
-              </h1>
-              <p className="hidden truncate text-xs text-slate-400 xl:block">
-                {routeMeta.subtitle}
-              </p>
+        <header className={APP_HEADER_CLASS}>
+          <div className={APP_HEADER_IDENTITY_CLASS}>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={APP_MOBILE_ONLY_ACTION_CLASS}
+              onClick={() => setMobileMenuOpen(true)}>
+              <Menu className="h-5 w-5" />
+            </Button>
+            <div className={APP_HEADER_TITLE_BLOCK_CLASS}>
+              {headerEyebrow && (
+                <p className={APP_HEADER_EYEBROW_CLASS}>{headerEyebrow}</p>
+              )}
+              <div className={APP_HEADER_TITLE_ROW_CLASS}>
+                <h1 className={APP_HEADER_TITLE_CLASS}>{routeMeta.title}</h1>
+                <p className={APP_HEADER_SUBTITLE_CLASS}>
+                  {routeMeta.subtitle}
+                </p>
+              </div>
             </div>
           </div>
+          {actions && <div className={APP_HEADER_ACTIONS_CLASS}>{actions}</div>}
         </header>
 
-        <div className="p-4 md:p-5">
-          {shouldGate ?
-            <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 p-6 text-slate-100">
-              <h2 className="text-xl font-semibold">Library data not found</h2>
-              <p className="mt-2 text-sm text-slate-300">
+        <div className={APP_CONTENT_PAD_CLASS}>
+          {isRestoring ?
+            <RouteFallback />
+          : shouldGate ?
+            <div className={ROUTE_MESSAGE_INFO_CLASS}>
+              <h2 className={ROUTE_MESSAGE_TITLE_CLASS}>
+                Library data not found
+              </h2>
+              <p className={ROUTE_MESSAGE_BODY_CLASS}>
                 The viewer could not find a library file at
-                <span className="mx-1 font-semibold text-slate-100">
+                <span className={ROUTE_MESSAGE_EMPHASIS_CLASS}>
                   {libraryStatus?.current_path}
                 </span>
                 . Run a new capture or select an existing file to continue.
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className={PAGE_ACTION_ROW_CLASS}>
                 <Button asChild size="sm">
                   <Link to="/setup">Open setup</Link>
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link to="/commands">Open command center</Link>
+                  <Link to="/command-center">Open command center</Link>
                 </Button>
               </div>
             </div>
-          : <div className="space-y-4">
+          : <div className={APP_CONTENT_STACK_CLASS}>
               {showLibraryContext && (
-                <section className="rounded-lg border border-slate-800 bg-slate-900/70 px-3.5 py-2.5 shadow-sm shadow-black/20">
-                  <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-300">
-                          Active library
-                        </span>
+                <section className={LIBRARY_CONTEXT_PANEL_CLASS}>
+                  <PaneHeader
+                    title={
+                      <span
+                        className={TRUNCATED_TITLE_TEXT_CLASS}
+                        data-doc-id="layout-active-library-name">
+                        {currentLibraryName}
+                      </span>
+                    }
+                    titleAs="div"
+                    titleClassName="text-sm font-medium"
+                    description={libraryStatus?.current_path}
+                    descriptionClassName="truncate text-xs"
+                    eyebrow={
+                      <Badge variant="success" size="compact" casing="ui">
+                        Active library
+                      </Badge>
+                    }
+                    topRight={
+                      <>
+                        <Badge
+                          variant="neutral"
+                          size="compact"
+                          casing="ui"
+                          id="layout-captured-at">
+                          {capturedLabel}
+                        </Badge>
                         <span
-                          className="truncate text-sm font-medium text-slate-100"
-                          data-doc-id="layout-active-library-name">
-                          {currentLibraryName}
+                          className={cn(
+                            DOWNLOAD_EXPIRY_BADGE_CLASS,
+                            downloadExpiryBadge.tone,
+                          )}
+                          data-doc-id="layout-download-expiry-label">
+                          {downloadExpiryBadge.label}
                         </span>
-                      </div>
-                      <p
-                        className="mt-1 truncate text-xs text-slate-400"
-                        data-doc-id="layout-active-library-path">
-                        {libraryStatus?.current_path}
-                      </p>
-                    </div>
+                      </>
+                    }
+                    topRightClassName={COMPACT_META_CLASS}
+                  />
 
-                    <div className="flex flex-wrap gap-1.5 text-[11px]">
-                      <span
-                        className="rounded-full border border-slate-700 bg-slate-950/80 px-2.5 py-1 text-slate-300"
-                        data-doc-id="layout-captured-at">
-                        Captured {capturedLabel}
-                      </span>
-                      <span
-                        className={`rounded-full border px-2.5 py-1 ${downloadExpiryBadge.tone}`}
-                        data-doc-id="layout-download-expiry-label">
-                        {downloadExpiryBadge.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-2.5 flex flex-wrap gap-2">
+                  <div className={LIBRARY_CONTEXT_METRICS_CLASS}>
                     {[
                       {
                         id: "products",
@@ -646,12 +789,10 @@ export default function Layout() {
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="flex min-w-[132px] flex-1 items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2 sm:flex-none">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                          {item.label}
-                        </p>
+                        className={LIBRARY_CONTEXT_METRIC_CLASS}>
+                        <p className={SECTION_EYEBROW_CLASS}>{item.label}</p>
                         <p
-                          className="shrink-0 text-base font-semibold text-white"
+                          className={METRIC_VALUE_CLASS}
                           data-doc-id={`layout-library-total-${item.id}`}>
                           {item.value}
                         </p>
@@ -662,16 +803,16 @@ export default function Layout() {
               )}
 
               {showUrgentKeyBanner && (
-                <section className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-3 shadow-sm shadow-black/20">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <section className={WARNING_BANNER_CLASS}>
+                  <div className={WARNING_BANNER_LAYOUT_CLASS}>
                     <div>
-                      <div className="flex items-center gap-2 text-amber-200">
+                      <div className={WARNING_BANNER_HEADER_CLASS}>
                         <AlertTriangle className="h-4 w-4" />
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">
+                        <p className={WARNING_BANNER_TITLE_CLASS}>
                           Expiring key warning
                         </p>
                       </div>
-                      <p className="mt-1 text-sm font-medium text-white">
+                      <p className={WARNING_BANNER_BODY_CLASS}>
                         {formatNumber(urgentKeysSummary.openActionCount)}{" "}
                         unexpired key
                         {urgentKeysSummary.openActionCount === 1 ?
@@ -679,7 +820,7 @@ export default function Layout() {
                         : "s"}{" "}
                         still need attention.
                       </p>
-                      <p className="mt-1 text-xs text-amber-50/90">
+                      <p className={WARNING_BANNER_DETAIL_CLASS}>
                         {formatNumber(urgentKeysSummary.openActionCount)} expire
                         within {urgentKeysSummary.thresholdDays} days
                         {urgentKeysSummary.nextExpiringDaysRemaining !== null ?
@@ -700,9 +841,11 @@ export default function Layout() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className={PAGE_ACTION_ROW_CLASS}>
                       <Button asChild size="sm" variant="secondary">
-                        <Link to="/expiring-keys">Review expiring keys</Link>
+                        <Link to="/library/expiring-keys">
+                          Review expiring keys
+                        </Link>
                       </Button>
                     </div>
                   </div>

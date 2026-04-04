@@ -7,26 +7,23 @@ import { Route, Routes } from "react-router-dom";
 import Layout from "./app/layout/Layout";
 import { FilterProvider } from "./state/filters";
 
-const Overview = lazy(() => import("./app/routes/Overview"));
-const CurrentBundles = lazy(() => import("./app/routes/CurrentBundles"));
-const CurrentSalesOverview = lazy(
-  () => import("./app/routes/CurrentSalesOverview"),
-);
-const VenueBundlePage = lazy(() => import("./app/routes/VenueBundlePage"));
-const VenueChoice = lazy(() => import("./app/routes/VenueChoice"));
-const LibrarySetup = lazy(() => import("./app/routes/LibrarySetup"));
+const Home = lazy(() => import("./app/routes/Home"));
+const SalesOverview = lazy(() => import("./app/routes/SalesOverview"));
+const SalesBundlePage = lazy(() => import("./app/routes/SalesBundlePage"));
+const CurrentChoice = lazy(() => import("./app/routes/CurrentChoice"));
+const Setup = lazy(() => import("./app/routes/Setup"));
 const CommandCenter = lazy(() => import("./app/routes/CommandCenter"));
-const Orders = lazy(() => import("./app/routes/Orders"));
-const Category = lazy(() => import("./app/routes/Category"));
+const Purchases = lazy(() => import("./app/routes/Purchases"));
+const LibraryCategory = lazy(() => import("./app/routes/LibraryCategory"));
 const SteamKeys = lazy(() => import("./app/routes/SteamKeys"));
-const NonSteamKeys = lazy(() => import("./app/routes/NonSteamKeys"));
-const Downloads = lazy(() => import("./app/routes/Downloads"));
+const OtherKeys = lazy(() => import("./app/routes/OtherKeys"));
+const OtherDownloads = lazy(() => import("./app/routes/OtherDownloads"));
 const Software = lazy(() => import("./app/routes/Software"));
 const Videos = lazy(() => import("./app/routes/Videos"));
-const Ebooks = lazy(() => import("./app/routes/Ebooks"));
+const EBooksPage = lazy(() => import("./app/routes/EBooksPage"));
 const Audiobooks = lazy(() => import("./app/routes/Audiobooks"));
 const ExpiringKeys = lazy(() => import("./app/routes/ExpiringKeys"));
-const Structure = lazy(() => import("./app/routes/Structure"));
+const Schema = lazy(() => import("./app/routes/Schema"));
 
 /**
  * Root app component that wires routing and global filter context.
@@ -36,35 +33,34 @@ export default function App() {
     <FilterProvider>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Overview />} />
-          <Route path="/current-bundles" element={<CurrentBundles />} />
-          <Route path="/venue/overview" element={<CurrentSalesOverview />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/sales" element={<SalesOverview />} />
           <Route
-            path="/venue/bundles/games"
-            element={<VenueBundlePage bundleType="games" />}
+            path="/sales/games"
+            element={<SalesBundlePage bundleType="games" />}
           />
           <Route
-            path="/venue/bundles/books"
-            element={<VenueBundlePage bundleType="books" />}
+            path="/sales/books"
+            element={<SalesBundlePage bundleType="books" />}
           />
           <Route
-            path="/venue/bundles/software"
-            element={<VenueBundlePage bundleType="software" />}
+            path="/sales/software"
+            element={<SalesBundlePage bundleType="software" />}
           />
-          <Route path="/venue/choice" element={<VenueChoice />} />
-          <Route path="/setup" element={<LibrarySetup />} />
-          <Route path="/commands" element={<CommandCenter />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/category/:category" element={<Category />} />
-          <Route path="/steam-keys" element={<SteamKeys />} />
-          <Route path="/non-steam-keys" element={<NonSteamKeys />} />
-          <Route path="/expiring-keys" element={<ExpiringKeys />} />
-          <Route path="/downloads" element={<Downloads />} />
-          <Route path="/software" element={<Software />} />
-          <Route path="/videos" element={<Videos />} />
-          <Route path="/ebooks" element={<Ebooks />} />
-          <Route path="/audiobooks" element={<Audiobooks />} />
-          <Route path="/structure" element={<Structure />} />
+          <Route path="/sales/choice" element={<CurrentChoice />} />
+          <Route path="/setup" element={<Setup />} />
+          <Route path="/command-center" element={<CommandCenter />} />
+          <Route path="/library/purchases" element={<Purchases />} />
+          <Route path="/library/category/:category" element={<LibraryCategory />} />
+          <Route path="/library/steam-keys" element={<SteamKeys />} />
+          <Route path="/library/other-keys" element={<OtherKeys />} />
+          <Route path="/library/expiring-keys" element={<ExpiringKeys />} />
+          <Route path="/library/other-downloads" element={<OtherDownloads />} />
+          <Route path="/library/software" element={<Software />} />
+          <Route path="/library/videos" element={<Videos />} />
+          <Route path="/library/ebooks" element={<EBooksPage />} />
+          <Route path="/library/audiobooks" element={<Audiobooks />} />
+          <Route path="/schema" element={<Schema />} />
         </Route>
       </Routes>
     </FilterProvider>

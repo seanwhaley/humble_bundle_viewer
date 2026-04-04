@@ -4,6 +4,7 @@
 import { ExternalLink, type LucideIcon } from "lucide-react";
 
 import { cn } from "../lib/utils";
+import { COMPACT_EXTERNAL_LINK_CLASS, SECTION_HELP_TEXT_CLASS } from "../styles/roles";
 import { Tooltip } from "./ui/tooltip";
 import { buttonVariants } from "./ui/button";
 
@@ -30,7 +31,7 @@ export default function SubproductInfoLink({
   targetBlank = true,
 }: SubproductInfoLinkProps) {
   if (!url) {
-    return <span className="text-xs text-slate-500">—</span>;
+    return <span className={SECTION_HELP_TEXT_CLASS}>—</span>;
   }
 
   return (
@@ -42,7 +43,7 @@ export default function SubproductInfoLink({
         aria-label={label}
         className={cn(
           buttonVariants({ variant: "ghost", size: "sm" }),
-          "h-8 gap-1 px-2 text-slate-300 hover:text-white",
+          COMPACT_EXTERNAL_LINK_CLASS,
           className
         )}
       >

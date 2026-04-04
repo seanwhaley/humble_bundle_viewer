@@ -2,7 +2,9 @@
  * Donut-style pie chart wrapper for ECharts.
  */
 import ReactECharts from "echarts-for-react";
+import ChartFrame from "./ChartFrame";
 import { echarts } from "./echarts";
+import { getChartTheme } from "./theme";
 
 interface ChartDataPoint {
   id?: string;
@@ -43,14 +45,11 @@ export default function PieChart({
   labelFormatter,
   tooltipFormatter,
 }: PieChartProps) {
+  const theme = getChartTheme();
+
   if (data.length === 0) {
     return (
-      <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-        <div className="mb-2 text-xs uppercase text-slate-400">{title}</div>
-        <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-slate-800 bg-slate-950/40 px-6 text-center text-sm text-slate-500">
-          {emptyMessage}
-        </div>
-      </div>
+      <ChartFrame title={title} emptyMessage={emptyMessage} />
     );
   }
 
@@ -80,7 +79,7 @@ export default function PieChart({
         avoidLabelOverlap: false,
         itemStyle: {
           borderRadius: 10,
-          borderColor: "#020617", // slate-950
+          borderColor: theme.surface,
           borderWidth: 2,
         },
         label: {
@@ -100,7 +99,7 @@ export default function PieChart({
 
             return `${point.label}: ${point.value}`;
           },
-          color: "#94a3b8", // slate-400
+          color: theme.mutedForeground,
         },
         emphasis: {
           label: {
@@ -119,7 +118,7 @@ export default function PieChart({
           details: item.details,
           itemStyle:
             selected && (item.id || item.label) === selected ?
-              { color: "#38bdf8" } // Sky blue for selected
+              { color: theme.accent }
             : undefined,
         })),
       },
@@ -127,13 +126,12 @@ export default function PieChart({
   };
 
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-      <div className="text-xs uppercase text-slate-400 mb-2">{title}</div>
+    <ChartFrame title={title}>
       <ReactECharts
         echarts={echarts}
         option={option}
         opts={{ renderer: "svg" }}
-        style={{ height: 240 }}
+        className="h-[240px]"
         onEvents={
           onSelect ?
             {
@@ -143,6 +141,6 @@ export default function PieChart({
           : undefined
         }
       />
-    </div>
+    </ChartFrame>
   );
 }

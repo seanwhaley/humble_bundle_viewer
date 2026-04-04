@@ -21,7 +21,61 @@ import { ChevronLeft, ChevronRight, ArrowUpDown, Filter } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { Badge } from "./ui/badge";
+import {
+  tableAutoLayoutClass,
+  tableBaseClass,
+  tableBodyCellClass,
+  tableBodyRowClass,
+  tableCellBaseClass,
+  tableCheckboxClass,
+  tableEmptyStateClass,
+  tableFilterAnchorClass,
+  tableFilterCountBadgeClass,
+  tableFilterMenuClass,
+  tableFilterMenuClearClass,
+  tableFilterMenuHeaderClass,
+  tableFilterMenuHintClass,
+  tableFilterMenuSelectClass,
+  tableFilterTriggerClass,
+  tableFilterTriggerContentClass,
+  tableFixedLayoutClass,
+  tableFixedWrapperClass,
+  tableHeaderBorderClass,
+  tableHeaderCellClass,
+  tableHeaderCellPaddingClass,
+  tableHeaderContentClass,
+  tableHeaderLabelRowClass,
+  tableHeaderRowClass,
+  tableHeaderSortableClass,
+  tableHeaderStackClass,
+  tableHeaderSurfaceClass,
+  tableHeaderToggleClass,
+  tableOverflowVisibleClass,
+  tablePaginationButtonsClass,
+  tablePaginationClass,
+  tablePaginationControlsClass,
+  tablePaginationInfoClass,
+  tablePaginationSelectGroupClass,
+  tableScrollWrapperClass,
+  tableSelectionCellClass,
+  tableSelectionHeaderCellClass,
+  tableSelectionHeaderStackClass,
+  tableSelectionSummaryClass,
+  tableToolbarActionsClass,
+  tableToolbarClass,
+  tableToolbarRowClass,
+  tableToolbarSearchSectionClass,
+  tableToolbarSummaryClass,
+} from "./ui/table";
 import { cn } from "../lib/utils";
+import {
+  COMPACT_FORM_SELECT_CLASS,
+  COMPACT_ACTION_BUTTON_CLASS,
+  FILTER_PANEL_CLASS,
+  FLOATING_PANEL_CLASS,
+  TABLE_SHELL_CLASS,
+} from "../styles/roles";
 
 type TableColumnMeta = {
   headerClassName?: string;
@@ -89,10 +143,7 @@ const IndeterminateCheckbox = ({
     <input
       type="checkbox"
       ref={ref}
-      className={cn(
-        "h-4 w-4 rounded border border-slate-700 bg-slate-950 text-primary",
-        className
-      )}
+      className={cn(tableCheckboxClass, className)}
       {...rest}
     />
   );
@@ -399,43 +450,45 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {/* Toolbar */}
       {showToolbar && (
-        <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3.5">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className={cn(FILTER_PANEL_CLASS, tableToolbarClass)}> 
+          <div className={tableToolbarRowClass}>
+            <div className={tableToolbarSearchSectionClass}>
               {!hideSearch && (
                 <Input
                   placeholder={searchPlaceholder}
                   value={globalFilter}
                   onChange={(event) => setGlobalFilter(event.target.value)}
-                  className="h-9 w-full max-w-lg border-slate-700 bg-slate-950"
+                  className="h-9 w-full max-w-lg"
                   aria-label="Search rows"
                 />
               )}
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                <span className="rounded-full border border-slate-800 bg-slate-950 px-2.5 py-1 text-slate-300">
+              <div className={tableToolbarSummaryClass}>
+                <Badge variant="neutral" size="compact" casing="ui">
                   Header filters available on this table
-                </span>
+                </Badge>
                 {hasGlobalSearch && (
-                  <span className="rounded-full border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-sky-200">
+                  <Badge variant="info" size="compact" casing="ui">
                     Search: {globalFilter}
-                  </span>
+                  </Badge>
                 )}
                 {activeFilterSummaries.map((filter) => (
-                  <span
+                  <Badge
                     key={filter.id}
-                    className="rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-indigo-200"
+                    variant="info"
+                    size="compact"
+                    casing="ui"
                   >
                     {filter.label}: {filter.count}
-                  </span>
+                  </Badge>
                 ))}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className={tableToolbarActionsClass}>
               {hasGlobalSearch && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   onClick={() => setGlobalFilter("")}
                 >
                   Clear search
@@ -445,7 +498,7 @@ export function DataTable<TData, TValue>({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 text-xs"
+                  className={COMPACT_ACTION_BUTTON_CLASS}
                   onClick={() => table.resetColumnFilters()}
                 >
                   Clear column filters
@@ -453,13 +506,13 @@ export function DataTable<TData, TValue>({
               )}
               {enableRowSelection && (
                 <>
-                  <span className="text-xs text-slate-400">
+                  <span className={tableSelectionSummaryClass}>
                     Selected {selectedCount} of {filteredCount}
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     onClick={handleSelectAll}
                   >
                     Select all
@@ -467,7 +520,7 @@ export function DataTable<TData, TValue>({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs"
+                    className={COMPACT_ACTION_BUTTON_CLASS}
                     onClick={handleSelectNone}
                   >
                     Select none
@@ -480,27 +533,24 @@ export function DataTable<TData, TValue>({
       )}
 
       <div
-        className={cn(
-          "rounded-md border border-slate-800 bg-slate-900",
-          "overflow-visible"
-        )}
+        className={cn(TABLE_SHELL_CLASS, tableOverflowVisibleClass)}
       >
         <div
           className={cn(
             allowHorizontalScroll
-              ? "overflow-x-auto overflow-y-visible"
-              : "max-w-full overflow-x-hidden overflow-y-visible"
+              ? tableScrollWrapperClass
+              : tableFixedWrapperClass
           )}
         >
         <table
           className={cn(
-            "caption-bottom text-left text-xs md:text-sm",
-            allowHorizontalScroll ? "min-w-full table-auto" : "w-full table-fixed"
+            tableBaseClass,
+            allowHorizontalScroll ? tableAutoLayoutClass : tableFixedLayoutClass
           )}
         >
-            <thead className="[&_tr]:border-b [&_tr]:border-slate-800">
+            <thead className={cn(tableHeaderSurfaceClass, tableHeaderBorderClass)}>
                 {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b transition-colors hover:bg-slate-800/50 data-[state=selected]:bg-slate-800">
+              <tr key={headerGroup.id} className={tableHeaderRowClass}>
                     {headerGroup.headers.map((header) => {
                     const filterValue = header.column.getFilterValue();
                     const selectedCount = Array.isArray(filterValue)
@@ -516,10 +566,11 @@ export function DataTable<TData, TValue>({
                         <th
                           key={header.id}
                           className={cn(
-                            "align-top font-medium text-slate-400 whitespace-normal break-words",
+                            tableHeaderCellClass,
+                            tableHeaderContentClass,
                             isSelectionColumn
-                              ? "w-10 px-2.5 py-3 text-center"
-                              : "px-3 py-3 text-left",
+                              ? tableSelectionHeaderCellClass
+                              : tableHeaderCellPaddingClass,
                             columnMeta?.headerClassName
                           )}
                         >
@@ -527,19 +578,19 @@ export function DataTable<TData, TValue>({
                             <div
                                 className={cn(
                                     isSelectionColumn
-                                      ? "flex items-start justify-center pt-0.5"
-                                      : "flex flex-col items-start gap-1.5"
+                                      ? tableSelectionHeaderStackClass
+                                      : tableHeaderStackClass
                                 )}
                             >
                                 <div
                                   className={cn(
-                                    "flex w-full items-start gap-2",
+                                    tableHeaderToggleClass,
                                     isSelectionColumn
                                       ? "justify-center"
                                       : "justify-between",
                                     !isSelectionColumn &&
                                       header.column.getCanSort() &&
-                                      "cursor-pointer select-none"
+                                      tableHeaderSortableClass
                                   )}
                                   onClick={
                                     isSelectionColumn
@@ -547,7 +598,7 @@ export function DataTable<TData, TValue>({
                                       : header.column.getToggleSortingHandler()
                                   }
                                 >
-                                  <div className="flex min-w-0 items-center gap-2">
+                                  <div className={tableHeaderLabelRowClass}>
                                     <span>
                                         {flexRender(
                                             header.column.columnDef.header,
@@ -564,12 +615,12 @@ export function DataTable<TData, TValue>({
                                     ref={(element) => {
                                       filterMenuRefs.current[header.column.id] = element;
                                     }}
-                                    className="relative flex w-full justify-start"
+                                    className={tableFilterAnchorClass}
                                     onClick={(event) => event.stopPropagation()}
                                   >
                                     <button
                                       type="button"
-                                      className="cursor-pointer rounded-md border border-slate-700 bg-slate-950/70 px-2 py-1 text-xs text-slate-300 hover:border-slate-500 hover:text-slate-100"
+                                      className={tableFilterTriggerClass}
                                       title="Filter column (Ctrl/Cmd click to select multiple)"
                                       aria-haspopup="listbox"
                                       onClick={(event) => {
@@ -581,61 +632,61 @@ export function DataTable<TData, TValue>({
                                         );
                                       }}
                                     >
-                                      <div className="flex items-center gap-1">
+                                      <div className={tableFilterTriggerContentClass}>
                                         <Filter className="h-3 w-3" />
                                         <span>Filter</span>
                                         {selectedCount > 0 && (
-                                          <span className="rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-200">
+                                          <span className={tableFilterCountBadgeClass}>
                                             {selectedCount}
                                           </span>
                                         )}
                                       </div>
                                     </button>
                                     {isFilterOpen && (
-                                      <div className="absolute left-0 top-full z-20 mt-2 w-52 rounded-md border border-slate-800 bg-slate-950 p-2 shadow-lg">
-                                      <div className="flex items-center justify-between pb-2 text-[10px] uppercase tracking-wide text-slate-400">
-                                        <span>Filter</span>
-                                        <button
-                                          type="button"
-                                          className="text-slate-400 hover:text-slate-200"
-                                          onClick={(event) => {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                            header.column.setFilterValue(undefined);
+                                      <div className={cn(FLOATING_PANEL_CLASS, tableFilterMenuClass)}>
+                                        <div className={tableFilterMenuHeaderClass}>
+                                          <span>Filter</span>
+                                          <button
+                                            type="button"
+                                            className={tableFilterMenuClearClass}
+                                            onClick={(event) => {
+                                              event.preventDefault();
+                                              event.stopPropagation();
+                                              header.column.setFilterValue(undefined);
+                                            }}
+                                          >
+                                            Clear
+                                          </button>
+                                        </div>
+                                        <select
+                                          multiple
+                                          title="Hold Ctrl (Cmd on Mac) to select multiple"
+                                          className={cn(COMPACT_FORM_SELECT_CLASS, tableFilterMenuSelectClass)}
+                                          value={(filterValue as string[]) ?? []}
+                                          onChange={(event) => {
+                                            const selected = Array.from(event.target.selectedOptions)
+                                              .map((option) => option.value)
+                                              .filter(Boolean);
+                                            header.column.setFilterValue(
+                                              selected.length ? selected : undefined
+                                            );
                                           }}
                                         >
-                                          Clear
-                                        </button>
-                                      </div>
-                                      <select
-                                        multiple
-                                        title="Hold Ctrl (Cmd on Mac) to select multiple"
-                                        className="h-40 w-full rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm"
-                                        value={(filterValue as string[]) ?? []}
-                                        onChange={(event) => {
-                                          const selected = Array.from(event.target.selectedOptions)
-                                            .map((option) => option.value)
-                                            .filter(Boolean);
-                                          header.column.setFilterValue(
-                                            selected.length ? selected : undefined
-                                          );
-                                        }}
-                                      >
-                                        {(
-                                          columnOptions[header.column.id] ?? []
-                                        ).map((option) => (
-                                          <option key={option} value={option}>
-                                            {formatOptionLabel(
-                                              option,
-                                              (header.column.columnDef.meta as { filterKind?: string } | undefined)
-                                                ?.filterKind
-                                            )}
-                                          </option>
-                                        ))}
-                                      </select>
-                                      <p className="pt-2 text-[10px] text-slate-500">
-                                        Hold Ctrl or Cmd to select multiple values.
-                                      </p>
+                                          {(
+                                            columnOptions[header.column.id] ?? []
+                                          ).map((option) => (
+                                            <option key={option} value={option}>
+                                              {formatOptionLabel(
+                                                option,
+                                                (header.column.columnDef.meta as { filterKind?: string } | undefined)
+                                                  ?.filterKind
+                                              )}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        <p className={tableFilterMenuHintClass}>
+                                          Hold Ctrl or Cmd to select multiple values.
+                                        </p>
                                       </div>
                                     )}
                                   </div>
@@ -645,7 +696,7 @@ export function DataTable<TData, TValue>({
                         </th>
                     );
                     })}
-                </tr>
+                    </tr>
                 ))}
             </thead>
             <tbody className="[&_tr:last-child]:border-0">
@@ -654,7 +705,7 @@ export function DataTable<TData, TValue>({
                     <tr
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="border-b border-slate-800 transition-colors hover:bg-slate-800/50 data-[state=selected]:bg-slate-800"
+                  className={tableBodyRowClass}
                     >
                     {row.getVisibleCells().map((cell) => {
                         const isSelectionColumn = cell.column.id === "select";
@@ -663,10 +714,10 @@ export function DataTable<TData, TValue>({
                         <td
                             key={cell.id}
                           className={cn(
-                            "whitespace-normal break-words",
+                            tableCellBaseClass,
                             isSelectionColumn
-                              ? "w-10 px-2.5 py-3 text-center align-top"
-                              : "p-3 align-top",
+                              ? tableSelectionCellClass
+                              : tableBodyCellClass,
                             columnMeta?.cellClassName
                           )}
                             title={typeof cell.getValue() === 'string' ? String(cell.getValue()) : undefined}
@@ -683,7 +734,7 @@ export function DataTable<TData, TValue>({
                 <tr>
                     <td
                     colSpan={table.getVisibleLeafColumns().length}
-                    className="h-24 text-center text-slate-400"
+                    className={tableEmptyStateClass}
                     >
                     No results.
                     </td>
@@ -695,15 +746,15 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-wrap items-center justify-end gap-2 py-4">
-        <div className="flex-1 text-xs text-slate-400">
+      <div className={tablePaginationClass}>
+        <div className={tablePaginationInfoClass}>
           {table.getFilteredRowModel().rows.length} row(s) total.
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
+        <div className={tablePaginationControlsClass}>
+          <div className={tablePaginationSelectGroupClass}>
             <span>Rows per page</span>
             <select
-              className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+              className={COMPACT_FORM_SELECT_CLASS}
               aria-label="Rows per page"
               value={table.getState().pagination.pageSize}
               onChange={(event) => table.setPageSize(Number(event.target.value))}
@@ -715,10 +766,10 @@ export function DataTable<TData, TValue>({
               ))}
             </select>
           </div>
-          <div className="flex items-center gap-2">
+          <div className={tablePaginationSelectGroupClass}>
             <span>Page</span>
             <select
-              className="h-8 rounded-md border border-slate-800 bg-slate-950 px-2 text-xs text-slate-100"
+              className={COMPACT_FORM_SELECT_CLASS}
               aria-label="Page number"
               value={table.getState().pagination.pageIndex}
               onChange={(event) => table.setPageIndex(Number(event.target.value))}
@@ -731,7 +782,7 @@ export function DataTable<TData, TValue>({
             </select>
           </div>
         </div>
-        <div className="space-x-2">
+        <div className={tablePaginationButtonsClass}>
           <Button
             variant="outline"
             size="sm"

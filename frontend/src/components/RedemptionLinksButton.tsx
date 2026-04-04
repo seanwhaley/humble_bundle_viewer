@@ -6,6 +6,15 @@ import { ChevronDown, ExternalLink } from "lucide-react";
 
 import { RedemptionLink } from "../data/types";
 import { cn } from "../lib/utils";
+import {
+  COMPACT_EXTERNAL_LINK_CLASS,
+  DISCLOSURE_TRIGGER_CLASS,
+  POPUP_LINK_ITEM_CLASS,
+  POPUP_LIST_CLASS,
+  POPUP_PANEL_CLASS,
+  POPUP_TITLE_CLASS,
+  SECTION_HELP_TEXT_CLASS,
+} from "../styles/roles";
 import { buttonVariants } from "./ui/button";
 import { Tooltip } from "./ui/tooltip";
 
@@ -26,7 +35,7 @@ export default function RedemptionLinksButton({
   className,
 }: RedemptionLinksButtonProps) {
   if (!links || links.length === 0) {
-    return <span className="text-xs text-slate-500">—</span>;
+    return <span className={SECTION_HELP_TEXT_CLASS}>—</span>;
   }
 
   if (links.length === 1) {
@@ -40,7 +49,7 @@ export default function RedemptionLinksButton({
           aria-label={link.label}
           className={cn(
             buttonVariants({ variant: compact ? "ghost" : "outline", size: "sm" }),
-            compact ? "h-8 gap-1 px-2 text-slate-300 hover:text-white" : "gap-2",
+            compact ? COMPACT_EXTERNAL_LINK_CLASS : "gap-2",
             className
           )}
         >
@@ -56,8 +65,8 @@ export default function RedemptionLinksButton({
       <summary
         className={cn(
           buttonVariants({ variant: compact ? "ghost" : "outline", size: "sm" }),
-          "list-none gap-1 px-2 marker:hidden [&::-webkit-details-marker]:hidden",
-          compact ? "h-8 text-slate-300 hover:text-white" : "gap-2"
+          DISCLOSURE_TRIGGER_CLASS,
+          compact ? "h-8 text-muted-foreground hover:text-foreground" : "gap-2"
         )}
       >
         <Tooltip content={`${label} (${links.length})`}>
@@ -68,28 +77,28 @@ export default function RedemptionLinksButton({
           </span>
         </Tooltip>
       </summary>
-      <div className="absolute right-0 z-20 mt-2 w-72 rounded-md border border-slate-700 bg-slate-950/95 p-2 shadow-xl">
-        <div className="px-2 pb-2 pt-1 text-xs uppercase tracking-[0.18em] text-slate-500">
+      <div className={POPUP_PANEL_CLASS}>
+        <div className={POPUP_TITLE_CLASS}>
           Redemption links
         </div>
-        <div className="space-y-1">
+        <div className={POPUP_LIST_CLASS}>
           {links.map((link) => (
             <a
               key={link.id}
               href={link.url}
               target="_blank"
               rel="noreferrer"
-              className="flex items-start justify-between gap-2 rounded-md px-2 py-2 text-sm text-slate-100 hover:bg-slate-800"
+              className={POPUP_LINK_ITEM_CLASS}
             >
               <span className="min-w-0">
                 <span className="block truncate font-medium">{link.label}</span>
                 {(link.region || link.kind === "instructions") && (
-                  <span className="block text-xs text-slate-400">
+                  <span className="block text-xs text-muted-foreground">
                     {link.region || "Instructions"}
                   </span>
                 )}
               </span>
-              <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+              <ExternalLink className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </a>
           ))}
         </div>

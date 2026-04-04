@@ -6,7 +6,6 @@ import { BarChart, PieChart, TreeChart } from "echarts/charts";
 import { GridComponent, TooltipComponent } from "echarts/components";
 import { CanvasRenderer, SVGRenderer } from "echarts/renderers";
 import "echarts-wordcloud";
-import "echarts/theme/dark";
 
 echarts.use([
   BarChart,
