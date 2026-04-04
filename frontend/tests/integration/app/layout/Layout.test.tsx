@@ -57,7 +57,9 @@ function renderLayout(initialEntry: string, outletLabel: string) {
     <MemoryRouter initialEntries={[initialEntry]} future={memoryRouterFuture}>
       <Routes>
         <Route path="/" element={<Layout />}>
+          <Route index element={<div>{outletLabel}</div>} />
           <Route path="library/other-downloads" element={<div>{outletLabel}</div>} />
+          <Route path="library/steam-keys" element={<div>{outletLabel}</div>} />
           <Route path="command-center" element={<div>{outletLabel}</div>} />
         </Route>
       </Routes>
@@ -140,5 +142,24 @@ describe("Layout", () => {
     expect(
       screen.queryByRole("link", { name: /^Non-Steam$/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("shows the urgent key banner on Home even when the shared library context is hidden", () => {
+    mockBuildExpiringKeyActionSummary.mockReturnValue({
+      openActionCount: 3,
+      thresholdDays: 30,
+      nextExpiringDaysRemaining: 5,
+      expiredReferenceCount: 1,
+    } as ReturnType<typeof selectors.buildExpiringKeyActionSummary>);
+
+    renderLayout("/", "Home outlet");
+
+    expect(screen.getByText("Home outlet")).toBeInTheDocument();
+    expect(screen.queryByText(/Active library/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Expiring key warning")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Review expiring keys/i })).toHaveAttribute(
+      "href",
+      "/library/expiring-keys",
+    );
   });
 });

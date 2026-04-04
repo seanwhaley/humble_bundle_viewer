@@ -114,7 +114,7 @@ Remaining follow-up:
 
 - `frontend`: `npm run build` passed on Windows
 - `frontend`: `npm test` passed with 45 test files and 142 tests
-- browser smoke on `http://127.0.0.1:5173/` confirmed the themed shell, theme selector, and route mounting for `/`, `/setup`, `/commands`, `/venue/overview`, and `/downloads`
+- browser smoke on `http://127.0.0.1:5173/` confirmed the themed shell, theme selector, and route mounting for `/`, `/setup`, `/command-center`, `/sales`, and `/library/other-downloads`
 - the smoke environment did not include the viewer backend, so data-dependent routes remained at `Loading view…`; this was treated as shell-and-mount verification rather than end-to-end API validation
 
 ## Open decisions
